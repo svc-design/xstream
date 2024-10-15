@@ -24,35 +24,38 @@ jobs:
           - platform: ios
             arch: x64  # Exclude iOS x64
           - platform: android
-            arch: x64  # Exclude android x64
+            arch: x64
         include:
           - platform: macos
-            arch: arm64
+            arch: x64
           - platform: macos
-            arch: x64
-          - platform: linux
             arch: arm64
           - platform: linux
             arch: x64
-          - platform: windows
-            arch: x64
-          - platform: ios
+          - platform: linux
             arch: arm64
           - platform: android
             arch: arm64
-
-    runs-on: ${{ matrix.platform == 'macos' && matrix.arch == 'arm64' && 'macos-latest' || (matrix.platform == 'ios' && 'macos-latest' || 'ubuntu-latest') }}
-
+          - platform: ios
+            arch: arm64
+          - platform: windows
+            arch: x64
+    runs-on: ${{
+      matrix.platform == 'windows' && 'windows-latest' ||
+      matrix.platform == 'linux'   && 'ubuntu-latest' ||
+      matrix.platform == 'android' && 'ubuntu-latest' ||
+      matrix.platform == 'macos'   && 'macos-latest'  ||
+      matrix.platform == 'ios'     && 'macos-latest' 
+    }}
     env:
       PLATFORM: ${{ matrix.platform }}
       ARCH: ${{ matrix.arch }}
-
     steps:
       - name: Checkout codebase
         uses: actions/checkout@v4
 
-      - name: Set up Flutter environment
-        if: ${{ matrix.platform != 'macos' && matrix.platform != 'ios' }}
+      - name: Set up Flutter environment for Linux/Android
+        if: ${{ matrix.platform == 'linux' || matrix.platform == 'android' }}
         run: |
           sudo apt-get update
           sudo apt-get install -y curl unzip xz-utils libglu1-mesa
@@ -61,11 +64,24 @@ jobs:
           export PATH="$PATH:$PWD/flutter/bin"
           flutter doctor
 
-      - name: Set up Flutter environment for macOS
+      - name: Set up Flutter environment for macOS/iOS
         if: ${{ matrix.platform == 'macos' || matrix.platform == 'ios' }}
         run: |
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          if [[ "${{ matrix.arch }}" == "arm64" ]]; then
+            eval "$(/opt/homebrew/bin/brew shellenv)" # For Apple Silicon
+          else
+            eval "$(/usr/local/bin/brew shellenv)"  # For Intel
+          fi
           brew install --cask flutter
           export PATH="$PATH:/Users/runner/Library/Flutter/bin"
+          flutter doctor
+
+      - name: Set up Flutter environment for Windows
+        if: ${{ matrix.platform == 'windows' }}
+        run: |
+          choco install flutter
+          set PATH=%PATH%;C:\flutter\bin
           flutter doctor
 
       - name: Show workflow information
@@ -117,7 +133,6 @@ jobs:
             build/windows/runner/Release/XStream.exe
             build/macos/Build/Products/Release/XStream.app
             build/app/outputs/flutter-apk/app-release.apk
-            # If you have an iOS build:
-            # build/ios/iphoneos/XStream.app
+            build/ios/iphoneos/XStream.app
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
