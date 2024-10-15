@@ -90,10 +90,10 @@ jobs:
         run: |
           case $PLATFORM in
             "linux")
-              flutter build linux --release --target-arch=$ARCH
+              flutter build linux --release
               ;;
             "windows")
-              flutter build windows --release --target-arch=$ARCH
+              flutter build windows --release
               ;;
             "macos")
               flutter build macos --release
