@@ -59,6 +59,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y snapd
+          sudo snap install --stable openjdk
           sudo snap install flutter --classic
           export PATH="$PATH:/snap/bin"
           flutter doctor
@@ -86,26 +87,34 @@ jobs:
         run: |
           echo "Platform: $PLATFORM, Architecture: $ARCH"
 
-      - name: Build Flutter packages
+      - name: Build Flutter packages for Windows
+        if: ${{ matrix.platform == 'windows' }}
+        run: |
+          flutter build windows --release
+        env:
+          PLATFORM: ${{ matrix.platform }}
+          ARCH: ${{ matrix.arch }}
+
+      - name: Build Flutter packages for Linux/Android/macOS/iOS
         run: |
           case $PLATFORM in
             "linux")
               flutter build linux --release
               ;;
-            "windows")
-              flutter build windows --release
+            "android")
+              flutter build apk --release
               ;;
             "macos")
               flutter build macos --release
-              flutter build ios --release --no-codesign
-              ;;
-            "android")
-              flutter build apk --release
               ;;
             "ios")
               flutter build ios --release --no-codesign
               ;;
           esac
+        shell: bash
+        env:
+          PLATFORM: ${{ matrix.platform }}
+          ARCH: ${{ matrix.arch }}
 
       - name: List built files
         run: ls -R build
