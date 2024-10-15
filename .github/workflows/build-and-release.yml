@@ -11,10 +11,10 @@ on:
 
 jobs:
   build:
-    needs: prepare
     permissions:
       contents: write
     strategy:
+      fail-fast: false
       matrix:
         platform: [linux, windows, macos, android, ios]
         arch: [x64, arm64]
