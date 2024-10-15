@@ -80,7 +80,7 @@ jobs:
         if: ${{ matrix.platform == 'windows' }}
         run: |
           choco install flutter
-          echo "##[add-path]C:\\flutter\\bin"  # Add flutter to PATH
+          echo "C:\\flutter\\bin" >> $GITHUB_ENV  # 使用 GITHUB_ENV 添加 flutter 到 PATH
 
       - name: Show workflow information
         run: |
