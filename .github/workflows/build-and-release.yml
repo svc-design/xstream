@@ -117,7 +117,7 @@ jobs:
           echo "tag_exists=$TAG_EXISTS" >> $GITHUB_ENV
 
       - name: Create Release
-        if: env.tag_exists != 'v*'  # 只有在标签不存在时才创建
+        if: env.tag_exists == ''  # 只有在标签不存在时才创建
         id: create_release
         uses: actions/create-release@v1
         with:
