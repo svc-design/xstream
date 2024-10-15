@@ -1,0 +1,120 @@
+name: Build and Release Flutter Packages
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    needs: prepare
+    permissions:
+      contents: write
+    strategy:
+      matrix:
+        platform: [linux, windows, macos, android, ios]
+        arch: [x64, arm64]
+        exclude:
+          - platform: windows
+            arch: arm64
+        include:
+          - platform: macos
+            arch: arm64
+          - platform: android
+            arch: arm64
+          - platform: linux
+            arch: arm64
+          - platform: linux
+            arch: x64
+          - platform: windows
+            arch: x64
+          - platform: macos
+            arch: x64
+          - platform: ios
+            arch: arm64
+      fail-fast: false
+
+    runs-on: ${{ matrix.platform == 'macos' && matrix.arch == 'arm64' && 'macos-latest' || (matrix.platform == 'ios' && 'macos-latest' || 'ubuntu-latest') }}
+
+    env:
+      PLATFORM: ${{ matrix.platform }}
+      ARCH: ${{ matrix.arch }}
+
+    steps:
+      - name: Checkout codebase
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter environment
+        if: ${{ matrix.platform != 'macos' && matrix.platform != 'ios' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl unzip xz-utils libglu1-mesa
+          curl -o flutter.tar.xz https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.7.0-stable.tar.xz
+          tar xf flutter.tar.xz
+          export PATH="$PATH:$PWD/flutter/bin"
+          flutter doctor
+
+      - name: Set up Flutter environment for macOS
+        if: ${{ matrix.platform == 'macos' || matrix.platform == 'ios' }}
+        run: |
+          brew install --cask flutter
+          export PATH="$PATH:/Users/runner/Library/Flutter/bin"
+          flutter doctor
+
+      - name: Show workflow information
+        run: |
+          echo "Platform: $PLATFORM, Architecture: $ARCH"
+
+      - name: Build Flutter packages
+        run: |
+          case $PLATFORM in
+            "linux")
+              flutter build linux --release --target-arch=$ARCH
+              ;;
+            "windows")
+              flutter build windows --release --target-arch=$ARCH
+              ;;
+            "macos")
+              flutter build macos --release
+              flutter build ios --release --no-codesign
+              ;;
+            "android")
+              flutter build apk --release
+              ;;
+            "ios")
+              flutter build ios --release --no-codesign
+              ;;
+          esac
+
+      - name: List built files
+        run: ls -R build
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: v${{ github.run_number }}-${{ github.run_id }}
+          release_name: Release v${{ github.run_number }}-${{ github.run_id }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload built packages to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ github.run_number }}-${{ github.run_id }}
+          files: |
+            build/linux/x64/release/bundle/*
+            build/linux/arm64/release/bundle/*
+            build/windows/runner/Release/XStream.exe
+            build/macos/Build/Products/Release/XStream.app
+            build/app/outputs/flutter-apk/app-release.apk
+            # 如果你有 iOS 构建:
+            # build/ios/iphoneos/XStream.app
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
