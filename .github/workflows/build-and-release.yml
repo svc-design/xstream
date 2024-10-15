@@ -66,12 +66,13 @@ jobs:
         if: ${{ matrix.platform == 'windows' }}
         shell: powershell
         run: |
-          Set-ExecutionPolicy Bypass -Scope Process -Force;
-          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12;
+          Set-ExecutionPolicy Bypass -Scope Process -Force
+          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
           iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
           choco install flutter -y
-          echo "C:\\flutter\\bin" >> $GITHUB_ENV
-          Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"  # 加载环境变量
+          echo "C:\flutter\bin" >> $GITHUB_ENV
+          Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
+          refreshenv
           flutter --version
 
       - name: Set up Flutter environment for Android
@@ -87,7 +88,7 @@ jobs:
           export PATH="$PATH:/snap/bin"
           java -version
           flutter doctor
-          
+
       - name: Set up Flutter environment for macOS/iOS
         if: ${{ matrix.platform == 'macos' || matrix.platform == 'ios' }}
         run: |
@@ -107,7 +108,10 @@ jobs:
 
       - name: Build Flutter packages for Windows
         if: ${{ matrix.platform == 'windows' }}
+        shell: powershell
         run: |
+          Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
+          refreshenv
           flutter build windows --release
         env:
           PLATFORM: ${{ matrix.platform }}
