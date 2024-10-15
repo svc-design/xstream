@@ -39,13 +39,12 @@ jobs:
           - platform: windows
             arch: x64
 
-    runs-on: ${{ 
+    runs-on: ${{
       matrix.platform == 'windows' && 'windows-latest' ||
       matrix.platform == 'linux'   && 'ubuntu-latest' ||
       matrix.platform == 'android' && 'ubuntu-latest' ||
       matrix.platform == 'macos'   && 'macos-latest'  ||
-      matrix.platform == 'ios'     && 'macos-latest' 
-    }}
+      matrix.platform == 'ios'     && 'macos-latest' }}
 
     env:
       PLATFORM: ${{ matrix.platform }}
@@ -153,7 +152,6 @@ jobs:
           fi
 
       - name: Create Release
-        if: env.tag_exists == ''  # 只有在标签不存在时才创建
         id: create_release
         uses: actions/create-release@v1
         with:
