@@ -58,8 +58,9 @@ jobs:
         if: ${{ matrix.platform == 'linux' || matrix.platform == 'android' }}
         run: |
           sudo apt-get update
-          sudo apt-get install -y snapd
-          sudo snap install --stable openjdk
+          sudo apt-get install -y snapd openjdk-17-jdk
+          echo "JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))" >> $GITHUB_ENV
+          java -version
           sudo snap install flutter --classic
           export PATH="$PATH:/snap/bin"
           flutter doctor
