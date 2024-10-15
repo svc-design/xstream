@@ -64,6 +64,10 @@ jobs:
       - name: Set up Flutter environment for macOS
         if: ${{ matrix.platform == 'macos' || matrix.platform == 'ios' }}
         run: |
+          # Install Homebrew if not installed
+          if ! command -v brew &> /dev/null; then
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          fi
           brew install --cask flutter
           export PATH="$PATH:/Users/runner/Library/Flutter/bin"
           flutter doctor
