@@ -71,7 +71,7 @@ jobs:
           iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
           choco install flutter -y
           echo "C:\\flutter\\bin" >> $GITHUB_ENV
-          refreshenv
+          Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"  # 加载环境变量
           flutter --version
 
       - name: Set up Flutter environment for Android
