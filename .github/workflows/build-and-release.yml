@@ -80,8 +80,12 @@ jobs:
       - name: Set up Flutter environment for Windows
         if: ${{ matrix.platform == 'windows' }}
         run: |
-          choco install flutter
+          Set-ExecutionPolicy Bypass -Scope Process -Force;
+          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12;
+          iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+          choco install flutter -y
           echo "C:\\flutter\\bin" >> $GITHUB_ENV
+          flutter --version
 
       - name: Show workflow information
         run: |
@@ -94,6 +98,7 @@ jobs:
         env:
           PLATFORM: ${{ matrix.platform }}
           ARCH: ${{ matrix.arch }}
+          PATH: C:\flutter\bin;${{ secrets.PATH }}
 
       - name: Build Flutter packages for Linux/Android/macOS/iOS
         run: |
