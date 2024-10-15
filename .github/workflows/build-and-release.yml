@@ -11,8 +11,6 @@ on:
 
 jobs:
   build:
-    permissions:
-      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -22,7 +20,7 @@ jobs:
           - platform: windows
             arch: arm64
           - platform: ios
-            arch: x64  # Exclude iOS x64
+            arch: x64
           - platform: android
             arch: x64
         include:
@@ -40,16 +38,18 @@ jobs:
             arch: arm64
           - platform: windows
             arch: x64
+
     runs-on: ${{
       matrix.platform == 'windows' && 'windows-latest' ||
       matrix.platform == 'linux'   && 'ubuntu-latest' ||
       matrix.platform == 'android' && 'ubuntu-latest' ||
       matrix.platform == 'macos'   && 'macos-latest'  ||
-      matrix.platform == 'ios'     && 'macos-latest' 
-    }}
+      matrix.platform == 'ios'     && 'macos-latest' }}
+
     env:
       PLATFORM: ${{ matrix.platform }}
       ARCH: ${{ matrix.arch }}
+
     steps:
       - name: Checkout codebase
         uses: actions/checkout@v4
@@ -81,8 +81,7 @@ jobs:
         if: ${{ matrix.platform == 'windows' }}
         run: |
           choco install flutter
-          set PATH=%PATH%;C:\flutter\bin
-          flutter doctor
+          echo "##[add-path]C:\\flutter\\bin"  # Add flutter to PATH
 
       - name: Show workflow information
         run: |
