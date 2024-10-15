@@ -14,6 +14,7 @@ jobs:
     permissions:
       contents: write
     strategy:
+      fail-fast: false
       matrix:
         platform: [linux, windows, macos, android, ios]
         arch: [x64, arm64]
@@ -35,7 +36,6 @@ jobs:
             arch: x64
           - platform: ios
             arch: arm64
-    fail-fast: false
 
     runs-on: ${{ matrix.platform == 'macos' && matrix.arch == 'arm64' && 'macos-latest' || (matrix.platform == 'ios' && 'macos-latest' || 'ubuntu-latest') }}
 
