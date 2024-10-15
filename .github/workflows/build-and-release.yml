@@ -11,16 +11,18 @@ on:
 
 jobs:
   build:
+    needs: prepare
     permissions:
       contents: write
     strategy:
-      fail-fast: false
       matrix:
         platform: [linux, windows, macos, android, ios]
         arch: [x64, arm64]
         exclude:
           - platform: windows
             arch: arm64
+          - platform: ios
+            arch: x64  # Exclude iOS x64
         include:
           - platform: macos
             arch: arm64
@@ -113,7 +115,7 @@ jobs:
             build/windows/runner/Release/XStream.exe
             build/macos/Build/Products/Release/XStream.app
             build/app/outputs/flutter-apk/app-release.apk
-            # 如果你有 iOS 构建:
+            # If you have an iOS build:
             # build/ios/iphoneos/XStream.app
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
