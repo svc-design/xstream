@@ -58,11 +58,10 @@ jobs:
         if: ${{ matrix.platform == 'linux' || matrix.platform == 'android' }}
         run: |
           sudo apt-get update
-          sudo apt-get install -y curl unzip xz-utils libglu1-mesa
-          curl -o flutter.tar.xz https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.7.0-stable.tar.xz
-          tar xf flutter.tar.xz
-          export PATH="$PATH:$PWD/flutter/bin"
-          flutter doctor
+          sudo apt-get install -y snapd  # Install snap if not already installed
+          sudo snap install flutter --classic  # Install Flutter using snap
+          export PATH="$PATH:/snap/bin"  # Add snap binaries to PATH
+          flutter doctor  # Check Flutter installation
 
       - name: Set up Flutter environment for macOS/iOS
         if: ${{ matrix.platform == 'macos' || matrix.platform == 'ios' }}
