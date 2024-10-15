@@ -54,17 +54,38 @@ jobs:
       - name: Checkout codebase
         uses: actions/checkout@v4
 
-      - name: Set up Flutter environment for Linux/Android
-        if: ${{ matrix.platform == 'linux' || matrix.platform == 'android' }}
+      - name: Set up Flutter environment for Linux
+        if: ${{ matrix.platform == 'linux' }}
         run: |
           sudo apt-get update
-          sudo apt-get install -y snapd openjdk-17-jdk
-          echo "JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))" >> $GITHUB_ENV
-          java -version
           sudo snap install flutter --classic
           export PATH="$PATH:/snap/bin"
           flutter doctor
 
+      - name: Set up Flutter environment for Windows
+        if: ${{ matrix.platform == 'windows' }}
+        run: |
+          Set-ExecutionPolicy Bypass -Scope Process -Force;
+          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12;
+          iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+          choco install flutter -y
+          echo "C:\\flutter\\bin" >> $GITHUB_ENV
+          flutter --version
+
+      - name: Set up Flutter environment for Android
+        if: ${{ matrix.platform == 'android' }}
+        run: |
+          sudo apt-get update
+          sudo snap install flutter --classic
+          sudo apt-get install -y snapd openjdk-17-jdk
+          echo "JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))" >> $GITHUB_ENV
+          # Set OpenJDK 17 as the default version
+          sudo update-alternatives --set java /usr/lib/jvm/java-17-openjdk-amd64/bin/java
+          sudo update-alternatives --set javac /usr/lib/jvm/java-17-openjdk-amd64/bin/javac
+          export PATH="$PATH:/snap/bin"
+          java -version
+          flutter doctor
+          
       - name: Set up Flutter environment for macOS/iOS
         if: ${{ matrix.platform == 'macos' || matrix.platform == 'ios' }}
         run: |
@@ -77,16 +98,6 @@ jobs:
           brew install --cask flutter
           export PATH="$PATH:/Users/runner/Library/Flutter/bin"
           flutter doctor
-
-      - name: Set up Flutter environment for Windows
-        if: ${{ matrix.platform == 'windows' }}
-        run: |
-          Set-ExecutionPolicy Bypass -Scope Process -Force;
-          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12;
-          iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-          choco install flutter -y
-          echo "C:\\flutter\\bin" >> $GITHUB_ENV
-          flutter --version
 
       - name: Show workflow information
         run: |
