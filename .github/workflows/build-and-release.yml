@@ -23,20 +23,22 @@ jobs:
             arch: arm64
           - platform: ios
             arch: x64  # Exclude iOS x64
+          - platform: android
+            arch: x64  # Exclude android x64
         include:
           - platform: macos
             arch: arm64
-          - platform: android
-            arch: arm64
+          - platform: macos
+            arch: x64
           - platform: linux
             arch: arm64
           - platform: linux
             arch: x64
           - platform: windows
             arch: x64
-          - platform: macos
-            arch: x64
           - platform: ios
+            arch: arm64
+          - platform: android
             arch: arm64
 
     runs-on: ${{ matrix.platform == 'macos' && matrix.arch == 'arm64' && 'macos-latest' || (matrix.platform == 'ios' && 'macos-latest' || 'ubuntu-latest') }}
