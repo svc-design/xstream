@@ -28,8 +28,9 @@ XStream 支持以下平台：
 1. 确保您已安装 [Flutter SDK](https://flutter.dev/docs/get-started/install)。
 2. 克隆或下载该项目到本地目录。
 3. 在终端中，导航到项目目录，然后运行以下命令以创建项目：
-   ```bash
+
 flutter create .
+flutter pub get
 flutter run
 
 # 在 macOS 下构建开发环境
