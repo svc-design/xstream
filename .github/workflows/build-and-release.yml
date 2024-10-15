@@ -110,7 +110,14 @@ jobs:
       - name: List built files
         run: ls -R build
 
+      - name: Check if tag exists
+        id: check_tag
+        run: |
+          TAG_EXISTS=$(git tag --list "v${{ github.run_number }}-${{ github.run_id }}")
+          echo "tag_exists=$TAG_EXISTS" >> $GITHUB_ENV
+
       - name: Create Release
+        if: env.tag_exists != 'v*'  # 只有在标签不存在时才创建
         id: create_release
         uses: actions/create-release@v1
         with:
