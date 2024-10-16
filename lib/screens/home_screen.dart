@@ -26,7 +26,7 @@ class HomeScreen extends StatelessWidget {
             flex: 2,
             child: Column(
               children: [
-                const ConnectionForm(),
+                const ConnectionForm(), // 这里可以使用 const
                 Expanded(child: const DeviceList()),
               ],
             ),

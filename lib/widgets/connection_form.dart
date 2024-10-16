@@ -1,44 +1,55 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/services.dart' show rootBundle;
 
 class ConnectionForm extends StatefulWidget {
-  const ConnectionForm({super.key});
+  const ConnectionForm({Key? key}) : super(key: key);
 
   @override
   _ConnectionFormState createState() => _ConnectionFormState();
 }
 
 class _ConnectionFormState extends State<ConnectionForm> {
-  final TextEditingController _domainController = TextEditingController();
-  String _message = '';
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _serverController = TextEditingController();
+  final TextEditingController _uuidController = TextEditingController();
 
-  Future<void> _fetchNodeConfig() async {
-    final String domain = _domainController.text;
-    if (domain.isEmpty) {
-      setState(() {
-        _message = '请输入有效的 XTLS 域名';
-      });
+  Future<void> _generateConfigFile() async {
+    // 获取用户输入
+    String serverDomain = _serverController.text.trim();
+    String uuid = _uuidController.text.trim();
+
+    if (serverDomain.isEmpty || uuid.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('请输入有效的 XTLS Server 域名和 UUID')),
+      );
       return;
     }
 
     try {
-      final response = await http.get(Uri.parse('https://api.example.com/nodes?domain=$domain')); // 假设您的 API 是这样的
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        // 在这里处理获取到的节点配置数据
-        setState(() {
-          _message = '成功同步节点配置: ${data['nodes']}'; // 根据实际返回结构进行调整
-        });
-      } else {
-        setState(() {
-          _message = '无法获取节点配置: ${response.statusCode}';
-        });
-      }
+      // 读取 assets/xray-template.json 文件
+      String templateContent = await rootBundle.loadString('assets/xray-template.json');
+
+      // 替换模板中的占位符
+      String updatedContent = templateContent
+          .replaceAll('<SERVER_DOMAIN>', serverDomain)
+          .replaceAll('<UUID>', uuid);
+
+      // 定义最终的文件路径
+      String outputPath = '/opt/homebrew/etc/xray-vpn.json';
+
+      // 写入最终的配置文件
+      final file = File(outputPath);
+      await file.writeAsString(updatedContent);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('配置文件已成功生成: $outputPath')),
+      );
     } catch (e) {
-      setState(() {
-        _message = '请求失败: $e';
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('生成配置文件时出错: $e')),
+      );
     }
   }
 
@@ -46,26 +57,43 @@ class _ConnectionFormState extends State<ConnectionForm> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('输入 XTLS 域名', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 10),
-          TextField(
-            controller: _domainController,
-            decoration: InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: 'XTLS 域名',
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextFormField(
+              controller: _serverController,
+              decoration: const InputDecoration(
+                labelText: 'XTLS Server 域名',
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return '请输入有效的 XTLS Server 域名';
+                }
+                return null;
+              },
             ),
-          ),
-          const SizedBox(height: 10),
-          ElevatedButton(
-            onPressed: _fetchNodeConfig,
-            child: const Text('同步节点配置'),
-          ),
-          const SizedBox(height: 10),
-          Text(_message, style: TextStyle(color: Colors.red)),
-        ],
+            const SizedBox(height: 16.0),
+            TextFormField(
+              controller: _uuidController,
+              decoration: const InputDecoration(
+                labelText: 'XTLS UUID',
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return '请输入有效的 XTLS UUID';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 32.0),
+            ElevatedButton(
+              onPressed: _generateConfigFile,
+              child: const Text('生成配置文件'),
+            ),
+          ],
+        ),
       ),
     );
   }
