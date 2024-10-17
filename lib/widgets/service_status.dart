@@ -10,15 +10,12 @@ class ServiceStatus extends StatelessWidget {
       children: [
         const Text('服务状态', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 10),
-        const Text('ID: 512 765 950', style: TextStyle(fontSize: 16)),
+        const Text('服务地址: http:// Or Socks5://127.0.0.1:1080', style: TextStyle(fontSize: 16)),
         const SizedBox(height: 20),
-        const Text('一次性密码:', style: TextStyle(fontSize: 16)),
+        const Text('网络延迟:', style: TextStyle(fontSize: 16)),
         const SizedBox(height: 10),
-        Container(
-          height: 40,
-          color: Colors.grey.shade300,
-          child: Center(child: Text('-', style: TextStyle(fontSize: 16))),
-        ),
+        const Text('网络丢包:', style: TextStyle(fontSize: 16)),
+        const SizedBox(height: 20),
         const Spacer(),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
