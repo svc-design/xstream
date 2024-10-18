@@ -1,10 +1,6 @@
-# XStream
+# xstream
 
-A Cutting-Edge Network Accelerator Powered by XTLS VLESS
-
-XStream 是一个强大的网络加速工具，旨在提升您的在线体验。利用 XTLS VLESS 的先进功能，XStream 优化您的互联网连接，提供更快的速度和更可靠的访问，助您畅享流媒体、跨境电商以及 GitHub 等在线服务，确保流畅的性能和最低的延迟。
-
-通过 XStream 用户友好的界面，您可以轻松管理连接和设置。在享受更快互联网的同时，保持安全和匿名，无论您身处何地，XStream 都能为您提供无缝的连接体验。选择 XStream，提升您的浏览体验，让您保持连接、安全和高效。
+XStream 是一个用户友好的 GUI 客户端，轻松管理 Xray-core 连接配置，优化您的互联网连接，提供更快的速度和更可靠的访问，助您畅享流媒体、跨境电商以及 GitHub 等在线服务，确保流畅的性能和最低的延迟。
 
 ## 支持的平台
 
