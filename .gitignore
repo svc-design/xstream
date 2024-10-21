@@ -27,4 +27,5 @@ doc/api/
 .flutter-plugins-dependencies
 
 init_xstream.sh
+merged_code.dart
 .DS_Store
