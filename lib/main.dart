@@ -3,6 +3,7 @@ import 'screens/home_screen.dart';
 import 'screens/subscription_screen.dart';
 import 'screens/settings_screen.dart';
 import 'utils/app_theme.dart';
+import 'widgets/lock_button.dart'; // 导入锁按钮
 
 void main() {
   runApp(MyApp());
@@ -39,6 +40,9 @@ class _MainPageState extends State<MainPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('XStream'),
+        actions: [
+          LockButton(), // 将锁按钮添加到 AppBar 的右侧
+        ],
       ),
       body: _pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
