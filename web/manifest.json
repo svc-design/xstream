@@ -1,6 +1,6 @@
 {
-    "name": "xstream_app",
-    "short_name": "xstream_app",
+    "name": "xstream",
+    "short_name": "xstream",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

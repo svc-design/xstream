@@ -15,6 +15,14 @@ jobs:
       - name: Checkout codebase
         uses: actions/checkout@v4
 
+      # 检查敏感信息
+      - name: Install git-secrets
+        run: |
+          git clone https://github.com/awslabs/git-secrets.git
+          sudo make install -C git-secrets
+          git secrets --install
+          git secrets --scan
+
       - name: Install Flutter
         run: |
           sudo apt-get update
@@ -27,10 +35,7 @@ jobs:
         run: |
           flutter analyze
 
-      # 可选：使用 git-secrets 检查敏感信息
-      - name: Install git-secrets (optional, for sensitive info checks)
+      # 运行 Flutter 单元测试
+      - name: Run Flutter tests
         run: |
-          git clone https://github.com/awslabs/git-secrets.git
-          sudo make install -C git-secrets
-          git secrets --install
-          git secrets --scan
+          flutter test --reporter expanded
