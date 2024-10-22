@@ -1,9 +1,12 @@
+// lib/widgets/lock_button.dart
+
 import 'package:flutter/material.dart';
 
 class LockButton extends StatefulWidget {
   final Function(String)? onUnlock; // Callback to pass the password to another component
+  final Function()? onLock; // Callback to handle locking logic
 
-  const LockButton({Key? key, this.onUnlock}) : super(key: key);
+  const LockButton({Key? key, this.onUnlock, this.onLock}) : super(key: key);
 
   @override
   _LockButtonState createState() => _LockButtonState();
@@ -66,6 +69,11 @@ class _LockButtonState extends State<LockButton> {
       setState(() {
         _isLocked = true;
       });
+
+      // Call the onLock callback to handle locking logic
+      if (widget.onLock != null) {
+        widget.onLock!(); // Invoke lock callback
+      }
     }
   }
 
