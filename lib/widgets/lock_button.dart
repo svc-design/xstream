@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:process_run/shell.dart';
 
 class LockButton extends StatefulWidget {
+  final Function(String)? onUnlock; // Callback to pass the password to another component
+
+  const LockButton({Key? key, this.onUnlock}) : super(key: key);
+
   @override
   _LockButtonState createState() => _LockButtonState();
 }
@@ -20,7 +23,7 @@ class _LockButtonState extends State<LockButton> {
             controller: passwordController,
             obscureText: true,
             decoration: InputDecoration(
-              labelText: 'Password',
+              labelText: '密码',
               border: OutlineInputBorder(),
             ),
           ),
@@ -45,43 +48,15 @@ class _LockButtonState extends State<LockButton> {
     }
   }
 
-  Future<void> _attemptUnlock(String password) async {
-    var shell = Shell();
-    try {
-      // 示例命令，使用 sudo 提权
-      var results = await shell.run('''
-        echo $password | sudo -S echo "Checking permissions"
-      ''');
-
-      // 取第一个 ProcessResult 来检查 exitCode
-      if (results.first.exitCode == 0) {
-        setState(() {
-          _isLocked = false;
-        });
-      } else {
-        _showError('密码错误或权限不足');
-      }
-    } catch (e) {
-      _showError('解锁失败: $e');
+  void _attemptUnlock(String password) {
+    // Call the provided callback function with the password
+    if (widget.onUnlock != null) {
+      widget.onUnlock!(password);
     }
-  }
 
-  void _showError(String message) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('错误'),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('确定'),
-            ),
-          ],
-        );
-      },
-    );
+    setState(() {
+      _isLocked = false; // Assume unlock is successful for now
+    });
   }
 
   void _toggleLock() async {
