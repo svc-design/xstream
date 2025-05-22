@@ -100,7 +100,9 @@ jobs:
           refreshenv
           flutter --version
 
-      - name: Build Flutter App
+      - name: Build Flutter App (Unix-like)
+        if: ${{ matrix.platform != 'windows' }}
+        shell: bash
         run: |
           case $PLATFORM in
             linux) flutter build linux --release ;;
@@ -110,8 +112,13 @@ jobs:
               flutter build apk --release ;;
             macos) flutter build macos --release ;;
             ios) flutter build ios --release --no-codesign ;;
-            windows) flutter build windows --release ;;
           esac
+
+      - name: Build Flutter App (Windows)
+        if: ${{ matrix.platform == 'windows' }}
+        shell: powershell
+        run: |
+          flutter build windows --release
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
