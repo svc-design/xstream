@@ -13,6 +13,12 @@ UNAME_M := $(shell uname -m)
 
 all: macos-intel macos-arm64 windows linux android ios
 
+fix-macos-signing:
+	@echo "🧹 Cleaning extended attributes for macOS build..."
+	xattr -rc .
+	flutter clean
+	flutter pub get
+
 # MacOS Intel build
 macos-intel:
 	@if [ "$(UNAME_S)" = "Darwin" ] && [ "$(UNAME_M)" = "x86_64" ]; then \
@@ -71,3 +77,5 @@ ios:
 clean:
 	echo "Cleaning build outputs..."
 	$(FLUTTER) clean
+	rm -rf macos/Flutter/ephemeral
+	xattr -rc .
