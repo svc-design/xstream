@@ -2,11 +2,9 @@ name: Build and Release Flutter Packages
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -39,30 +37,56 @@ jobs:
           - platform: windows
             arch: x64
 
-    runs-on: ${{
-      matrix.platform == 'windows' && 'windows-latest' ||
-      matrix.platform == 'linux'   && 'ubuntu-latest' ||
-      matrix.platform == 'android' && 'ubuntu-latest' ||
-      matrix.platform == 'macos'   && 'macos-latest'  ||
-      matrix.platform == 'ios'     && 'macos-latest' }}
+    runs-on: ${{ matrix.platform == 'windows' && 'windows-latest' ||
+                 matrix.platform == 'linux'   && 'ubuntu-latest' ||
+                 matrix.platform == 'android' && 'ubuntu-latest' ||
+                 matrix.platform == 'macos'   && 'macos-latest' ||
+                 matrix.platform == 'ios'     && 'macos-latest' }}
 
     env:
       PLATFORM: ${{ matrix.platform }}
       ARCH: ${{ matrix.arch }}
 
     steps:
-      - name: Checkout codebase
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Flutter environment for Linux
-        if: ${{ matrix.platform == 'linux' }}
+      - name: Set up Flutter for Unix-like Platforms
+        if: ${{ matrix.platform != 'windows' }}
+        shell: bash
         run: |
-          sudo apt-get update
-          sudo snap install flutter --classic
-          export PATH="$PATH:/snap/bin"
+          echo "Setting up Flutter for $PLATFORM ($ARCH)"
+
+          if [[ "$PLATFORM" == "linux" ]]; then
+            sudo apt-get update
+            sudo snap install flutter --classic
+            export PATH="$PATH:/snap/bin"
+
+          elif [[ "$PLATFORM" == "android" ]]; then
+            sudo apt-get update
+            sudo snap install flutter --classic
+            sudo apt-get install -y openjdk-17-jdk
+            JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
+            echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
+            sudo update-alternatives --set java $JAVA_HOME/bin/java
+            sudo update-alternatives --set javac $JAVA_HOME/bin/javac
+            export PATH="$PATH:/snap/bin"
+            java -version
+
+          elif [[ "$PLATFORM" == "macos" || "$PLATFORM" == "ios" ]]; then
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            if [[ "$ARCH" == "arm64" ]]; then
+              eval "$(/opt/homebrew/bin/brew shellenv)"
+            else
+              eval "$(/usr/local/bin/brew shellenv)"
+            fi
+            brew install --cask flutter
+            export PATH="$PATH:$HOME/Library/Flutter/bin"
+          fi
+
           flutter doctor
 
-      - name: Set up Flutter environment for Windows
+      - name: Set up Flutter for Windows
         if: ${{ matrix.platform == 'windows' }}
         shell: powershell
         run: |
@@ -70,143 +94,55 @@ jobs:
           [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
           iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
           choco install flutter -y
-          echo "C:\flutter\bin" >> $GITHUB_ENV
+          echo "C:\flutter\bin" | Out-File -Append -FilePath $env:GITHUB_ENV
           Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
           refreshenv
           flutter --version
 
-      - name: Set up Flutter environment for Android
-        if: ${{ matrix.platform == 'android' }}
-        run: |
-          sudo apt-get update
-          sudo snap install flutter --classic
-          sudo apt-get install -y snapd openjdk-17-jdk
-          echo "JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))" >> $GITHUB_ENV
-          # Set OpenJDK 17 as the default version
-          sudo update-alternatives --set java /usr/lib/jvm/java-17-openjdk-amd64/bin/java
-          sudo update-alternatives --set javac /usr/lib/jvm/java-17-openjdk-amd64/bin/javac
-          export PATH="$PATH:/snap/bin"
-          java -version
-          flutter doctor
-
-      - name: Set up Flutter environment for macOS/iOS
-        if: ${{ matrix.platform == 'macos' || matrix.platform == 'ios' }}
-        run: |
-          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          if [[ "${{ matrix.arch }}" == "arm64" ]]; then
-            eval "$(/opt/homebrew/bin/brew shellenv)" # For Apple Silicon
-          else
-            eval "$(/usr/local/bin/brew shellenv)"  # For Intel
-          fi
-          brew install --cask flutter
-          export PATH="$PATH:/Users/runner/Library/Flutter/bin"
-          flutter doctor
-
-      - name: Show workflow information
-        run: |
-          echo "Platform: $PLATFORM, Architecture: $ARCH"
-
-      - name: Build Flutter packages for Windows
-        if: ${{ matrix.platform == 'windows' }}
-        shell: powershell
-        run: |
-          Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
-          refreshenv
-          flutter build windows --release
-        env:
-          PLATFORM: ${{ matrix.platform }}
-          ARCH: ${{ matrix.arch }}
-          PATH: C:\flutter\bin;${{ secrets.PATH }}
-
-      - name: Build Flutter packages for Linux/Android/macOS/iOS
+      - name: Build Flutter App
         run: |
           case $PLATFORM in
-            "linux")
-              flutter build linux --release
-              ;;
-            "android")
+            linux) flutter build linux --release ;;
+            android)
               export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
               export PATH=$JAVA_HOME/bin:$PATH
-              flutter build apk --release
-              ;;
-            "macos")
-              flutter build macos --release
-              ;;
-            "ios")
-              flutter build ios --release --no-codesign
-              ;;
+              flutter build apk --release ;;
+            macos) flutter build macos --release ;;
+            ios) flutter build ios --release --no-codesign ;;
+            windows) flutter build windows --release ;;
           esac
-        shell: bash
-        env:
-          PLATFORM: ${{ matrix.platform }}
-          ARCH: ${{ matrix.arch }}
 
-      - name: List built files
-        run: ls -R build
-
-      - name: Upload built packages to artifact
-        if: success()  # 仅在构建成功时执行
-        uses: actions/upload-artifact@v3
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: flutter-packages-${{ github.run_number }}-${{ github.run_id }}
+          name: build-${{ matrix.platform }}-${{ matrix.arch }}
           path: |
-            build/linux/x64/release/bundle/*
-            build/linux/arm64/release/bundle/*
-            build/windows/runner/Release/XStream.exe
-            build/macos/Build/Products/Release/xstream.app
-            build/app/outputs/flutter-apk/app-release.apk
-            build/ios/iphoneos/XStream.app
+            build/**/release/**/*
+            build/app/outputs/flutter-apk/*.apk
+            build/ios/iphoneos/*.app
+            build/windows/runner/Release/*.exe
 
   release:
     runs-on: ubuntu-latest
-    needs: build  # 确保构建任务完成后再执行
+    needs: build
     steps:
-      - name: Checkout codebase
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download built packages from artifact
-        uses: actions/download-artifact@v3
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
         with:
-          name: flutter-packages-${{ github.run_number }}-${{ github.run_id }}
+          path: release-artifacts
 
-      - name: Check if tag exists
-        id: check_tag
-        run: |
-          TAG_EXISTS=$(git tag --list "daily-build-${{ github.run_number }}-${{ github.run_id }}")
-          echo "tag_exists=$TAG_EXISTS" >> $GITHUB_ENV
+      - name: List downloaded files
+        run: ls -R release-artifacts
 
-      - name: Set tag_name
-        id: set_tag_name
-        run: |
-          # 根据标签是否存在设置 tag_name
-          if [ -z "$TAG_EXISTS" ]; then
-            echo "tag_name=daily-build-${{ github.run_number }}-${{ github.run_id }}" >> $GITHUB_ENV
-          else
-            echo "tag_name=$TAG_EXISTS" >> $GITHUB_ENV
-          fi
-
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        with:
-          tag_name: ${{ env.tag_name }}
-          release_name: Daily Build ${{ env.tag_name }}
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload built packages to Release
-        if: env.tag_exists != ''  # 只有在标签存在时才上传
+      - name: Publish GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ env.tag_name }}
+          tag_name: daily-${{ github.run_number }}
+          name: Daily Build ${{ github.run_number }}
           files: |
-            build/linux/x64/release/bundle/*
-            build/linux/arm64/release/bundle/*
-            build/windows/runner/Release/XStream.exe
-            build/macos/Build/Products/Release/xstream.app
-            build/app/outputs/flutter-apk/app-release.apk
-            build/ios/iphoneos/XStream.app
+            release-artifacts/**/*.{exe,app,apk,bundle}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
