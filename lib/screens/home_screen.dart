@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
+import '../../utils/native_bridge.dart'; // 引入平台桥接
 
 class HomeScreen extends StatelessWidget {
-  final bool isUnlocked; // 新参数，用于接收解锁状态
-  final String sudoPassword; // 新参数，用于接收 sudo 密码
+  final bool isUnlocked;
+  final String sudoPassword;
 
-  HomeScreen({Key? key, required this.isUnlocked, required this.sudoPassword}) : super(key: key); // 修改构造函数
+  HomeScreen({Key? key, required this.isUnlocked, required this.sudoPassword}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // 检测屏幕宽度和平台
         bool isLargeScreen = constraints.maxWidth > 600;
         bool isDesktop = Theme.of(context).platform == TargetPlatform.macOS ||
             Theme.of(context).platform == TargetPlatform.linux ||
@@ -20,7 +20,7 @@ class HomeScreen extends StatelessWidget {
         return isLargeScreen && isDesktop
             ? Row(
                 children: [
-                  // 左侧：状态信息和启动按钮
+                  // 左侧：状态信息和按钮
                   Expanded(
                     flex: 1,
                     child: Container(
@@ -47,11 +47,25 @@ class HomeScreen extends StatelessWidget {
                                 isUnlocked ? 'Service running' : 'Service not running',
                                 style: TextStyle(color: isUnlocked ? Colors.green : Colors.red),
                               ),
-                              ElevatedButton(
-                                onPressed: () {
-                                  // 启动服务的逻辑
-                                },
-                                child: Text('Start Service'),
+                              Row(
+                                children: [
+                                  ElevatedButton(
+                                    onPressed: () async {
+                                      final msg = await NativeBridge.startXrayService();
+                                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+                                    },
+                                    child: Text('Start'),
+                                  ),
+                                  SizedBox(width: 8),
+                                  ElevatedButton(
+                                    onPressed: () async {
+                                      final msg = await NativeBridge.stopXrayService();
+                                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+                                    },
+                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                                    child: Text('Stop'),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -76,32 +90,11 @@ class HomeScreen extends StatelessWidget {
               )
             : ListView(
                 children: [
-                  // 仅在手机屏幕上显示配置项
-                  CustomListTile(
-                    title: 'VLESS',
-                    subtitle: 'tcp | none',
-                    status: isUnlocked ? 'Service running' : 'Service not running',
-                  ),
-                  CustomListTile(
-                    title: 'VMess',
-                    subtitle: 'tcp | none',
-                    status: isUnlocked ? 'Service running' : 'Service not running',
-                  ),
-                  CustomListTile(
-                    title: 'Shadowsocks',
-                    subtitle: 'tcp | none',
-                    status: isUnlocked ? 'Service running' : 'Service not running',
-                  ),
-                  CustomListTile(
-                    title: 'Trojan',
-                    subtitle: 'tcp | tls',
-                    status: isUnlocked ? 'Service running' : 'Service not running',
-                  ),
-                  CustomListTile(
-                    title: 'Socks',
-                    subtitle: 'tcp | none',
-                    status: isUnlocked ? 'Service running' : 'Service not running',
-                  ),
+                  CustomListTile(title: 'VLESS', subtitle: 'tcp | none', status: isUnlocked ? 'Service running' : 'Service not running'),
+                  CustomListTile(title: 'VMess', subtitle: 'tcp | none', status: isUnlocked ? 'Service running' : 'Service not running'),
+                  CustomListTile(title: 'Shadowsocks', subtitle: 'tcp | none', status: isUnlocked ? 'Service running' : 'Service not running'),
+                  CustomListTile(title: 'Trojan', subtitle: 'tcp | tls', status: isUnlocked ? 'Service running' : 'Service not running'),
+                  CustomListTile(title: 'Socks', subtitle: 'tcp | none', status: isUnlocked ? 'Service running' : 'Service not running'),
                 ],
               );
       },
@@ -133,7 +126,7 @@ class CustomListTile extends StatelessWidget {
             )
           : null,
       onTap: () {
-        // 处理点击事件的逻辑，例如启动服务
+        // 点击服务项逻辑，未来可扩展
       },
     );
   }
