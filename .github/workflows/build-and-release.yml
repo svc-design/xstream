@@ -86,6 +86,19 @@ jobs:
 
           flutter doctor
 
+      - name: Create DMG package (macOS only)
+        if: ${{ matrix.platform == 'macos' }}
+        run: |
+          brew install create-dmg
+          create-dmg \
+            --volname "XStream Installer" \
+            --window-pos 200 120 \
+            --window-size 800 400 \
+            --icon-size 100 \
+            --app-drop-link 600 185 \
+            build/macos/XStream.dmg \
+            build/macos/Build/Products/Release/Runner.app
+
       - name: Set up Flutter for Windows
         if: ${{ matrix.platform == 'windows' }}
         shell: powershell
@@ -151,6 +164,10 @@ jobs:
           tag_name: daily-${{ github.run_number }}
           name: Daily Build ${{ github.run_number }}
           files: |
-            release-artifacts/**/*.{exe,app,apk,bundle}
+            release-artifacts/**/*.apk
+            release-artifacts/**/*.app
+            release-artifacts/**/*.dmg
+            release-artifacts/**/*.exe
+            release-artifacts/**/*.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
