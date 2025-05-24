@@ -107,7 +107,6 @@ jobs:
           [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
           iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
           choco install flutter -y
-          # ✅ 正确路径是 C:\tools\flutter\bin
           echo "C:\tools\flutter\bin" | Out-File -Append -FilePath $env:GITHUB_PATH
           Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
           refreshenv
@@ -133,15 +132,22 @@ jobs:
         run: |
           flutter build windows --release
 
-      - name: Upload build artifact
+       - name: Show filtered build output
+         shell: bash
+         run: |
+           echo "🎯 Distributable output for $PLATFORM-$ARCH:"
+           find build -type f \( -iname "*.apk" -o -iname "*.dmg" -o -iname "*.exe" -o -iname "*.aab" -o -iname "*.app" \) | tee /tmp/${{ matrix.platform }}-${{ matrix.arch }}-release.log
+
+      - name: Upload filtered artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-${{ matrix.platform }}-${{ matrix.arch }}
           path: |
-            build/**/release/**/*
-            build/app/outputs/flutter-apk/*.apk
+            build/**/*.apk
+            build/**/*.dmg
+            build/**/*.exe
+            build/**/*.aab
             build/ios/iphoneos/*.app
-            build/windows/runner/Release/*.exe
 
   release:
     runs-on: ubuntu-latest
@@ -155,8 +161,12 @@ jobs:
         with:
           path: release-artifacts
 
-      - name: List downloaded files
-        run: ls -R release-artifacts
+      - name: List all downloaded artifacts
+        run: |
+          echo "🎯 Listing contents of release-artifacts"
+          find release-artifacts -type f | tee /tmp/artifacts.list
+          echo "📦 Artifact summary:"
+          cat /tmp/artifacts.list
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v1
