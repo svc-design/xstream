@@ -133,13 +133,15 @@ jobs:
         if: ${{ matrix.platform == 'macos' }}
         run: |
           brew install create-dmg
+          DMG_NAME="XStream-${ARCH}.dmg"
+          echo "💽 Creating macOS DMG: $DMG_NAME"
           create-dmg \
             --volname "XStream Installer" \
             --window-pos 200 120 \
             --window-size 800 400 \
             --icon-size 100 \
             --app-drop-link 600 185 \
-            build/macos/XStream.dmg \
+            "build/macos/$DMG_NAME" \
             build/macos/Build/Products/Release/Runner.app
 
       - name: Zip iOS Runner.app
@@ -154,7 +156,7 @@ jobs:
         with:
           name: build-${{ matrix.platform }}-${{ matrix.arch }}
           path: |
-            build/macos/XStream.dmg
+            build/macos/XStream-${{ matrix.arch }}.dmg
             build/linux/x64/release/bundle/xstream
             build/windows/x64/runner/Release/xstream.exe
             build/app/outputs/flutter-apk/app-release.apk
@@ -192,6 +194,6 @@ jobs:
             release-artifacts/**/app-release.apk
             release-artifacts/**/app-release.aab
             release-artifacts/**/xstream.app.zip
-            release-artifacts/**/*.dmg
+            release-artifacts/**/XStream-*.dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
