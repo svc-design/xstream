@@ -132,11 +132,11 @@ jobs:
         run: |
           flutter build windows --release
 
-       - name: Show filtered build output
-         shell: bash
-         run: |
-           echo "🎯 Distributable output for $PLATFORM-$ARCH:"
-           find build -type f \( -iname "*.apk" -o -iname "*.dmg" -o -iname "*.exe" -o -iname "*.aab" -o -iname "*.app" \) | tee /tmp/${{ matrix.platform }}-${{ matrix.arch }}-release.log
+      - name: Show filtered build output
+        shell: bash
+        run: |
+          echo "🎯 Distributable output for $PLATFORM-$ARCH:"
+          find build -type f \( -iname "*.apk" -o -iname "*.dmg" -o -iname "*.exe" -o -iname "*.aab" -o -iname "*.app" \) | tee /tmp/${{ matrix.platform }}-${{ matrix.arch }}-release.log
 
       - name: Upload filtered artifacts
         uses: actions/upload-artifact@v4
