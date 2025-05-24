@@ -6,7 +6,9 @@ PROJECT_NAME = XStream
 UNAME_S := $(shell uname -s)
 UNAME_M := $(shell uname -m)
 
-# Arch aliases for CI compatibility
+.PHONY: all macos-intel macos-arm64 windows-x64 linux-x64 linux-arm64 android-arm64 ios-arm64 clean
+
+# Aliases for CI
 macos-x64: macos-intel
 macos-arm64: macos-arm64
 windows-x64: windows-x64
@@ -14,8 +16,6 @@ linux-x64: linux-x64
 linux-arm64: linux-arm64
 android-arm64: android-arm64
 ios-arm64: ios-arm64
-
-.PHONY: all macos-intel macos-arm64 windows-x64 linux-x64 linux-arm64 android-arm64 ios-arm64 clean dmg zip-ios
 
 all: macos-intel macos-arm64 windows-x64 linux-x64 linux-arm64 android-arm64 ios-arm64
 
@@ -28,11 +28,9 @@ fix-macos-signing:
 macos-intel:
 	@if [ "$(UNAME_S)" = "Darwin" ] && [ "$(UNAME_M)" = "x86_64" ]; then \
 		echo "Building for macOS (Intel)..."; \
-		$(FLUTTER) build macos; \
+		$(FLUTTER) build macos --release; \
 		brew install create-dmg || true; \
 		DMG_NAME=XStream-x86_64.dmg; \
-		mkdir -p build/macos/bin; \
-		cp build/macos/Build/Products/Release/xstream build/macos/bin/xstream; \
 		create-dmg \
 			--volname "XStream Installer" \
 			--window-pos 200 120 \
@@ -40,7 +38,7 @@ macos-intel:
 			--icon-size 100 \
 			--app-drop-link 600 185 \
 			build/macos/$$DMG_NAME \
-			build/macos/bin; \
+			build/macos/Build/Products/Release/Runner.app; \
 	else \
 		echo "Skipping macOS Intel build (not on Intel architecture)"; \
 	fi
@@ -48,11 +46,9 @@ macos-intel:
 macos-arm64:
 	@if [ "$(UNAME_S)" = "Darwin" ] && [ "$(UNAME_M)" = "arm64" ]; then \
 		echo "Building for macOS (ARM64)..."; \
-		$(FLUTTER) build macos; \
+		$(FLUTTER) build macos --release; \
 		brew install create-dmg || true; \
 		DMG_NAME=XStream-arm64.dmg; \
-		mkdir -p build/macos/bin; \
-		cp build/macos/Build/Products/Release/xstream build/macos/bin/xstream; \
 		create-dmg \
 			--volname "XStream Installer" \
 			--window-pos 200 120 \
@@ -60,12 +56,10 @@ macos-arm64:
 			--icon-size 100 \
 			--app-drop-link 600 185 \
 			build/macos/$$DMG_NAME \
-			build/macos/bin; \
+			build/macos/Build/Products/Release/Runner.app; \
 	else \
 		echo "Skipping macOS ARM64 build (not on ARM architecture)"; \
 	fi
-
-
 
 windows-x64:
 	@if [ "$(UNAME_S)" = "Windows_NT" ] || [ "$(OS)" = "Windows_NT" ]; then \
@@ -101,7 +95,7 @@ linux-arm64:
 android-arm64:
 	@if [ "$(UNAME_S)" = "Linux" ] || [ "$(UNAME_S)" = "Darwin" ]; then \
 		echo "Building for Android arm64..."; \
-		$(FLUTTER) build apk; \
+		$(FLUTTER) build apk --release; \
 	else \
 		echo "Android build not supported on this platform"; \
 	fi
@@ -114,8 +108,6 @@ ios-arm64:
 	else \
 		echo "iOS build only supported on macOS"; \
 	fi
-
-
 
 clean:
 	echo "Cleaning build outputs..."
