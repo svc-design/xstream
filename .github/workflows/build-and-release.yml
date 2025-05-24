@@ -152,7 +152,7 @@ jobs:
           name: build-${{ matrix.platform }}-${{ matrix.arch }}
           path: |
             build/macos/*.dmg
-            build/linux/**/release/bundle/xstream-*
+            build/linux/x64/release/bundle/xstream
             build/windows/x64/runner/Release/xstream.exe
             build/app/outputs/flutter-apk/app-release.apk
             build/ios/iphoneos/XStream.app.zip
