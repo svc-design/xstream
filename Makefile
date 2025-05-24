@@ -6,6 +6,15 @@ PROJECT_NAME = XStream
 UNAME_S := $(shell uname -s)
 UNAME_M := $(shell uname -m)
 
+# Arch aliases for CI compatibility
+macos-x64: macos-intel
+macos-arm64: macos-arm64
+windows-x64: windows-x64
+linux-x64: linux-x64
+linux-arm64: linux-arm64
+android-arm64: android-arm64
+ios-arm64: ios-arm64
+
 .PHONY: all macos-intel macos-arm64 windows-x64 linux-x64 linux-arm64 android-arm64 ios-arm64 clean dmg zip-ios
 
 all: macos-intel macos-arm64 windows-x64 linux-x64 linux-arm64 android-arm64 ios-arm64
@@ -59,14 +68,11 @@ macos-arm64:
 
 
 windows-x64:
-	@if [ "$(UNAME_S)" = "Linux" ] || [ "$(UNAME_S)" = "Darwin" ]; then \
-		echo "Building for Windows (cross-compile)..."; \
-		$(FLUTTER) build windows --release; \
-	elif [ "$(OS)" = "Windows_NT" ]; then \
+	@if [ "$(UNAME_S)" = "Windows_NT" ] || [ "$(OS)" = "Windows_NT" ]; then \
 		echo "Building for Windows (native)..."; \
 		flutter build windows --release; \
 	else \
-		echo "Windows build not supported on this platform"; \
+		echo "Windows build only supported on native Windows systems"; \
 	fi
 
 linux-x64:
@@ -80,9 +86,14 @@ linux-x64:
 
 linux-arm64:
 	@if [ "$(UNAME_S)" = "Linux" ]; then \
-		echo "Building for Linux arm64..."; \
-		$(FLUTTER) build linux --release --target-platform=linux-arm64; \
-		mv build/linux/arm64/release/bundle/xstream build/linux/arm64/release/bundle/xstream-arm64; \
+		if [ "$(UNAME_M)" = "aarch64" ] || [ "$(UNAME_M)" = "arm64" ]; then \
+			echo "Building for Linux arm64..."; \
+			$(FLUTTER) build linux --release --target-platform=linux-arm64; \
+			mv build/linux/arm64/release/bundle/xstream build/linux/arm64/release/bundle/xstream-arm64; \
+		else \
+			echo "❌ Cross-build from x64 to arm64 is not supported. Please run this on an arm64 host."; \
+			exit 0; \
+		fi \
 	else \
 		echo "Linux arm64 build only supported on Linux systems"; \
 	fi
@@ -103,6 +114,8 @@ ios-arm64:
 	else \
 		echo "iOS build only supported on macOS"; \
 	fi
+
+
 
 clean:
 	echo "Cleaning build outputs..."
