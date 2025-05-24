@@ -100,14 +100,7 @@ jobs:
         shell: bash
         run: |
           case $PLATFORM in
-            linux)
-              flutter build linux --release
-              BIN_PATH="build/linux/${ARCH}/release/bundle/xstream"
-              mkdir -pv $BIN_PATH
-              if [ -f "$BIN_PATH" ]; then
-                mv "$BIN_PATH" "build/linux/${ARCH}/release/bundle/xstream-${ARCH}"
-              fi
-              ;;
+            linux) flutter build linux --release ;;
             macos) flutter build macos --release ;;
             ios) flutter build ios --release --no-codesign ;;
             android)
