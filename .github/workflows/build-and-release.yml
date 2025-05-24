@@ -15,6 +15,8 @@ jobs:
         platform: [linux, windows, macos, android, ios]
         arch: [x64, arm64]
         exclude:
+          - platform: linux
+            arch: arm64
           - platform: windows
             arch: arm64
           - platform: ios
@@ -28,8 +30,6 @@ jobs:
             arch: arm64
           - platform: linux
             arch: x64
-          - platform: linux
-            arch: arm64
           - platform: android
             arch: arm64
           - platform: ios
@@ -56,12 +56,10 @@ jobs:
         shell: bash
         run: |
           echo "Setting up Flutter for $PLATFORM ($ARCH)"
-
           if [[ "$PLATFORM" == "linux" ]]; then
             sudo apt-get update
             sudo snap install flutter --classic
             export PATH="$PATH:/snap/bin"
-
           elif [[ "$PLATFORM" == "android" ]]; then
             sudo apt-get update
             sudo snap install flutter --classic
@@ -72,7 +70,6 @@ jobs:
             sudo update-alternatives --set javac $JAVA_HOME/bin/javac
             export PATH="$PATH:/snap/bin"
             java -version
-
           elif [[ "$PLATFORM" == "macos" || "$PLATFORM" == "ios" ]]; then
             /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
             if [[ "$ARCH" == "arm64" ]]; then
@@ -83,7 +80,6 @@ jobs:
             brew install --cask flutter
             export PATH="$PATH:$HOME/Library/Flutter/bin"
           fi
-
           flutter doctor
 
       - name: Set up Flutter for Windows
@@ -94,7 +90,6 @@ jobs:
           [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
           iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
           choco install flutter -y
-          # ✅ 正确路径是 C:\tools\flutter\bin
           echo "C:\tools\flutter\bin" | Out-File -Append -FilePath $env:GITHUB_PATH
           Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
           refreshenv
@@ -105,13 +100,20 @@ jobs:
         shell: bash
         run: |
           case $PLATFORM in
-            linux) flutter build linux --release ;;
+            linux)
+              flutter build linux --release
+              BIN_PATH="build/linux/${ARCH}/release/bundle/xstream"
+              mkdir -pv $BIN_PATH
+              if [ -f "$BIN_PATH" ]; then
+                mv "$BIN_PATH" "build/linux/${ARCH}/release/bundle/xstream-${ARCH}"
+              fi
+              ;;
+            macos) flutter build macos --release ;;
+            ios) flutter build ios --release --no-codesign ;;
             android)
               export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
               export PATH=$JAVA_HOME/bin:$PATH
               flutter build apk --release ;;
-            macos) flutter build macos --release ;;
-            ios) flutter build ios --release --no-codesign ;;
           esac
 
       - name: Build Flutter App (Windows)
@@ -120,15 +122,47 @@ jobs:
         run: |
           flutter build windows --release
 
-      - name: Upload build artifact
+      - name: Create DMG package (macOS only)
+        if: ${{ matrix.platform == 'macos' }}
+        run: |
+          brew install create-dmg
+          DMG_NAME="XStream-${ARCH}.dmg"
+          echo "💽 Creating macOS DMG: $DMG_NAME"
+          create-dmg \
+            --volname "XStream Installer" \
+            --window-pos 200 120 \
+            --window-size 800 400 \
+            --icon-size 100 \
+            --app-drop-link 600 185 \
+            build/macos/$DMG_NAME \
+            build/macos/Build/Products/Release/Runner.app
+
+      - name: Zip iOS Runner.app
+        if: ${{ matrix.platform == 'ios' }}
+        run: |
+          cd build/ios/iphoneos
+          zip -r XStream.app.zip Runner.app
+
+      - name: Show filtered build output
+        shell: bash
+        run: |
+          echo "🎯 Distributable output for $PLATFORM-$ARCH:"
+          if [[ "$PLATFORM" == "linux" ]]; then
+            find build/linux -type f -executable -exec file {} \; | grep ELF | cut -d: -f1 | tee /tmp/${{ matrix.platform }}-${{ matrix.arch }}-release.log
+          else
+            find build -type f \( -iname "*.apk" -o -iname "*.dmg" -o -iname "*.exe" -o -iname "*.aab" -o -iname "*.app" \) | tee /tmp/${{ matrix.platform }}-${{ matrix.arch }}-release.log
+          fi
+
+      - name: Upload filtered artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-${{ matrix.platform }}-${{ matrix.arch }}
           path: |
-            build/**/release/**/*
-            build/app/outputs/flutter-apk/*.apk
-            build/ios/iphoneos/*.app
-            build/windows/runner/Release/*.exe
+            build/macos/*.dmg
+            build/linux/**/release/bundle/xstream-*
+            build/windows/x64/runner/Release/xstream.exe
+            build/app/outputs/flutter-apk/app-release.apk
+            build/ios/iphoneos/XStream.app.zip
 
   release:
     runs-on: ubuntu-latest
@@ -142,15 +176,22 @@ jobs:
         with:
           path: release-artifacts
 
-      - name: List downloaded files
-        run: ls -R release-artifacts
-
+      - name: List all downloaded artifacts
+        run: |
+          echo "🎯 Listing contents of release-artifacts"
+          find release-artifacts -type f | tee /tmp/artifacts.list
+          echo "📦 Artifact summary:"
+          cat /tmp/artifacts.list
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: daily-${{ github.run_number }}
           name: Daily Build ${{ github.run_number }}
           files: |
-            release-artifacts/**/*.{exe,app,apk,bundle}
+            release-artifacts/**/xstream-*
+            release-artifacts/**/xstream.exe
+            release-artifacts/**/app-release.apk
+            release-artifacts/**/XStream.app.zip
+            release-artifacts/**/*.dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
