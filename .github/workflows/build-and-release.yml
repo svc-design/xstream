@@ -146,7 +146,7 @@ jobs:
         if: ${{ matrix.platform == 'ios' }}
         run: |
           cd build/ios/iphoneos
-          zip -r Runner.app.zip Runner.app
+          zip -r xstream.app.zip Runner.app
 
 
       - name: Upload filtered artifacts
@@ -154,13 +154,13 @@ jobs:
         with:
           name: build-${{ matrix.platform }}-${{ matrix.arch }}
           path: |
-            build/macos/*.dmg
-            build/linux/**/release/**/xstream
+            build/macos/XStream.dmg
+            build/linux/x64/release/bundle/xstream
             build/windows/x64/runner/Release/xstream.exe
             build/app/outputs/flutter-apk/app-release.apk
             build/app/outputs/apk/release/app-release.apk
             build/app/outputs/bundle/release/*.aab
-            build/ios/iphoneos/Runner.app
+            build/ios/iphoneos/xstream.app.zip
 
   release:
     runs-on: ubuntu-latest
@@ -191,7 +191,7 @@ jobs:
             release-artifacts/**/xstream.exe
             release-artifacts/**/app-release.apk
             release-artifacts/**/app-release.aab
-            release-artifacts/**/Runner.app/**
+            release-artifacts/**/xstream.app.zip
             release-artifacts/**/*.dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
