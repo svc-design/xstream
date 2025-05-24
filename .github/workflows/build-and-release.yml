@@ -99,6 +99,12 @@ jobs:
             build/macos/XStream.dmg \
             build/macos/Build/Products/Release/Runner.app
 
+      - name: Zip iOS Runner.app
+        if: ${{ matrix.platform == 'ios' }}
+        run: |
+          cd build/ios/iphoneos
+          zip -r Runner.app.zip Runner.app
+
       - name: Set up Flutter for Windows
         if: ${{ matrix.platform == 'windows' }}
         shell: powershell
@@ -136,18 +142,24 @@ jobs:
         shell: bash
         run: |
           echo "🎯 Distributable output for $PLATFORM-$ARCH:"
-          find build -type f \( -iname "*.apk" -o -iname "*.dmg" -o -iname "*.exe" -o -iname "*.aab" -o -iname "*.app" \) | tee /tmp/${{ matrix.platform }}-${{ matrix.arch }}-release.log
+          if [[ "$PLATFORM" == "linux" ]]; then
+            find build/linux -type f -executable -exec file {} \; | grep ELF | cut -d: -f1 | tee /tmp/${{ matrix.platform }}-${{ matrix.arch }}-release.log
+          else
+            find build -type f \( -iname "*.apk" -o -iname "*.dmg" -o -iname "*.exe" -o -iname "*.aab" -o -iname "*.app" \) | tee /tmp/${{ matrix.platform }}-${{ matrix.arch }}-release.log
+          fi
 
       - name: Upload filtered artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-${{ matrix.platform }}-${{ matrix.arch }}
           path: |
-            build/**/*.apk
-            build/**/*.dmg
-            build/**/*.exe
-            build/**/*.aab
-            build/ios/iphoneos/*.app
+            build/macos/*.dmg
+            build/linux/**/release/**/xstream
+            build/windows/x64/runner/Release/xstream.exe
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/apk/release/app-release.apk
+            build/app/outputs/bundle/release/*.aab
+            build/ios/iphoneos/Runner.app
 
   release:
     runs-on: ubuntu-latest
@@ -174,10 +186,11 @@ jobs:
           tag_name: daily-${{ github.run_number }}
           name: Daily Build ${{ github.run_number }}
           files: |
-            release-artifacts/**/*.apk
-            release-artifacts/**/*.app
+            release-artifacts/**/xstream
+            release-artifacts/**/xstream.exe
+            release-artifacts/**/app-release.apk
+            release-artifacts/**/app-release.aab
+            release-artifacts/**/Runner.app/**
             release-artifacts/**/*.dmg
-            release-artifacts/**/*.exe
-            release-artifacts/**/*.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
