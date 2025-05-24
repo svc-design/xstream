@@ -12,8 +12,8 @@ dependencies:
   provider: ^6.1.2      # 管理全局状态的插件
   http: ^1.2.2          # 网络请求
   path_provider: ^2.1.5 # 访问文件系统
-  process_run: ^0.12.2  # 执行 shell 命令和管理权限
-  flutter_lints: ^2.0.0
+  process_run: ^1.2.4  # 执行 shell 命令和管理权限
+  flutter_lints: ^5.0.0
 
 dev_dependencies:
   flutter_test:
