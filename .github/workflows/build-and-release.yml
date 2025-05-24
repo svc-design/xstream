@@ -109,10 +109,15 @@ jobs:
         shell: bash
         run: |
           echo "🎯 Distributable output for $PLATFORM-$ARCH:"
-          if [[ "$PLATFORM" == "linux" ]]; then
-              find build/linux -type f -executable -exec file {} \; | grep ELF | cut -d: -f1 | tee /tmp/${{ matrix.platform }}-${{ matrix.arch }}-release.log
+          if [ -d build ]; then
+            if [[ "$PLATFORM" == "linux" ]]; then
+              find build/linux -type f -executable -exec file {} \; | grep ELF | cut -d: -f1 | tee /tmp/${PLATFORM}-${ARCH}-release.log
+            else
+              find build -type f \( -iname "*.apk" -o -iname "*.dmg" -o -iname "*.exe" -o -iname "*.aab" -o -iname "*.app" \) | tee /tmp/${PLATFORM}-${ARCH}-release.log
+            fi
           else
-              find build -type f \( -iname "*.apk" -o -iname "*.dmg" -o -iname "*.exe" -o -iname "*.aab" -o -iname "*.app" \) | tee /tmp/${{ matrix.platform }}-${{ matrix.arch }}-release.log
+            echo "⚠️ No build output directory found."
+            touch /tmp/${PLATFORM}-${ARCH}-release.log
           fi
 
       - name: Upload filtered artifacts
