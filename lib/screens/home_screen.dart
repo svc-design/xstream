@@ -14,37 +14,28 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String _activeNode = '';
 
+  // VPN 节点配置列表，使用简化的 nodeName 映射（用于 plist 拼接）
   final List<Map<String, String>> vpnNodes = [
-    {
-      'name': '🇺🇸 US-VPN',
-      'protocol': 'VLESS',
-      'config': '/opt/homebrew/etc/xray-vpn-us-node.json'
-    },
-    {
-      'name': '🇨🇦 CA-VPN',
-      'protocol': 'VMess',
-      'config': '/opt/homebrew/etc/xray-vpn-ca-node.json'
-    },
-    {
-      'name': '🇯🇵 Tokyo-VPN',
-      'protocol': 'Trojan',
-      'config': '/opt/homebrew/etc/xray-vpn-tky-node.json'
-    },
+    {'name': 'US-VPN', 'label': '🇺🇸 US-VPN', 'protocol': 'VLESS'},
+    {'name': 'CA-VPN', 'label': '🇨🇦 CA-VPN', 'protocol': 'VMess'},
+    {'name': 'Tokyo-VPN', 'label': '🇯🇵 Tokyo-VPN', 'protocol': 'Trojan'},
   ];
 
   Future<void> _toggleNode(Map<String, String> node) async {
     final nodeName = node['name']!;
-    final configPath = node['config']!;
 
     if (_activeNode == nodeName) {
-      final msg = await NativeBridge.stopXrayService();
+      // 停止当前节点
+      final msg = await NativeBridge.stopNodeService(nodeName);
       setState(() => _activeNode = '');
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } else {
-      // 先关闭当前
-      await NativeBridge.stopXrayService();
+      // 停止旧节点（如有）
+      if (_activeNode.isNotEmpty) {
+        await NativeBridge.stopNodeService(_activeNode);
+      }
       // 启动新节点
-      final msg = await NativeBridge.startNodeService(configPath, nodeName);
+      final msg = await NativeBridge.startNodeService(nodeName);
       setState(() => _activeNode = nodeName);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     }
@@ -57,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
         final node = vpnNodes[index];
         final isActive = _activeNode == node['name'];
         return ListTile(
-          title: Text(node['name']!),
+          title: Text(node['label']!),
           subtitle: Text('${node['protocol']} | tcp'),
           trailing: IconButton(
             icon: Icon(
@@ -83,6 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
         return isLargeScreen && isDesktop
             ? Row(
                 children: [
+                  // 左侧：状态区域
                   Expanded(
                     flex: 1,
                     child: Container(
@@ -102,6 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
+                  // 右侧：VPN 节点列表
                   Expanded(flex: 2, child: _buildVpnListView()),
                 ],
               )
