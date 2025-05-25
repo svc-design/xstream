@@ -128,7 +128,7 @@ jobs:
             --icon-size 100 \
             --app-drop-link 600 185 \
             build/macos/$DMG_NAME \
-            build/macos/Build/Products/Release/Runner.app
+            build/macos/Build/Products/Release/xstream.app
 
       - name: Zip iOS Runner.app
         if: ${{ matrix.platform == 'ios' }}
