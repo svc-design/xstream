@@ -7,28 +7,37 @@ class AppDelegate: FlutterAppDelegate {
     if let window = mainFlutterWindow,
        let controller = window.contentViewController as? FlutterViewController {
 
-      let channel = FlutterMethodChannel(name: "com.xstream/native",
-                                         binaryMessenger: controller.engine.binaryMessenger)
+      let channel = FlutterMethodChannel(
+        name: "com.xstream/native",
+        binaryMessenger: controller.engine.binaryMessenger
+      )
 
       channel.setMethodCallHandler { call, result in
         switch call.method {
 
         case "startNodeService":
           if let args = call.arguments as? [String: Any],
-             let configPath = args["config"] as? String,
              let nodeName = args["node"] as? String {
             let safeName = nodeName.lowercased().replacingOccurrences(of: "-", with: "_")
-            let logPath = "/tmp/xray-vpn-\(safeName)-log"
-            let cmd = "nohup /opt/homebrew/bin/xray run -c \(configPath) &> \(logPath) &"
+            let plistPath = "/Users/\(NSUserName())/Library/LaunchAgents/com.xstream.xray-node-\(safeName).plist"
+            let cmd = "launchctl load \(plistPath)"
             self.runWithPrivileges(command: cmd)
-            result("已启动 \(nodeName)")
+            result("✅ 节点 \(nodeName) 启动完成")
           } else {
-            result(FlutterError(code: "INVALID_ARGS", message: "Missing config or node", details: nil))
+            result(FlutterError(code: "INVALID_ARGS", message: "Missing node name", details: nil))
           }
 
-        case "stopXrayService":
-          self.runWithPrivileges(command: "pkill -f '/opt/homebrew/bin/xray run'")
-          result("所有节点已停止")
+        case "stopNodeService":
+          if let args = call.arguments as? [String: Any],
+             let nodeName = args["node"] as? String {
+            let safeName = nodeName.lowercased().replacingOccurrences(of: "-", with: "_")
+            let plistPath = "/Users/\(NSUserName())/Library/LaunchAgents/com.xstream.xray-node-\(safeName).plist"
+            let cmd = "launchctl unload \(plistPath)"
+            self.runWithPrivileges(command: cmd)
+            result("🛑 节点 \(nodeName) 已停止")
+          } else {
+            result(FlutterError(code: "INVALID_ARGS", message: "Missing node name", details: nil))
+          }
 
         default:
           result(FlutterMethodNotImplemented)
@@ -39,14 +48,17 @@ class AppDelegate: FlutterAppDelegate {
     super.applicationDidFinishLaunching(notification)
   }
 
-  /// 使用 AppleScript 以管理员权限运行 shell 命令
+  /// 使用 AppleScript 执行带管理员权限的 shell 命令
   func runWithPrivileges(command: String) {
-    let script = "do shell script \"\(command.replacingOccurrences(of: "\"", with: "\\\""))\" with administrator privileges"
+    let escapedCommand = command.replacingOccurrences(of: "\"", with: "\\\"")
+    let script = """
+    do shell script "\(escapedCommand)" with administrator privileges
+    """
     let appleScript = NSAppleScript(source: script)
     var error: NSDictionary?
     appleScript?.executeAndReturnError(&error)
     if let err = error {
-      print("执行失败: \(err)")
+      print("🚨 命令执行失败: \(err)")
     }
   }
 
