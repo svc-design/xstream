@@ -15,25 +15,60 @@ class _HomeScreenState extends State<HomeScreen> {
   String _activeNode = '';
 
   final List<Map<String, String>> vpnNodes = [
-    {'name': '🇺🇸 US-VPN', 'protocol': 'VLESS'},
-    {'name': '🇨🇦 CA-VPN', 'protocol': 'VMess'},
-    {'name': '🇯🇵 Tokyo-VPN', 'protocol': 'Trojan'},
+    {
+      'name': '🇺🇸 US-VPN',
+      'protocol': 'VLESS',
+      'config': '/opt/homebrew/etc/xray-vpn-us-node.json'
+    },
+    {
+      'name': '🇨🇦 CA-VPN',
+      'protocol': 'VMess',
+      'config': '/opt/homebrew/etc/xray-vpn-ca-node.json'
+    },
+    {
+      'name': '🇯🇵 Tokyo-VPN',
+      'protocol': 'Trojan',
+      'config': '/opt/homebrew/etc/xray-vpn-tky-node.json'
+    },
   ];
 
-  void _toggleNode(String nodeName) async {
+  Future<void> _toggleNode(Map<String, String> node) async {
+    final nodeName = node['name']!;
+    final configPath = node['config']!;
+
     if (_activeNode == nodeName) {
       final msg = await NativeBridge.stopXrayService();
-      setState(() {
-        _activeNode = '';
-      });
+      setState(() => _activeNode = '');
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } else {
-      final msg = await NativeBridge.startXrayService();
-      setState(() {
-        _activeNode = nodeName;
-      });
+      // 先关闭当前
+      await NativeBridge.stopXrayService();
+      // 启动新节点
+      final msg = await NativeBridge.startNodeService(configPath, nodeName);
+      setState(() => _activeNode = nodeName);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     }
+  }
+
+  Widget _buildVpnListView() {
+    return ListView.builder(
+      itemCount: vpnNodes.length,
+      itemBuilder: (context, index) {
+        final node = vpnNodes[index];
+        final isActive = _activeNode == node['name'];
+        return ListTile(
+          title: Text(node['name']!),
+          subtitle: Text('${node['protocol']} | tcp'),
+          trailing: IconButton(
+            icon: Icon(
+              isActive ? Icons.stop_circle : Icons.play_circle_fill,
+              color: isActive ? Colors.red : Colors.green,
+            ),
+            onPressed: widget.isUnlocked ? () => _toggleNode(node) : null,
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -67,43 +102,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
-                  Expanded(
-                    flex: 2,
-                    child: ListView.builder(
-                      itemCount: vpnNodes.length,
-                      itemBuilder: (context, index) {
-                        final node = vpnNodes[index];
-                        final isActive = _activeNode == node['name'];
-                        return ListTile(
-                          title: Text(node['name']!),
-                          subtitle: Text('${node['protocol']} | tcp'),
-                          trailing: IconButton(
-                            icon: Icon(isActive ? Icons.stop_circle : Icons.play_circle_fill,
-                                color: isActive ? Colors.red : Colors.green),
-                            onPressed: () => _toggleNode(node['name']!),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
+                  Expanded(flex: 2, child: _buildVpnListView()),
                 ],
               )
-            : ListView.builder(
-                itemCount: vpnNodes.length,
-                itemBuilder: (context, index) {
-                  final node = vpnNodes[index];
-                  final isActive = _activeNode == node['name'];
-                  return ListTile(
-                    title: Text(node['name']!),
-                    subtitle: Text('${node['protocol']} | tcp'),
-                    trailing: IconButton(
-                      icon: Icon(isActive ? Icons.stop_circle : Icons.play_circle_fill,
-                          color: isActive ? Colors.red : Colors.green),
-                      onPressed: () => _toggleNode(node['name']!),
-                    ),
-                  );
-                },
-              );
+            : _buildVpnListView();
       },
     );
   }
