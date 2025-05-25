@@ -12,12 +12,24 @@ class AppDelegate: FlutterAppDelegate {
 
       channel.setMethodCallHandler { call, result in
         switch call.method {
-        case "startXrayService":
-          self.runWithPrivileges(command: "nohup /opt/homebrew/bin/xray run -c /opt/homebrew/etc/xray-vpn.json &> /tmp/xray-vpn-log &")
-          result("启动命令已执行")
+
+        case "startNodeService":
+          if let args = call.arguments as? [String: Any],
+             let configPath = args["config"] as? String,
+             let nodeName = args["node"] as? String {
+            let safeName = nodeName.lowercased().replacingOccurrences(of: "-", with: "_")
+            let logPath = "/tmp/xray-vpn-\(safeName)-log"
+            let cmd = "nohup /opt/homebrew/bin/xray run -c \(configPath) &> \(logPath) &"
+            self.runWithPrivileges(command: cmd)
+            result("已启动 \(nodeName)")
+          } else {
+            result(FlutterError(code: "INVALID_ARGS", message: "Missing config or node", details: nil))
+          }
+
         case "stopXrayService":
           self.runWithPrivileges(command: "pkill -f '/opt/homebrew/bin/xray run'")
-          result("停止命令已执行")
+          result("所有节点已停止")
+
         default:
           result(FlutterMethodNotImplemented)
         }
