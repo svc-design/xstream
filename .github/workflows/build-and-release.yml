@@ -181,10 +181,10 @@ jobs:
           tag_name: daily-${{ github.run_number }}
           name: Daily Build ${{ github.run_number }}
           files: |
-            release-artifacts/**/xstream-*
+            release-artifacts/**/*.dmg
             release-artifacts/**/xstream.exe
             release-artifacts/**/app-release.apk
             release-artifacts/**/XStream.app.zip
-            release-artifacts/**/*.dmg
+            release-artifacts/build-linux-x64/linux/x64/release/bundle/xstream
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
