@@ -3,7 +3,10 @@ import 'screens/home_screen.dart';
 import 'screens/subscription_screen.dart';
 import 'screens/settings_screen.dart';
 import 'utils/app_theme.dart';
-import 'widgets/lock_button.dart'; // 导入锁按钮
+import 'utils/native_bridge.dart';
+import 'utils/log_store.dart'; // ✅ 添加漏引的 log_store.dart
+import 'widgets/log_console.dart'; // ✅ 提供 LogLevel 类型支持
+import 'widgets/lock_button.dart';
 
 void main() {
   runApp(MyApp());
@@ -28,21 +31,21 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   int _currentIndex = 0;
-
-  bool _isUnlocked = false; // 全局解锁状态
-  String _sudoPassword = ''; // 全局 sudo 密码
-
+  bool _isUnlocked = false;
+  String _sudoPassword = '';
   final List<Widget> _pages = [];
 
   @override
   void initState() {
     super.initState();
-    // 初始化各个页面，并将解锁状态共享给所有页面
+
+    // ✅ 修复后的日志回调写法
+    NativeBridge.initializeLogger((log) {
+      LogStore.add(LogEntry(LogLevel.info, "[macOS] $log"));
+    });
+
     _pages.addAll([
-      HomeScreen(
-        isUnlocked: _isUnlocked,
-        sudoPassword: _sudoPassword,
-      ),
+      HomeScreen(isUnlocked: _isUnlocked, sudoPassword: _sudoPassword),
       SubscriptionScreen(
         isUnlocked: _isUnlocked,
         sudoPassword: _sudoPassword,
@@ -53,68 +56,44 @@ class _MainPageState extends State<MainPage> {
           });
         },
       ),
-      SettingsScreen(
-        isUnlocked: _isUnlocked,
-        sudoPassword: _sudoPassword,
-      ),
+      SettingsScreen(isUnlocked: _isUnlocked, sudoPassword: _sudoPassword),
     ]);
+  }
+
+  void _updatePages() {
+    _pages[0] = HomeScreen(isUnlocked: _isUnlocked, sudoPassword: _sudoPassword);
+    _pages[1] = SubscriptionScreen(
+      isUnlocked: _isUnlocked,
+      sudoPassword: _sudoPassword,
+      onRequestUnlock: (password) {
+        setState(() {
+          _isUnlocked = true;
+          _sudoPassword = password;
+        });
+      },
+    );
+    _pages[2] = SettingsScreen(isUnlocked: _isUnlocked, sudoPassword: _sudoPassword);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('XStream'),
+        title: const Text('XStream'),
         actions: [
           LockButton(
             onUnlock: (password) {
               setState(() {
                 _isUnlocked = true;
                 _sudoPassword = password;
-                // 更新所有页面的解锁状态和 sudo 密码
-                _pages[0] = HomeScreen(
-                  isUnlocked: _isUnlocked,
-                  sudoPassword: _sudoPassword,
-                );
-                _pages[1] = SubscriptionScreen(
-                  isUnlocked: _isUnlocked,
-                  sudoPassword: _sudoPassword,
-                  onRequestUnlock: (password) {
-                    setState(() {
-                      _isUnlocked = true;
-                      _sudoPassword = password;
-                    });
-                  },
-                );
-                _pages[2] = SettingsScreen(
-                  isUnlocked: _isUnlocked,
-                  sudoPassword: _sudoPassword,
-                );
+                _updatePages();
               });
             },
-            onLock: () { // 处理锁定逻辑
+            onLock: () {
               setState(() {
-                _isUnlocked = false; // 锁定时重置解锁状态
-                _sudoPassword = '';  // 清空 sudo 密码
-                // 更新所有页面的解锁状态
-                _pages[0] = HomeScreen(
-                  isUnlocked: _isUnlocked,
-                  sudoPassword: _sudoPassword,
-                );
-                _pages[1] = SubscriptionScreen(
-                  isUnlocked: _isUnlocked,
-                  sudoPassword: _sudoPassword,
-                  onRequestUnlock: (password) {
-                    setState(() {
-                      _isUnlocked = true;
-                      _sudoPassword = password;
-                    });
-                  },
-                );
-                _pages[2] = SettingsScreen(
-                  isUnlocked: _isUnlocked,
-                  sudoPassword: _sudoPassword,
-                );
+                _isUnlocked = false;
+                _sudoPassword = '';
+                _updatePages();
               });
             },
           ),
@@ -123,24 +102,11 @@ class _MainPageState extends State<MainPage> {
       body: _pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.link),
-            label: 'Subscriptions',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
+        onTap: (index) => setState(() => _currentIndex = index),
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.link), label: 'Subscriptions'),
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
         ],
       ),
     );
