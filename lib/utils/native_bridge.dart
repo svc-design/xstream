@@ -1,17 +1,18 @@
 import 'package:flutter/services.dart';
+import 'vpn_config.dart'; // 用于获取 vpnPlistNameMap
 
 class NativeBridge {
   static const MethodChannel _channel = MethodChannel('com.xstream/native');
   static const MethodChannel _loggerChannel = MethodChannel('com.xstream/logger');
 
-  /// 启动指定节点的 Xray 服务（通过 LaunchAgent 名称自动推导）
   static Future<String> startNodeService(String nodeName) async {
+    final suffix = vpnPlistNameMap[nodeName];
+    if (suffix == null) return '未知节点: $nodeName';
+
     try {
       final result = await _channel.invokeMethod<String>(
         'startNodeService',
-        {
-          'node': nodeName,
-        },
+        {'nodeSuffix': suffix},
       );
       return result ?? '启动成功';
     } catch (e) {
@@ -19,14 +20,14 @@ class NativeBridge {
     }
   }
 
-  /// 停止指定节点的 Xray 服务（通过 LaunchAgent 名称自动推导）
   static Future<String> stopNodeService(String nodeName) async {
+    final suffix = vpnPlistNameMap[nodeName];
+    if (suffix == null) return '未知节点: $nodeName';
+
     try {
       final result = await _channel.invokeMethod<String>(
         'stopNodeService',
-        {
-          'node': nodeName,
-        },
+        {'nodeSuffix': suffix},
       );
       return result ?? '已停止';
     } catch (e) {
@@ -34,14 +35,26 @@ class NativeBridge {
     }
   }
 
-  /// 初始化日志监听器（来自 macOS 原生日志）
+  static Future<bool> checkNodeStatus(String nodeName) async {
+    final suffix = vpnPlistNameMap[nodeName];
+    if (suffix == null) return false;
+
+    try {
+      final result = await _channel.invokeMethod<bool>(
+        'checkNodeStatus',
+        {'nodeSuffix': suffix},
+      );
+      return result ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
   static void initializeLogger(Function(String log) onLog) {
     _loggerChannel.setMethodCallHandler((call) async {
       if (call.method == 'log') {
         final log = call.arguments as String?;
-        if (log != null) {
-          onLog(log);
-        }
+        if (log != null) onLog(log);
       }
     });
   }
