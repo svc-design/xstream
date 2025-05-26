@@ -1,12 +1,10 @@
 // lib/screens/settings_screen.dart
 import 'package:flutter/material.dart';
 import '../../utils/log_store.dart';
+import '../../utils/global_state.dart';
 
 class SettingsScreen extends StatefulWidget {
-  final bool isUnlocked;
-  final String sudoPassword;
-
-  const SettingsScreen({Key? key, required this.isUnlocked, required this.sudoPassword}) : super(key: key);
+  const SettingsScreen({Key? key}) : super(key: key);
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -44,7 +42,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     context: context,
                     applicationName: 'XStream',
                     applicationVersion: '1.0.0',
-                    children: [const Text('由 XStream 驱动的多节点代理 UI')],
+                    children: const [
+                      Text('由 XStream 驱动的多节点代理 UI'),
+                    ],
                   );
                 },
               ),
@@ -54,18 +54,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const VerticalDivider(width: 1),
         // 主内容区域
         Expanded(
-          child: _selectedTab == 'log' ? const _LiveLogViewer() : _buildSettingsCenter(context),
+          child: _selectedTab == 'log'
+              ? const _LiveLogViewer()
+              : _buildSettingsCenter(context),
         ),
       ],
     );
   }
 
   Widget _buildSettingsCenter(BuildContext context) {
-    return Center(
-      child: Text(
-        '⚙️ 设置中心',
-        style: Theme.of(context).textTheme.titleLarge,
-      ),
+    return ValueListenableBuilder<bool>(
+      valueListenable: GlobalState.isUnlocked,
+      builder: (context, isUnlocked, _) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '⚙️ 设置中心',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                isUnlocked ? '🔓 当前已解锁' : '🔒 当前未解锁',
+                style: const TextStyle(color: Colors.grey),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -85,7 +102,10 @@ class _LiveLogViewerState extends State<_LiveLogViewer> {
     super.initState();
     _logs = LogStore.getAll().map((e) => e.formatted).toList();
 
-    // 简单轮询方式
+    _startPolling();
+  }
+
+  void _startPolling() {
     Future.doWhile(() async {
       await Future.delayed(const Duration(seconds: 1));
       if (!mounted) return false;
@@ -118,7 +138,10 @@ class _LiveLogViewerState extends State<_LiveLogViewer> {
                 final log = _logs[index];
                 return Text(
                   log,
-                  style: const TextStyle(color: Colors.white, fontFamily: 'monospace'),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontFamily: 'monospace',
+                  ),
                 );
               },
             ),

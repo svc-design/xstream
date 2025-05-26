@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
-import 'screens/subscription_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/subscription_screen.dart';
 import 'utils/app_theme.dart';
-import 'widgets/lock_button.dart'; // 导入锁按钮
+import 'utils/log_store.dart';
+import 'utils/global_state.dart';
+import 'utils/native_bridge.dart';
+import 'widgets/log_console.dart';
 
 void main() {
   runApp(MyApp());
@@ -23,126 +26,86 @@ class MyApp extends StatelessWidget {
 
 class MainPage extends StatefulWidget {
   @override
-  _MainPageState createState() => _MainPageState();
+  State<MainPage> createState() => _MainPageState();
 }
 
 class _MainPageState extends State<MainPage> {
   int _currentIndex = 0;
 
-  bool _isUnlocked = false; // 全局解锁状态
-  String _sudoPassword = ''; // 全局 sudo 密码
-
-  final List<Widget> _pages = [];
-
   @override
   void initState() {
     super.initState();
-    // 初始化各个页面，并将解锁状态共享给所有页面
-    _pages.addAll([
-      HomeScreen(
-        isUnlocked: _isUnlocked,
-        sudoPassword: _sudoPassword,
-      ),
-      SubscriptionScreen(
-        isUnlocked: _isUnlocked,
-        sudoPassword: _sudoPassword,
-        onRequestUnlock: (password) {
-          setState(() {
-            _isUnlocked = true;
-            _sudoPassword = password;
-          });
-        },
-      ),
-      SettingsScreen(
-        isUnlocked: _isUnlocked,
-        sudoPassword: _sudoPassword,
-      ),
-    ]);
+    NativeBridge.initializeLogger((log) {
+      LogStore.addLog(LogLevel.info, "[macOS] $log");
+    });
+  }
+
+  Future<void> _promptUnlockDialog() async {
+    String? password = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        final controller = TextEditingController();
+        return AlertDialog(
+          title: const Text('输入密码解锁'),
+          content: TextField(
+            controller: controller,
+            obscureText: true,
+            decoration: const InputDecoration(labelText: '密码'),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
+            TextButton(onPressed: () => Navigator.pop(context, controller.text), child: const Text('确认')),
+          ],
+        );
+      },
+    );
+
+    if (password != null && password.isNotEmpty) {
+      GlobalState.isUnlocked.value = true;
+      GlobalState.sudoPassword.value = password;
+    }
+  }
+
+  void _lock() {
+    GlobalState.isUnlocked.value = false;
+    GlobalState.sudoPassword.value = '';
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('XStream'),
+        title: const Text('XStream'),
         actions: [
-          LockButton(
-            onUnlock: (password) {
-              setState(() {
-                _isUnlocked = true;
-                _sudoPassword = password;
-                // 更新所有页面的解锁状态和 sudo 密码
-                _pages[0] = HomeScreen(
-                  isUnlocked: _isUnlocked,
-                  sudoPassword: _sudoPassword,
-                );
-                _pages[1] = SubscriptionScreen(
-                  isUnlocked: _isUnlocked,
-                  sudoPassword: _sudoPassword,
-                  onRequestUnlock: (password) {
-                    setState(() {
-                      _isUnlocked = true;
-                      _sudoPassword = password;
-                    });
-                  },
-                );
-                _pages[2] = SettingsScreen(
-                  isUnlocked: _isUnlocked,
-                  sudoPassword: _sudoPassword,
-                );
-              });
-            },
-            onLock: () { // 处理锁定逻辑
-              setState(() {
-                _isUnlocked = false; // 锁定时重置解锁状态
-                _sudoPassword = '';  // 清空 sudo 密码
-                // 更新所有页面的解锁状态
-                _pages[0] = HomeScreen(
-                  isUnlocked: _isUnlocked,
-                  sudoPassword: _sudoPassword,
-                );
-                _pages[1] = SubscriptionScreen(
-                  isUnlocked: _isUnlocked,
-                  sudoPassword: _sudoPassword,
-                  onRequestUnlock: (password) {
-                    setState(() {
-                      _isUnlocked = true;
-                      _sudoPassword = password;
-                    });
-                  },
-                );
-                _pages[2] = SettingsScreen(
-                  isUnlocked: _isUnlocked,
-                  sudoPassword: _sudoPassword,
-                );
-              });
+          ValueListenableBuilder<bool>(
+            valueListenable: GlobalState.isUnlocked,
+            builder: (context, unlocked, _) {
+              return IconButton(
+                icon: Icon(unlocked ? Icons.lock_open : Icons.lock),
+                onPressed: unlocked ? _lock : _promptUnlockDialog,
+              );
             },
           ),
         ],
       ),
-      body: _pages[_currentIndex],
+      body: IndexedStack(
+        index: _currentIndex,
+        children: const [
+          HomeScreen(),
+          SubscriptionScreen(),
+          SettingsScreen(),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.link),
-            label: 'Subscriptions',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
+        onTap: (index) => setState(() => _currentIndex = index),
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.link), label: 'Subscriptions'),
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
         ],
       ),
     );
   }
 }
+

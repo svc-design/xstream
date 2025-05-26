@@ -18,9 +18,12 @@ class AppDelegate: FlutterAppDelegate {
         case "startNodeService":
           if let args = call.arguments as? [String: Any],
              let nodeName = args["node"] as? String {
-            let safeName = nodeName.lowercased().replacingOccurrences(of: "-", with: "_")
-            let plistPath = "/Users/\(NSUserName())/Library/LaunchAgents/com.xstream.xray-node-\(safeName).plist"
-            let cmd = "launchctl load \(plistPath)"
+            let safeName = nodeName.lowercased()
+              .replacingOccurrences(of: "-", with: "_")
+              .replacingOccurrences(of: "_vpn", with: "")
+            let userName = NSUserName()
+            let plistPath = "/Users/\(userName)/Library/LaunchAgents/com.xstream.xray-node-\(safeName).plist"
+            let cmd = "launchctl load \"\(plistPath)\""
             self.runWithPrivileges(command: cmd)
             result("✅ 节点 \(nodeName) 启动完成")
           } else {
@@ -30,9 +33,12 @@ class AppDelegate: FlutterAppDelegate {
         case "stopNodeService":
           if let args = call.arguments as? [String: Any],
              let nodeName = args["node"] as? String {
-            let safeName = nodeName.lowercased().replacingOccurrences(of: "-", with: "_")
-            let plistPath = "/Users/\(NSUserName())/Library/LaunchAgents/com.xstream.xray-node-\(safeName).plist"
-            let cmd = "launchctl unload \(plistPath)"
+            let safeName = nodeName.lowercased()
+              .replacingOccurrences(of: "-", with: "_")
+              .replacingOccurrences(of: "_vpn", with: "")
+            let userName = NSUserName()
+            let plistPath = "/Users/\(userName)/Library/LaunchAgents/com.xstream.xray-node-\(safeName).plist"
+            let cmd = "launchctl unload \"\(plistPath)\""
             self.runWithPrivileges(command: cmd)
             result("🛑 节点 \(nodeName) 已停止")
           } else {
@@ -48,17 +54,27 @@ class AppDelegate: FlutterAppDelegate {
     super.applicationDidFinishLaunching(notification)
   }
 
-  /// 使用 AppleScript 执行带管理员权限的 shell 命令
   func runWithPrivileges(command: String) {
+    logToFlutter("info", "🛠️ 运行命令: \(command)")
     let escapedCommand = command.replacingOccurrences(of: "\"", with: "\\\"")
-    let script = """
-    do shell script "\(escapedCommand)" with administrator privileges
-    """
+    let script = "do shell script \"\(escapedCommand)\" with administrator privileges"
     let appleScript = NSAppleScript(source: script)
     var error: NSDictionary?
-    appleScript?.executeAndReturnError(&error)
+    let result = appleScript?.executeAndReturnError(&error)
     if let err = error {
+      logToFlutter("error", "❌ 执行失败: \(err)")
       print("🚨 命令执行失败: \(err)")
+    } else {
+      logToFlutter("info", "✅ 命令执行成功")
+    }
+  }
+
+  func logToFlutter(_ level: String, _ message: String) {
+    let fullLog = "[\(level.uppercased())] \(Date()): \(message)"
+    if let controller = mainFlutterWindow?.contentViewController as? FlutterViewController {
+      let messenger = controller.engine.binaryMessenger
+      let eventChannel = FlutterMethodChannel(name: "com.xstream/logger", binaryMessenger: messenger)
+      eventChannel.invokeMethod("log", arguments: fullLog)
     }
   }
 
