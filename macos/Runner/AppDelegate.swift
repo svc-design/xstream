@@ -13,37 +13,29 @@ class AppDelegate: FlutterAppDelegate {
       )
 
       channel.setMethodCallHandler { call, result in
-        switch call.method {
+        guard let args = call.arguments as? [String: Any],
+              let suffix = args["nodeSuffix"] as? String else {
+          result(FlutterError(code: "INVALID_ARGS", message: "Missing node suffix", details: nil))
+          return
+        }
 
+        let userName = NSUserName()
+        let uid = getuid()
+        let plistPath = "/Users/\(userName)/Library/LaunchAgents/com.xstream.xray-node-\(suffix).plist"
+        let serviceName = "com.xstream.xray-node-\(suffix)"
+
+        switch call.method {
         case "startNodeService":
-          if let args = call.arguments as? [String: Any],
-             let nodeName = args["node"] as? String {
-            let safeName = nodeName.lowercased()
-              .replacingOccurrences(of: "-", with: "_")
-              .replacingOccurrences(of: "_vpn", with: "")
-            let userName = NSUserName()
-            let plistPath = "/Users/\(userName)/Library/LaunchAgents/com.xstream.xray-node-\(safeName).plist"
-            let cmd = "launchctl load \"\(plistPath)\""
-            self.runWithPrivileges(command: cmd)
-            result("✅ 节点 \(nodeName) 启动完成")
-          } else {
-            result(FlutterError(code: "INVALID_ARGS", message: "Missing node name", details: nil))
-          }
+          let cmd = "launchctl bootstrap gui/\(uid) \"\(plistPath)\""
+          self.runShellScript(command: cmd, returnsBool: false, result: result)
 
         case "stopNodeService":
-          if let args = call.arguments as? [String: Any],
-             let nodeName = args["node"] as? String {
-            let safeName = nodeName.lowercased()
-              .replacingOccurrences(of: "-", with: "_")
-              .replacingOccurrences(of: "_vpn", with: "")
-            let userName = NSUserName()
-            let plistPath = "/Users/\(userName)/Library/LaunchAgents/com.xstream.xray-node-\(safeName).plist"
-            let cmd = "launchctl unload \"\(plistPath)\""
-            self.runWithPrivileges(command: cmd)
-            result("🛑 节点 \(nodeName) 已停止")
-          } else {
-            result(FlutterError(code: "INVALID_ARGS", message: "Missing node name", details: nil))
-          }
+          let cmd = "launchctl bootout gui/\(uid) \"\(plistPath)\""
+          self.runShellScript(command: cmd, returnsBool: false, result: result)
+
+        case "checkNodeStatus":
+          let cmd = "launchctl list | grep \"\(serviceName)\""
+          self.runShellScript(command: cmd, returnsBool: true, result: result)
 
         default:
           result(FlutterMethodNotImplemented)
@@ -54,18 +46,40 @@ class AppDelegate: FlutterAppDelegate {
     super.applicationDidFinishLaunching(notification)
   }
 
-  func runWithPrivileges(command: String) {
+  func runShellScript(command: String, returnsBool: Bool, result: @escaping FlutterResult) {
     logToFlutter("info", "🛠️ 运行命令: \(command)")
-    let escapedCommand = command.replacingOccurrences(of: "\"", with: "\\\"")
-    let script = "do shell script \"\(escapedCommand)\" with administrator privileges"
-    let appleScript = NSAppleScript(source: script)
-    var error: NSDictionary?
-    let result = appleScript?.executeAndReturnError(&error)
-    if let err = error {
-      logToFlutter("error", "❌ 执行失败: \(err)")
-      print("🚨 命令执行失败: \(err)")
-    } else {
-      logToFlutter("info", "✅ 命令执行成功")
+
+    let task = Process()
+    task.launchPath = "/bin/zsh"
+    task.arguments = ["-c", command]
+
+    let pipe = Pipe()
+    task.standardOutput = pipe
+    task.standardError = pipe
+
+    task.terminationHandler = { process in
+      let data = pipe.fileHandleForReading.readDataToEndOfFile()
+      let output = String(data: data, encoding: .utf8) ?? ""
+
+      if returnsBool {
+        let found = output.contains("com.xstream")
+        self.logToFlutter("info", "🔍 服务状态: \(found ? "运行中 ✅" : "未运行 ❌")")
+        result(found)
+      } else {
+        if process.terminationStatus == 0 {
+          self.logToFlutter("info", "✅ 命令执行成功\n\(output)")
+          result("success")
+        } else {
+          self.logToFlutter("error", "❌ 命令执行失败: \(output)")
+          result(FlutterError(code: "EXEC_FAILED", message: "Command failed", details: output))
+        }
+      }
+    }
+
+    do {
+      try task.run()
+    } catch {
+      result(FlutterError(code: "EXEC_ERROR", message: "Failed to start process", details: error.localizedDescription))
     }
   }
 
@@ -73,8 +87,8 @@ class AppDelegate: FlutterAppDelegate {
     let fullLog = "[\(level.uppercased())] \(Date()): \(message)"
     if let controller = mainFlutterWindow?.contentViewController as? FlutterViewController {
       let messenger = controller.engine.binaryMessenger
-      let eventChannel = FlutterMethodChannel(name: "com.xstream/logger", binaryMessenger: messenger)
-      eventChannel.invokeMethod("log", arguments: fullLog)
+      let loggerChannel = FlutterMethodChannel(name: "com.xstream/logger", binaryMessenger: messenger)
+      loggerChannel.invokeMethod("log", arguments: fullLog)
     }
   }
 
