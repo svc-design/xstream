@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 
 class NativeBridge {
   static const MethodChannel _channel = MethodChannel('com.xstream/native');
+  static const MethodChannel _loggerChannel = MethodChannel('com.xstream/logger');
 
   /// 启动指定节点的 Xray 服务（通过 LaunchAgent 名称自动推导）
   static Future<String> startNodeService(String nodeName) async {
@@ -31,5 +32,17 @@ class NativeBridge {
     } catch (e) {
       return '停止失败: $e';
     }
+  }
+
+  /// 初始化日志监听器（来自 macOS 原生日志）
+  static void initializeLogger(Function(String log) onLog) {
+    _loggerChannel.setMethodCallHandler((call) async {
+      if (call.method == 'log') {
+        final log = call.arguments as String?;
+        if (log != null) {
+          onLog(log);
+        }
+      }
+    });
   }
 }
