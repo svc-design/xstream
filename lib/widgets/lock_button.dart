@@ -1,10 +1,10 @@
 // lib/widgets/lock_button.dart
-
 import 'package:flutter/material.dart';
+import '../../utils/global_state.dart';
 
 class LockButton extends StatefulWidget {
-  final Function(String)? onUnlock; // Callback to pass the password to another component
-  final Function()? onLock; // Callback to handle locking logic
+  final Function(String)? onUnlock;
+  final Function()? onLock;
 
   const LockButton({Key? key, this.onUnlock, this.onLock}) : super(key: key);
 
@@ -13,7 +13,7 @@ class LockButton extends StatefulWidget {
 }
 
 class _LockButtonState extends State<LockButton> {
-  bool _isLocked = true;
+  bool get _isLocked => !GlobalState.isUnlocked.value;
 
   Future<void> _promptForPassword() async {
     String? password = await showDialog<String>(
@@ -36,9 +36,7 @@ class _LockButtonState extends State<LockButton> {
               child: Text('取消'),
             ),
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(passwordController.text);
-              },
+              onPressed: () => Navigator.of(context).pop(passwordController.text),
               child: Text('确认'),
             ),
           ],
@@ -52,36 +50,31 @@ class _LockButtonState extends State<LockButton> {
   }
 
   void _attemptUnlock(String password) {
-    // Call the provided callback function with the password
-    if (widget.onUnlock != null) {
-      widget.onUnlock!(password);
-    }
-
-    setState(() {
-      _isLocked = false; // Assume unlock is successful for now
-    });
+    GlobalState.isUnlocked.value = true;
+    GlobalState.sudoPassword.value = password;
+    widget.onUnlock?.call(password);
   }
 
   void _toggleLock() async {
     if (_isLocked) {
       await _promptForPassword();
     } else {
-      setState(() {
-        _isLocked = true;
-      });
-
-      // Call the onLock callback to handle locking logic
-      if (widget.onLock != null) {
-        widget.onLock!(); // Invoke lock callback
-      }
+      GlobalState.isUnlocked.value = false;
+      GlobalState.sudoPassword.value = '';
+      widget.onLock?.call();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      icon: Icon(_isLocked ? Icons.lock : Icons.lock_open),
-      onPressed: _toggleLock,
+    return ValueListenableBuilder<bool>(
+      valueListenable: GlobalState.isUnlocked,
+      builder: (context, isUnlocked, _) {
+        return IconButton(
+          icon: Icon(isUnlocked ? Icons.lock_open : Icons.lock),
+          onPressed: _toggleLock,
+        );
+      },
     );
   }
 }
