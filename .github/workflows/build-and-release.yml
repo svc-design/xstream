@@ -23,9 +23,9 @@ jobs:
             arch: x64
           - platform: android
             arch: x64
-        include:
           - platform: macos
             arch: x64
+        include:
           - platform: macos
             arch: arm64
           - platform: linux
