@@ -38,7 +38,7 @@ macos-intel:
 			--icon-size 100 \
 			--app-drop-link 600 185 \
 			build/macos/$$DMG_NAME \
-			build/macos/Build/Products/Release/Runner.app; \
+			build/macos/Build/Products/Release/xstream.app;\
 	else \
 		echo "Skipping macOS Intel build (not on Intel architecture)"; \
 	fi
@@ -56,7 +56,7 @@ macos-arm64:
 			--icon-size 100 \
 			--app-drop-link 600 185 \
 			build/macos/$$DMG_NAME \
-			build/macos/Build/Products/Release/Runner.app; \
+			build/macos/Build/Products/Release/xstream.app;\
 	else \
 		echo "Skipping macOS ARM64 build (not on ARM architecture)"; \
 	fi
