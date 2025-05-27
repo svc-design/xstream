@@ -20,6 +20,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _toggleNode(Map<String, String> node) async {
     final nodeName = node['name']!;
+
+    if (GlobalState.sudoPassword.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('请先输入管理员密码解锁')),
+      );
+      return;
+    }
+
     if (_activeNode == nodeName) {
       final msg = await NativeBridge.stopNodeService(nodeName);
       setState(() => _activeNode = '');

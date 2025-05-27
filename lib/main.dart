@@ -62,13 +62,13 @@ class _MainPageState extends State<MainPage> {
 
     if (password != null && password.isNotEmpty) {
       GlobalState.isUnlocked.value = true;
-      GlobalState.sudoPassword.value = password;
+      GlobalState.sudoPassword = password;
     }
   }
 
   void _lock() {
     GlobalState.isUnlocked.value = false;
-    GlobalState.sudoPassword.value = '';
+    GlobalState.sudoPassword = '';
   }
 
   @override

@@ -51,6 +51,17 @@ flutter run
 其他资源
 有关 Flutter 开发的更多帮助，请查看 在线文档，该文档提供了教程、示例、移动开发的指导以及完整的 API 参考。
 
+整个调用链路流程图
+
+Flutter端 Lock按钮输入sudo密码 → GlobalState → NativeBridge调用
+    ↓
+MethodChannel传参（包含密码）给macOS端
+    ↓
+macOS端 AppDelegate.swift 接收参数 → AppleScript执行sudo权限shell命令
+    ↓
+后台静默执行VPN启动/停止命令 → 执行结果反馈回Flutter端
+
+
 
 # 更新说明
 - 添加了在 macOS 下构建开发环境的步骤，包括安装 Flutter、Xcode、CocoaPods 以及构建项目的命令。
@@ -66,3 +77,4 @@ flutter run
 - perf: 性能优化
 - test: 添加或修改测试
 - chore: 其他杂项任务（例如更新构建任务或包管理器配置）
+

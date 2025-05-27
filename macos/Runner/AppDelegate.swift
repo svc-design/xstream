@@ -4,86 +4,83 @@ import FlutterMacOS
 @main
 class AppDelegate: FlutterAppDelegate {
   override func applicationDidFinishLaunching(_ notification: Notification) {
-    if let window = mainFlutterWindow,
-       let controller = window.contentViewController as? FlutterViewController {
+    guard let controller = mainFlutterWindow?.contentViewController as? FlutterViewController else {
+      return
+    }
 
-      let channel = FlutterMethodChannel(
-        name: "com.xstream/native",
-        binaryMessenger: controller.engine.binaryMessenger
-      )
+    let channel = FlutterMethodChannel(
+      name: "com.xstream/native",
+      binaryMessenger: controller.engine.binaryMessenger
+    )
 
-      channel.setMethodCallHandler { call, result in
-        guard let args = call.arguments as? [String: Any],
-              let suffix = args["nodeSuffix"] as? String else {
-          result(FlutterError(code: "INVALID_ARGS", message: "Missing node suffix", details: nil))
-          return
-        }
+    channel.setMethodCallHandler { [weak self] call, result in
+      guard let self = self else {
+        result(FlutterError(code: "SELF_IS_NIL", message: "Internal error", details: nil))
+        return
+      }
 
-        let userName = NSUserName()
-        let uid = getuid()
-        let plistPath = "/Users/\(userName)/Library/LaunchAgents/com.xstream.xray-node-\(suffix).plist"
-        let serviceName = "com.xstream.xray-node-\(suffix)"
+      guard let args = call.arguments as? [String: Any] else {
+        result(FlutterError(code: "INVALID_ARGS", message: "Arguments not a dictionary", details: nil))
+        return
+      }
 
-        switch call.method {
-        case "startNodeService":
-          let cmd = "launchctl bootstrap gui/\(uid) \"\(plistPath)\""
-          self.runShellScript(command: cmd, returnsBool: false, result: result)
+      guard let suffix = args["nodeSuffix"] as? String,
+            let sudoPassword = args["sudoPassword"] as? String,
+            !suffix.isEmpty, !sudoPassword.isEmpty else {
+        result(FlutterError(code: "INVALID_VALUES", message: "Missing or empty nodeSuffix/sudoPassword", details: args))
+        return
+      }
 
-        case "stopNodeService":
-          let cmd = "launchctl bootout gui/\(uid) \"\(plistPath)\""
-          self.runShellScript(command: cmd, returnsBool: false, result: result)
+      let plistPath = "\(NSHomeDirectory())/Library/LaunchAgents/com.xstream.xray-node-\(suffix).plist"
+      let uid = getuid()
+      let safePath = plistPath.replacingOccurrences(of: "\"", with: "\\\"")  // 防止路径中包含引号
 
-        case "checkNodeStatus":
-          let cmd = "launchctl list | grep \"\(serviceName)\""
-          self.runShellScript(command: cmd, returnsBool: true, result: result)
+      switch call.method {
+      case "startNodeService":
+        let cmd = "launchctl bootstrap gui/\(uid) \"\(safePath)\""
+        self.runShellWithAdminPrivileges(command: cmd, password: sudoPassword, result: result)
 
-        default:
-          result(FlutterMethodNotImplemented)
-        }
+      case "stopNodeService":
+        let cmd = "launchctl bootout gui/\(uid) \"\(safePath)\""
+        self.runShellWithAdminPrivileges(command: cmd, password: sudoPassword, result: result)
+
+      default:
+        result(FlutterMethodNotImplemented)
       }
     }
 
     super.applicationDidFinishLaunching(notification)
   }
 
-  func runShellScript(command: String, returnsBool: Bool, result: @escaping FlutterResult) {
-    logToFlutter("info", "🛠️ 运行命令: \(command)")
+  private func runShellWithAdminPrivileges(command: String, password: String, result: @escaping FlutterResult) {
+    logToFlutter("info", "🛠️ Running command: \(command)")
 
-    let task = Process()
-    task.launchPath = "/bin/zsh"
-    task.arguments = ["-c", command]
+    let escapedCommand = command.replacingOccurrences(of: "\"", with: "\\\"")
+    let scriptSource = """
+    do shell script "\(escapedCommand)" user name "\(NSUserName())" password "\(password)" with administrator privileges
+    """
 
-    let pipe = Pipe()
-    task.standardOutput = pipe
-    task.standardError = pipe
-
-    task.terminationHandler = { process in
-      let data = pipe.fileHandleForReading.readDataToEndOfFile()
-      let output = String(data: data, encoding: .utf8) ?? ""
-
-      if returnsBool {
-        let found = output.contains("com.xstream")
-        self.logToFlutter("info", "🔍 服务状态: \(found ? "运行中 ✅" : "未运行 ❌")")
-        result(found)
-      } else {
-        if process.terminationStatus == 0 {
-          self.logToFlutter("info", "✅ 命令执行成功\n\(output)")
-          result("success")
-        } else {
-          self.logToFlutter("error", "❌ 命令执行失败: \(output)")
-          result(FlutterError(code: "EXEC_FAILED", message: "Command failed", details: output))
-        }
-      }
+    guard let script = NSAppleScript(source: scriptSource) else {
+      result(FlutterError(code: "SCRIPT_ERROR", message: "Unable to create AppleScript", details: scriptSource))
+      return
     }
 
-    do {
-      try task.run()
-    } catch {
-      result(FlutterError(code: "EXEC_ERROR", message: "Failed to start process", details: error.localizedDescription))
+    var errorDict: NSDictionary?
+    let output = script.executeAndReturnError(&errorDict)
+
+    if let error = errorDict {
+      let brief = error[NSAppleScript.errorBriefMessage] as? String ?? "Execution failed"
+      let number = error[NSAppleScript.errorNumber] as? Int ?? -1
+      logToFlutter("error", "❌ Command failed [\(number)]: \(brief)\nDetails: \(error)")
+      result(FlutterError(code: "EXEC_FAILED", message: brief, details: error))
+    } else {
+      let outputStr = output.stringValue ?? "success"
+      logToFlutter("info", "✅ Command succeeded: \(outputStr)")
+      result(outputStr)
     }
   }
 
-  func logToFlutter(_ level: String, _ message: String) {
+  private func logToFlutter(_ level: String, _ message: String) {
     let fullLog = "[\(level.uppercased())] \(Date()): \(message)"
     if let controller = mainFlutterWindow?.contentViewController as? FlutterViewController {
       let messenger = controller.engine.binaryMessenger

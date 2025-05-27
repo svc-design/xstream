@@ -78,7 +78,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
   void _onCreateConfig() {
     final unlocked = GlobalState.isUnlocked.value;
-    final password = GlobalState.sudoPassword.value;
+    final password = GlobalState.sudoPassword;
 
     if (!unlocked) {
       setState(() {

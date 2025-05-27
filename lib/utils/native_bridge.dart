@@ -1,18 +1,26 @@
 import 'package:flutter/services.dart';
-import 'vpn_config.dart'; // 用于获取 vpnPlistNameMap
+import 'vpn_config.dart';
+import 'global_state.dart'; // ✅ 引入 GlobalState 获取 sudoPassword
 
 class NativeBridge {
   static const MethodChannel _channel = MethodChannel('com.xstream/native');
   static const MethodChannel _loggerChannel = MethodChannel('com.xstream/logger');
 
+  /// 启动 VPN 节点服务
   static Future<String> startNodeService(String nodeName) async {
     final suffix = vpnPlistNameMap[nodeName];
     if (suffix == null) return '未知节点: $nodeName';
 
+    final password = GlobalState.sudoPassword;
+    if (password.isEmpty) return '⚠️ 尚未提供管理员密码';
+
     try {
       final result = await _channel.invokeMethod<String>(
         'startNodeService',
-        {'nodeSuffix': suffix},
+        {
+          'nodeSuffix': suffix,
+          'sudoPassword': password,
+        },
       );
       return result ?? '启动成功';
     } catch (e) {
@@ -20,14 +28,21 @@ class NativeBridge {
     }
   }
 
+  /// 停止 VPN 节点服务
   static Future<String> stopNodeService(String nodeName) async {
     final suffix = vpnPlistNameMap[nodeName];
     if (suffix == null) return '未知节点: $nodeName';
 
+    final password = GlobalState.sudoPassword;
+    if (password.isEmpty) return '⚠️ 尚未提供管理员密码';
+
     try {
       final result = await _channel.invokeMethod<String>(
         'stopNodeService',
-        {'nodeSuffix': suffix},
+        {
+          'nodeSuffix': suffix,
+          'sudoPassword': password,
+        },
       );
       return result ?? '已停止';
     } catch (e) {
@@ -35,6 +50,7 @@ class NativeBridge {
     }
   }
 
+  /// 检查 VPN 服务是否正在运行
   static Future<bool> checkNodeStatus(String nodeName) async {
     final suffix = vpnPlistNameMap[nodeName];
     if (suffix == null) return false;
@@ -50,6 +66,7 @@ class NativeBridge {
     }
   }
 
+  /// 注册原生日志监听器
   static void initializeLogger(Function(String log) onLog) {
     _loggerChannel.setMethodCallHandler((call) async {
       if (call.method == 'log') {
