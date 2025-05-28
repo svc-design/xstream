@@ -26,9 +26,12 @@ for node in "${NODES[@]}"; do
   <string>/tmp/xray-vpn-${node}-node.err</string>
   <key>RunAtLoad</key>
   <true/>
+  <key>KeepAlive</key>
+  <true/>
 </dict>
 </plist>
 EOF
 done
 
 echo "✅ 所有 .plist 文件已生成到 $PLIST_DIR"
+
