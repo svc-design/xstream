@@ -14,8 +14,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Map<String, String>> vpnNodes = [
     {'name': 'US-VPN', 'label': '🇺🇸 US-VPN', 'protocol': 'VLESS'},
-    {'name': 'CA-VPN', 'label': '🇨🇦 CA-VPN', 'protocol': 'VMess'},
-    {'name': 'Tokyo-VPN', 'label': '🇯🇵 Tokyo-VPN', 'protocol': 'Trojan'},
+    {'name': 'CA-VPN', 'label': '🇨🇦 CA-VPN', 'protocol': 'VLESS'},
+    {'name': 'Tokyo-VPN', 'label': '🇯🇵 Tokyo-VPN', 'protocol': 'VLESS'},
   ];
 
   Future<void> _toggleNode(Map<String, String> node) async {
