@@ -1,7 +1,8 @@
-// lib/screens/settings_screen.dart
 import 'package:flutter/material.dart';
-import '../../utils/log_store.dart';
 import '../../utils/global_state.dart';
+import '../../utils/native_bridge.dart';
+import '../../utils/global_keys.dart'; // ✅ 引入全局 logConsoleKey
+import '../widgets/log_console.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -11,18 +12,63 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  String _selectedTab = 'home';
+  String _selectedTab = 'log';
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        // 左侧菜单
+        // 左侧菜单栏
         Container(
-          width: 200,
+          width: 220,
           color: Colors.grey[100],
-          child: ListView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  '⚙️ 设置中心',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: ValueListenableBuilder<bool>(
+                  valueListenable: GlobalState.isUnlocked,
+                  builder: (context, isUnlocked, _) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.build),
+                          label: const Text('初始化 Xray'),
+                          onPressed: isUnlocked
+                              ? () async {
+                                  logConsoleKey.currentState?.addLog('开始初始化 Xray...');
+                                  try {
+                                    final output = await NativeBridge.initXray();
+                                    logConsoleKey.currentState?.addLog(output);
+                                  } catch (e) {
+                                    logConsoleKey.currentState?.addLog('[错误] $e', level: LogLevel.error);
+                                  }
+                                }
+                              : null,
+                        ),
+                        if (!isUnlocked)
+                          const Padding(
+                            padding: EdgeInsets.only(top: 8.0),
+                            child: Text(
+                              '请先解锁以执行初始化操作',
+                              style: TextStyle(color: Colors.grey, fontSize: 12),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+              const Divider(height: 32),
               ListTile(
                 leading: const Icon(Icons.article),
                 title: const Text('📜 查看日志'),
@@ -33,7 +79,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   });
                 },
               ),
-              const Divider(),
               ListTile(
                 leading: const Icon(Icons.info),
                 title: const Text('关于'),
@@ -52,102 +97,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
         const VerticalDivider(width: 1),
-        // 主内容区域
+        // 右侧日志输出面板
         Expanded(
-          child: _selectedTab == 'log'
-              ? const _LiveLogViewer()
-              : _buildSettingsCenter(context),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSettingsCenter(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: GlobalState.isUnlocked,
-      builder: (context, isUnlocked, _) {
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                '⚙️ 设置中心',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                isUnlocked ? '🔓 当前已解锁' : '🔒 当前未解锁',
-                style: const TextStyle(color: Colors.grey),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _LiveLogViewer extends StatefulWidget {
-  const _LiveLogViewer({Key? key}) : super(key: key);
-
-  @override
-  State<_LiveLogViewer> createState() => _LiveLogViewerState();
-}
-
-class _LiveLogViewerState extends State<_LiveLogViewer> {
-  List<String> _logs = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _logs = LogStore.getAll().map((e) => e.formatted).toList();
-
-    _startPolling();
-  }
-
-  void _startPolling() {
-    Future.doWhile(() async {
-      await Future.delayed(const Duration(seconds: 1));
-      if (!mounted) return false;
-
-      final current = LogStore.getAll().map((e) => e.formatted).toList();
-      if (current.length != _logs.length) {
-        setState(() {
-          _logs = current;
-        });
-      }
-      return true;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const Padding(
-          padding: EdgeInsets.all(12),
-          child: Text('📡 实时日志', style: TextStyle(fontWeight: FontWeight.bold)),
-        ),
-        Expanded(
-          child: Container(
-            color: Colors.black87,
-            padding: const EdgeInsets.all(8.0),
-            child: ListView.builder(
-              itemCount: _logs.length,
-              itemBuilder: (context, index) {
-                final log = _logs[index];
-                return Text(
-                  log,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontFamily: 'monospace',
-                  ),
-                );
-              },
-            ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: _selectedTab == 'log'
+                ? LogConsole(key: logConsoleKey) // ✅ 使用全局 logConsoleKey
+                : const Center(child: Text('请选择左侧菜单')),
           ),
         ),
       ],
     );
   }
 }
+
