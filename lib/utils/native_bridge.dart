@@ -58,4 +58,17 @@ class NativeBridge {
       }
     });
   }
+
+  static Future<String> initXray() async {
+    try {
+      final result = await _channel.invokeMethod<String>(
+        'performAction',
+        {'action': 'initXray'},
+      );
+      return result ?? '初始化完成，但无返回内容';
+    } catch (e) {
+      return '初始化失败: $e';
+    }
+  }
+
 }

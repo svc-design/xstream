@@ -4,6 +4,7 @@ import 'screens/settings_screen.dart';
 import 'screens/subscription_screen.dart';
 import 'utils/app_theme.dart';
 import 'utils/log_store.dart';
+import 'utils/global_keys.dart';
 import 'utils/global_state.dart';
 import 'utils/native_bridge.dart';
 import 'widgets/log_console.dart';
@@ -36,6 +37,7 @@ class _MainPageState extends State<MainPage> {
   void initState() {
     super.initState();
     NativeBridge.initializeLogger((log) {
+      logConsoleKey.currentState?.addLog("[macOS] $log");
       LogStore.addLog(LogLevel.info, "[macOS] $log");
     });
   }

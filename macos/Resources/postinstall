@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# 取参数中的密码（Flutter → Swift → Bash）
+SUDO_PASS="$1"
+
+# 设置路径
+SOURCE_PATH="$(dirname "$0")/xray"
+XRAY_BIN="/opt/homebrew/bin/xray"
+LAUNCH_AGENTS_DIR="$HOME/Library/LaunchAgents"
+XRAI_CONFIG_DIR="/opt/homebrew/etc"
+
+# 输出路径调试信息
+echo "SOURCE_PATH: $SOURCE_PATH"
+echo "XRAY_BIN: $XRAY_BIN"
+echo "LAUNCH_AGENTS_DIR: $LAUNCH_AGENTS_DIR"
+echo "XRAI_CONFIG_DIR: $XRAI_CONFIG_DIR"
+
+# 创建目标路径（如果不存在）
+echo "$SUDO_PASS" | sudo -S mkdir -p "$XRAI_CONFIG_DIR" "$LAUNCH_AGENTS_DIR"
+
+# 拷贝 xray 可执行文件
+echo "Copying xray binary..."
+ls -l "$SOURCE_PATH"
+
+if [[ "$(uname)" == "Darwin" && "$(uname -m)" == "arm64" ]]; then
+  echo "Detected macOS ARM64, copying xray binary..."
+  echo "$SUDO_PASS" | sudo -S cp -f "$SOURCE_PATH/xray" "$XRAY_BIN"
+  echo "$SUDO_PASS" | sudo -S chmod +x "$XRAY_BIN"
+else
+  echo "Skipping xray binary installation: not macOS ARM64."
+fi
+
+# 拷贝 plist 启动文件
+echo "Copying plist files..."
+echo "$SUDO_PASS" | sudo -S cp -f "$SOURCE_PATH/com.xstream.xray-node-ca.plist" "$LAUNCH_AGENTS_DIR/"
+echo "$SUDO_PASS" | sudo -S cp -f "$SOURCE_PATH/com.xstream.xray-node-us.plist" "$LAUNCH_AGENTS_DIR/"
+echo "$SUDO_PASS" | sudo -S cp -f "$SOURCE_PATH/com.xstream.xray-node-tky.plist" "$LAUNCH_AGENTS_DIR/"
+
+# 拷贝配置文件
+echo "Copying xray configuration files..."
+echo "$SUDO_PASS" | sudo -S cp -f "$SOURCE_PATH/xray-vpn-ca-node.json" "$XRAI_CONFIG_DIR/"
+echo "$SUDO_PASS" | sudo -S cp -f "$SOURCE_PATH/xray-vpn-tky-node.json" "$XRAI_CONFIG_DIR/"
+echo "$SUDO_PASS" | sudo -S cp -f "$SOURCE_PATH/xray-vpn-us-node.json" "$XRAI_CONFIG_DIR/"
+echo "$SUDO_PASS" | sudo -S cp -f "$SOURCE_PATH/xray-vpn.json" "$XRAI_CONFIG_DIR/"
+
+echo "✅ xray assets have been successfully embedded and deployed."
