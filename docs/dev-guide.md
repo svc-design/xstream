@@ -1,0 +1,43 @@
+# 开发者构建指南（macOS）
+
+本指南适用于希望在 macOS 上本地构建和调试 XStream 项目的开发者。
+
+## 环境准备
+
+### 1. 安装 Flutter
+
+使用 Homebrew 安装 Flutter： brew install --cask flutter
+
+或者参考官方安装指南：Flutter 安装文档
+
+2. 安装 Xcode 和配置
+
+前往 App Store 或 Apple Developer 官网安装最新版 Xcode。
+
+初次安装后运行初始化命令： sudo xcodebuild -runFirstLaunch
+安装命令行工具（如果未安装）： xcode-select --install
+
+3. 安装 CocoaPods（iOS/macOS 必需）
+
+sudo gem install cocoapods
+
+4. 拉取依赖并构建
+
+flutter pub get
+flutter build macos
+开发调试
+使用 VS Code 或 Android Studio 打开项目根目录，可执行如下命令调试：
+flutter run -d macos
+或使用调试按钮直接运行项目。
+
+# 目录结构简述
+
+lib/：Flutter 主代码目录
+macos/：平台特定配置与原生代码（Swift）
+assets/：图标、Xray 配置等静态资源
+
+# 常见问题
+构建失败、权限错误
+检查是否正确授予 macOS 网络和文件访问权限
+
+使用 flutter clean 清除缓存后重新构建
