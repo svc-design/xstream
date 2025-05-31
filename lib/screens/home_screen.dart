@@ -18,11 +18,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadNodes();
+    _loadNodes(); // 不再重新 load，只从已缓存的数据读取
   }
 
   Future<void> _loadNodes() async {
-    await VpnConfigManager.load();
     setState(() {
       vpnNodes = VpnConfigManager.nodes;
     });
