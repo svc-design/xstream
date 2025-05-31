@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../utils/native_bridge.dart';
 import '../../utils/global_state.dart';
+import '../../models/vpn_node.dart';
+import '../../utils/vpn_config.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -11,15 +13,23 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String _activeNode = '';
+  List<VpnNode> vpnNodes = [];
 
-  final List<Map<String, String>> vpnNodes = [
-    {'name': 'US-VPN', 'label': '🇺🇸 US-VPN', 'protocol': 'VLESS'},
-    {'name': 'CA-VPN', 'label': '🇨🇦 CA-VPN', 'protocol': 'VLESS'},
-    {'name': 'Tokyo-VPN', 'label': '🇯🇵 Tokyo-VPN', 'protocol': 'VLESS'},
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadNodes();
+  }
 
-  Future<void> _toggleNode(Map<String, String> node) async {
-    final nodeName = node['name']!;
+  Future<void> _loadNodes() async {
+    await VpnConfigManager.load();
+    setState(() {
+      vpnNodes = VpnConfigManager.nodes;
+    });
+  }
+
+  Future<void> _toggleNode(VpnNode node) async {
+    final nodeName = node.name;
     if (_activeNode == nodeName) {
       final msg = await NativeBridge.stopNodeService(nodeName);
       setState(() => _activeNode = '');
@@ -50,10 +60,10 @@ class _HomeScreenState extends State<HomeScreen> {
               itemCount: vpnNodes.length,
               itemBuilder: (context, index) {
                 final node = vpnNodes[index];
-                final isActive = _activeNode == node['name'];
+                final isActive = _activeNode == node.name;
                 return ListTile(
-                  title: Text(node['label']!),
-                  subtitle: Text('${node['protocol']} | tcp'),
+                  title: Text('${node.countryCode.toUpperCase()} | ${node.name}'),
+                  subtitle: Text('VLESS | tcp'),
                   trailing: IconButton(
                     icon: Icon(
                       isActive ? Icons.stop_circle : Icons.play_circle_fill,

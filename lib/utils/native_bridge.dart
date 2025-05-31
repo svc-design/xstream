@@ -1,13 +1,14 @@
 import 'package:flutter/services.dart';
-import 'vpn_config.dart'; // 用于获取 vpnPlistNameMap
+import 'vpn_config.dart';
 
 class NativeBridge {
   static const MethodChannel _channel = MethodChannel('com.xstream/native');
   static const MethodChannel _loggerChannel = MethodChannel('com.xstream/logger');
 
   static Future<String> startNodeService(String nodeName) async {
-    final suffix = vpnPlistNameMap[nodeName];
-    if (suffix == null) return '未知节点: $nodeName';
+    final node = VpnConfigManager.getNodeByName(nodeName);
+    if (node == null) return '未知节点: $nodeName';
+    final suffix = node.plistName;
 
     try {
       final result = await _channel.invokeMethod<String>(
@@ -21,8 +22,9 @@ class NativeBridge {
   }
 
   static Future<String> stopNodeService(String nodeName) async {
-    final suffix = vpnPlistNameMap[nodeName];
-    if (suffix == null) return '未知节点: $nodeName';
+    final node = VpnConfigManager.getNodeByName(nodeName);
+    if (node == null) return '未知节点: $nodeName';
+    final suffix = node.plistName;
 
     try {
       final result = await _channel.invokeMethod<String>(
@@ -36,8 +38,9 @@ class NativeBridge {
   }
 
   static Future<bool> checkNodeStatus(String nodeName) async {
-    final suffix = vpnPlistNameMap[nodeName];
-    if (suffix == null) return false;
+    final node = VpnConfigManager.getNodeByName(nodeName);
+    if (node == null) return false;
+    final suffix = node.plistName;
 
     try {
       final result = await _channel.invokeMethod<bool>(
@@ -70,5 +73,4 @@ class NativeBridge {
       return '初始化失败: $e';
     }
   }
-
 }
