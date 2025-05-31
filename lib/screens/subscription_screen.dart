@@ -73,13 +73,15 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       return;
     }
 
-    String configContent = template
+    String rawJson = template
         .replaceAll('<SERVER_DOMAIN>', domain)
         .replaceAll('<PORT>', port)
         .replaceAll('<UUID>', uuid);
 
+    late String fixedJsonContent;
     try {
-      jsonDecode(configContent);
+      final jsonObj = jsonDecode(rawJson);
+      fixedJsonContent = JsonEncoder.withIndent('  ').convert(jsonObj);
     } catch (e) {
       setState(() {
         _message = '生成的配置文件无效: $e';
@@ -95,7 +97,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     try {
       final script = '''
         echo "$password" | sudo -S bash -c '
-          echo "$configContent" > "$configPath"
+          echo "${fixedJsonContent.replaceAll(r'"', r'\"')}" > "$configPath"
           echo "$plistContent" > "$plistPath"
         '
       ''';
@@ -103,10 +105,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       final process = await Process.start('sh', ['-c', script], runInShell: true);
       final result = await process.exitCode;
       if (result == 0) {
-        // 保存到本地节点配置
         final node = VpnNode(
           name: nodeName,
-          countryCode: '', // 可根据需要设定
+          countryCode: '',
           configPath: configPath,
           plistName: nodeName.toLowerCase(),
           server: domain,
