@@ -18,10 +18,17 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadNodes(); // 不再重新 load，只从已缓存的数据读取
+    _initializeConfig();
   }
 
-  Future<void> _loadNodes() async {
+  Future<void> _initializeConfig() async {
+    await VpnConfigManager.load();
+    setState(() {
+      vpnNodes = VpnConfigManager.nodes;
+    });
+  }
+
+  Future<void> _reloadNodes() async {
     setState(() {
       vpnNodes = VpnConfigManager.nodes;
     });
@@ -62,7 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 final isActive = _activeNode == node.name;
                 return ListTile(
                   title: Text('${node.countryCode.toUpperCase()} | ${node.name}'),
-                  subtitle: Text('VLESS | tcp'),
+                  subtitle: const Text('VLESS | tcp'),
                   trailing: IconButton(
                     icon: Icon(
                       isActive ? Icons.stop_circle : Icons.play_circle_fill,
@@ -84,14 +91,45 @@ class _HomeScreenState extends State<HomeScreen> {
                           padding: const EdgeInsets.all(16.0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
-                              Text('Service Overview', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                              SizedBox(height: 8),
-                              Text('Address: Socks5://127.0.0.1:1080'),
-                              SizedBox(height: 8),
-                              Text('Latency: N/A'),
-                              SizedBox(height: 8),
-                              Text('Loss: N/A'),
+                            children: [
+                              const Text('Service Overview', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 8),
+                              const Text('Address: Socks5://127.0.0.1:1080'),
+                              const SizedBox(height: 8),
+                              const Text('Latency: N/A'),
+                              const SizedBox(height: 8),
+                              const Text('Loss: N/A'),
+                              const Divider(height: 32),
+                              ElevatedButton.icon(
+                                icon: const Icon(Icons.sync),
+                                label: const Text('同步配置'),
+                                onPressed: () async {
+                                  await VpnConfigManager.load();
+                                  await _reloadNodes();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        '🔄 已同步配置文件：\n- assets/vpn_nodes.json\n- ~/Library/Application Support/XStream/vpn_nodes.json',
+                                      ),
+                                      duration: Duration(seconds: 3),
+                                    ),
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 8),
+                              ElevatedButton.icon(
+                                icon: const Icon(Icons.save),
+                                label: const Text('保存配置'),
+                                onPressed: () async {
+                                  final path = await VpnConfigManager.saveToFile();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('✅ 配置已保存到：\n$path'),
+                                      duration: const Duration(seconds: 3),
+                                    ),
+                                  );
+                                },
+                              ),
                             ],
                           ),
                         ),

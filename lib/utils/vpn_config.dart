@@ -76,11 +76,13 @@ class VpnConfigManager {
     return json.encode(_nodes.map((e) => e.toJson()).toList());
   }
 
-  static Future<void> saveToFile() async {
+  /// 保存配置并返回保存路径
+  static Future<String> saveToFile() async {
     final path = await _getLocalConfigPath();
     final file = File(path);
     await file.create(recursive: true);
     await file.writeAsString(exportToJson());
+    return path;
   }
 
   static Future<void> importFromJson(String jsonStr) async {
