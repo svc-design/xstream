@@ -90,4 +90,26 @@ class VpnConfigManager {
     _nodes = jsonList.map((e) => VpnNode.fromJson(e)).toList();
     await saveToFile();
   }
+
+  /// 删除节点对应的配置文件和 plist 文件（如果存在），并从内存移除
+  static Future<void> deleteNodeFiles(VpnNode node) async {
+    try {
+      final jsonFile = File(node.configPath);
+      if (await jsonFile.exists()) {
+        await jsonFile.delete();
+      }
+
+      final homeDir = Platform.environment['HOME'] ?? '/Users/unknown';
+      final plistPath = '$homeDir/Library/LaunchAgents/com.xstream.xray-node-${node.plistName}.plist';
+      final plistFile = File(plistPath);
+      if (await plistFile.exists()) {
+        await plistFile.delete();
+      }
+
+      removeNode(node.name);
+      await saveToFile();
+    } catch (e) {
+      print('⚠️ 删除节点文件失败: $e');
+    }
+  }
 }

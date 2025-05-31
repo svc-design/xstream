@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../utils/native_bridge.dart';
 import '../../utils/global_state.dart';
@@ -14,6 +15,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String _activeNode = '';
   List<VpnNode> vpnNodes = [];
+  final Set<String> _selectedNodeNames = {};
 
   @override
   void initState() {
@@ -50,6 +52,25 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _deleteSelectedNodes() async {
+    final toDelete = vpnNodes.where((e) => _selectedNodeNames.contains(e.name)).toList();
+    for (final node in toDelete) {
+      try {
+        await File(node.configPath).delete();
+        final home = Platform.environment['HOME'] ?? '/Users/unknown';
+        final plistPath = '$home/Library/LaunchAgents/com.xstream.xray-node-${node.plistName}.plist';
+        await File(plistPath).delete();
+      } catch (_) {}
+      VpnConfigManager.removeNode(node.name);
+    }
+    await VpnConfigManager.saveToFile();
+    _selectedNodeNames.clear();
+    _reloadNodes();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('✅ 已删除 ${toDelete.length} 个节点并更新配置')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<bool>(
@@ -67,9 +88,24 @@ class _HomeScreenState extends State<HomeScreen> {
               itemBuilder: (context, index) {
                 final node = vpnNodes[index];
                 final isActive = _activeNode == node.name;
+                final isSelected = _selectedNodeNames.contains(node.name);
                 return ListTile(
                   title: Text('${node.countryCode.toUpperCase()} | ${node.name}'),
                   subtitle: const Text('VLESS | tcp'),
+                  leading: isUnlocked
+                      ? Checkbox(
+                          value: isSelected,
+                          onChanged: (checked) {
+                            setState(() {
+                              if (checked == true) {
+                                _selectedNodeNames.add(node.name);
+                              } else {
+                                _selectedNodeNames.remove(node.name);
+                              }
+                            });
+                          },
+                        )
+                      : null,
                   trailing: IconButton(
                     icon: Icon(
                       isActive ? Icons.stop_circle : Icons.play_circle_fill,
@@ -115,6 +151,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   );
                                 },
+                              ),
+                              const SizedBox(height: 8),
+                              ElevatedButton.icon(
+                                icon: const Icon(Icons.delete_forever),
+                                label: const Text('删除配置'),
+                                onPressed: _selectedNodeNames.isNotEmpty ? _deleteSelectedNodes : null,
                               ),
                               const SizedBox(height: 8),
                               ElevatedButton.icon(
