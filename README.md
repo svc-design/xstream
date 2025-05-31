@@ -1,5 +1,9 @@
 # XStream
 
+<p align="center">
+  <img src="assets/logo.png" alt="Project Logo" width="200"/>
+</p>
+
 **XStream** 是一个用户友好的图形化客户端，用于便捷管理 Xray-core 多节点连接配置，优化网络体验，助您畅享流媒体、跨境电商与开发者服务（如 GitHub）。
 
 ---
