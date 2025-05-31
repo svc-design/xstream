@@ -2,6 +2,9 @@
 
 FLUTTER = flutter
 PROJECT_NAME = XStream
+APP_NAME := Xstream
+ICON_SRC := assets/logo.png
+ICON_DST := macos/Runner/Assets.xcassets/AppIcon.appiconset
 
 UNAME_S := $(shell uname -s)
 UNAME_M := $(shell uname -m)
@@ -18,6 +21,36 @@ android-arm64: android-arm64
 ios-arm64: ios-arm64
 
 all: macos-intel macos-arm64 windows-x64 linux-x64 linux-arm64 android-arm64 ios-arm64
+
+
+## 生成并替换 macOS App 图标
+icon:
+	@echo "🎨 生成 macOS AppIcon..."
+	rm -rf temp.iconset
+	mkdir -p temp.iconset
+	sips -z 16 16     $(ICON_SRC) --out temp.iconset/icon_16x16.png
+	sips -z 32 32     $(ICON_SRC) --out temp.iconset/icon_16x16@2x.png
+	sips -z 32 32     $(ICON_SRC) --out temp.iconset/icon_32x32.png
+	sips -z 64 64     $(ICON_SRC) --out temp.iconset/icon_32x32@2x.png
+	sips -z 128 128   $(ICON_SRC) --out temp.iconset/icon_128x128.png
+	sips -z 256 256   $(ICON_SRC) --out temp.iconset/icon_128x128@2x.png
+	sips -z 256 256   $(ICON_SRC) --out temp.iconset/icon_256x256.png
+	sips -z 512 512   $(ICON_SRC) --out temp.iconset/icon_256x256@2x.png
+	sips -z 512 512   $(ICON_SRC) --out temp.iconset/icon_512x512.png
+	cp $(ICON_SRC) temp.iconset/icon_512x512@2x.png
+
+	@echo "🧼 替换 AppIcon.appiconset 中的图标..."
+	cp temp.iconset/icon_16x16.png       $(ICON_DST)/app_icon_16.png
+	cp temp.iconset/icon_16x16@2x.png    $(ICON_DST)/app_icon_32.png
+	cp temp.iconset/icon_32x32.png       $(ICON_DST)/app_icon_32.png
+	cp temp.iconset/icon_32x32@2x.png    $(ICON_DST)/app_icon_64.png
+	cp temp.iconset/icon_128x128.png     $(ICON_DST)/app_icon_128.png
+	cp temp.iconset/icon_128x128@2x.png  $(ICON_DST)/app_icon_256.png
+	cp temp.iconset/icon_256x256.png     $(ICON_DST)/app_icon_256.png
+	cp temp.iconset/icon_256x256@2x.png  $(ICON_DST)/app_icon_512.png
+	cp temp.iconset/icon_512x512@2x.png  $(ICON_DST)/app_icon_1024.png
+
+	@echo "✅ 图标替换完成！"
 
 fix-macos-signing:
 	@echo "🧹 Cleaning extended attributes for macOS build..."
