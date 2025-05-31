@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../utils/global_state.dart';
+import '../../models/vpn_node.dart';
+import '../../utils/vpn_config.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   const SubscriptionScreen({Key? key}) : super(key: key);
@@ -12,7 +14,9 @@ class SubscriptionScreen extends StatefulWidget {
 }
 
 class _SubscriptionScreenState extends State<SubscriptionScreen> {
+  final _nodeNameController = TextEditingController();
   final _domainController = TextEditingController();
+  final _portController = TextEditingController(text: '443');
   final _uuidController = TextEditingController();
   String _message = '';
 
@@ -20,13 +24,41 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     return await rootBundle.loadString('assets/xray-template.json');
   }
 
-  Future<void> _generateConfig(String password) async {
-    final domain = _domainController.text;
-    final uuid = _uuidController.text;
+  String _generatePlistContent(String name, String configPath) {
+    return '''<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.xstream.xray-node-$name</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/xray</string>
+    <string>run</string>
+    <string>-c</string>
+    <string>$configPath</string>
+  </array>
+  <key>StandardOutPath</key>
+  <string>/tmp/xray-vpn-$name-node.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/xray-vpn-$name-node.err</string>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+</dict>
+</plist>''';
+  }
 
-    if (domain.isEmpty || uuid.isEmpty) {
+  Future<void> _generateConfig(String password) async {
+    final nodeName = _nodeNameController.text.trim();
+    final domain = _domainController.text.trim();
+    final port = _portController.text.trim();
+    final uuid = _uuidController.text.trim();
+
+    if (nodeName.isEmpty || domain.isEmpty || port.isEmpty || uuid.isEmpty) {
       setState(() {
-        _message = '域名和 UUID 不能为空';
+        _message = '所有字段均不能为空';
       });
       return;
     }
@@ -43,6 +75,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
     String configContent = template
         .replaceAll('<SERVER_DOMAIN>', domain)
+        .replaceAll('<PORT>', port)
         .replaceAll('<UUID>', uuid);
 
     try {
@@ -54,24 +87,46 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       return;
     }
 
-    try {
-      final process = await Process.start('sh', ['-c', '''
-        echo "$password" | sudo -S bash -c 'echo "$configContent" > /opt/homebrew/etc/xray-vpn.json'
-      '''], runInShell: true);
+    final configPath = '/opt/homebrew/etc/xray-vpn-${nodeName.toLowerCase()}.json';
+    final homeDir = Platform.environment['HOME'] ?? '/Users/unknown';
+    final plistPath = '$homeDir/Library/LaunchAgents/com.xstream.xray-node-${nodeName.toLowerCase()}.plist';
+    final plistContent = _generatePlistContent(nodeName.toLowerCase(), configPath);
 
+    try {
+      final script = '''
+        echo "$password" | sudo -S bash -c '
+          echo "$configContent" > "$configPath"
+          echo "$plistContent" > "$plistPath"
+        '
+      ''';
+
+      final process = await Process.start('sh', ['-c', script], runInShell: true);
       final result = await process.exitCode;
       if (result == 0) {
+        // 保存到本地节点配置
+        final node = VpnNode(
+          name: nodeName,
+          countryCode: '', // 可根据需要设定
+          configPath: configPath,
+          plistName: nodeName.toLowerCase(),
+          server: domain,
+          port: int.tryParse(port) ?? 443,
+          uuid: uuid,
+        );
+        VpnConfigManager.addNode(node);
+        await VpnConfigManager.saveToFile();
+
         setState(() {
-          _message = '✅ 配置文件生成成功: /opt/homebrew/etc/xray-vpn.json';
+          _message = '✅ 配置已保存: $configPath\n✅ 服务项已生成: $plistPath';
         });
       } else {
         setState(() {
-          _message = '生成配置文件失败，错误码: $result';
+          _message = '生成配置失败，错误码: $result';
         });
       }
     } catch (e) {
       setState(() {
-        _message = '生成配置文件失败: $e';
+        _message = '生成配置失败: $e';
       });
     }
   }
@@ -97,7 +152,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Subscription Config'),
+        title: const Text('添加 VPN 节点配置'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -105,30 +160,32 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextField(
-              controller: _domainController,
-              decoration: const InputDecoration(
-                labelText: 'XTLS Server 域名',
-                border: OutlineInputBorder(),
-              ),
+              controller: _nodeNameController,
+              decoration: const InputDecoration(labelText: '节点名（如 US-VPN）'),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _domainController,
+              decoration: const InputDecoration(labelText: '服务器域名'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _portController,
+              decoration: const InputDecoration(labelText: '端口号'),
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 12),
             TextField(
               controller: _uuidController,
-              decoration: const InputDecoration(
-                labelText: 'UUID',
-                border: OutlineInputBorder(),
-              ),
+              decoration: const InputDecoration(labelText: 'UUID'),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _onCreateConfig,
-              child: const Text('创建配置项'),
+              child: const Text('生成配置并保存'),
             ),
             const SizedBox(height: 16),
-            Text(
-              _message,
-              style: const TextStyle(color: Colors.red),
-            ),
+            Text(_message, style: const TextStyle(color: Colors.red)),
           ],
         ),
       ),
