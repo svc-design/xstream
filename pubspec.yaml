@@ -25,3 +25,4 @@ flutter:
   # 注册外部资源
   assets:
     - assets/xray-template.json
+    - assets/logo.png
