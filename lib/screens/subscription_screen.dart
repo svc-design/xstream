@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../utils/global_state.dart';
+import '../../models/vpn_node.dart';
+import '../../utils/vpn_config.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   const SubscriptionScreen({Key? key}) : super(key: key);
@@ -93,7 +95,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     try {
       final script = '''
         echo "$password" | sudo -S bash -c '
-          echo "$configContent" > $configPath
+          echo "$configContent" > "$configPath"
           echo "$plistContent" > "$plistPath"
         '
       ''';
@@ -101,6 +103,19 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       final process = await Process.start('sh', ['-c', script], runInShell: true);
       final result = await process.exitCode;
       if (result == 0) {
+        // 保存到本地节点配置
+        final node = VpnNode(
+          name: nodeName,
+          countryCode: '', // 可根据需要设定
+          configPath: configPath,
+          plistName: nodeName.toLowerCase(),
+          server: domain,
+          port: int.tryParse(port) ?? 443,
+          uuid: uuid,
+        );
+        VpnConfigManager.addNode(node);
+        await VpnConfigManager.saveToFile();
+
         setState(() {
           _message = '✅ 配置已保存: $configPath\n✅ 服务项已生成: $plistPath';
         });
