@@ -29,4 +29,5 @@ doc/api/
 
 init_xstream.sh
 merged_code.dart
+*.dmg
 .DS_Store

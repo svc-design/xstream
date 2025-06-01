@@ -3,13 +3,13 @@
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.xstream.xray-node-ca</string>
+  <string>xstream.svc.plus.xray-node-ca</string>
   <key>ProgramArguments</key>
   <array>
     <string>/opt/homebrew/bin/xray</string>
     <string>run</string>
     <string>-c</string>
-    <string>/opt/homebrew/etc/xray-vpn-ca-node.json</string>
+    <string>/opt/homebrew/etc/xray-vpn-node-ca.json</string>
   </array>
   <key>StandardOutPath</key>
   <string>/tmp/xray-vpn-ca-node.log</string>

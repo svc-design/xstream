@@ -29,24 +29,6 @@
 		33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 33CC10F22044A3C60003C045 /* Assets.xcassets */; };
 		33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 33CC10F42044A3C60003C045 /* MainMenu.xib */; };
 		33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC11122044BFA00003C045 /* MainFlutterWindow.swift */; };
-		978816F12DE7E9DA0060DA96 /* xray-vpn-tky-node.json in Resources */ = {isa = PBXBuildFile; fileRef = 978816EE2DE7E9DA0060DA96 /* xray-vpn-tky-node.json */; };
-		978816F22DE7E9DA0060DA96 /* xray-vpn-us-node.json in Resources */ = {isa = PBXBuildFile; fileRef = 978816EF2DE7E9DA0060DA96 /* xray-vpn-us-node.json */; };
-		978816F32DE7E9DA0060DA96 /* xray in Resources */ = {isa = PBXBuildFile; fileRef = 978816EB2DE7E9DA0060DA96 /* xray */; };
-		978816F42DE7E9DA0060DA96 /* com.xstream.xray-node-tky.plist in Resources */ = {isa = PBXBuildFile; fileRef = 978816E92DE7E9DA0060DA96 /* com.xstream.xray-node-tky.plist */; };
-		978816F52DE7E9DA0060DA96 /* com.xstream.xray-node-ca.plist in Resources */ = {isa = PBXBuildFile; fileRef = 978816E82DE7E9DA0060DA96 /* com.xstream.xray-node-ca.plist */; };
-		978816F62DE7E9DA0060DA96 /* xray-vpn.json in Resources */ = {isa = PBXBuildFile; fileRef = 978816EC2DE7E9DA0060DA96 /* xray-vpn.json */; };
-		978816F72DE7E9DA0060DA96 /* com.xstream.xray-node-us.plist in Resources */ = {isa = PBXBuildFile; fileRef = 978816EA2DE7E9DA0060DA96 /* com.xstream.xray-node-us.plist */; };
-		978816F82DE7E9DA0060DA96 /* xray-vpn-ca-node.json in Resources */ = {isa = PBXBuildFile; fileRef = 978816ED2DE7E9DA0060DA96 /* xray-vpn-ca-node.json */; };
-		978816F92DE7E9DA0060DA96 /* xray-vpn-tky-node.json in Resources */ = {isa = PBXBuildFile; fileRef = 978816EE2DE7E9DA0060DA96 /* xray-vpn-tky-node.json */; };
-		978816FA2DE7E9DA0060DA96 /* xray-vpn-us-node.json in Resources */ = {isa = PBXBuildFile; fileRef = 978816EF2DE7E9DA0060DA96 /* xray-vpn-us-node.json */; };
-		978816FB2DE7E9DA0060DA96 /* xray in Resources */ = {isa = PBXBuildFile; fileRef = 978816EB2DE7E9DA0060DA96 /* xray */; };
-		978816FC2DE7E9DA0060DA96 /* com.xstream.xray-node-tky.plist in Resources */ = {isa = PBXBuildFile; fileRef = 978816E92DE7E9DA0060DA96 /* com.xstream.xray-node-tky.plist */; };
-		978816FD2DE7E9DA0060DA96 /* com.xstream.xray-node-ca.plist in Resources */ = {isa = PBXBuildFile; fileRef = 978816E82DE7E9DA0060DA96 /* com.xstream.xray-node-ca.plist */; };
-		978816FE2DE7E9DA0060DA96 /* xray-vpn.json in Resources */ = {isa = PBXBuildFile; fileRef = 978816EC2DE7E9DA0060DA96 /* xray-vpn.json */; };
-		978816FF2DE7E9DA0060DA96 /* com.xstream.xray-node-us.plist in Resources */ = {isa = PBXBuildFile; fileRef = 978816EA2DE7E9DA0060DA96 /* com.xstream.xray-node-us.plist */; };
-		978817002DE7E9DA0060DA96 /* xray-vpn-ca-node.json in Resources */ = {isa = PBXBuildFile; fileRef = 978816ED2DE7E9DA0060DA96 /* xray-vpn-ca-node.json */; };
-		97E8BA8F2DE97BED0081C4DB /* postinstall in Resources */ = {isa = PBXBuildFile; fileRef = 97E8BA8E2DE97BED0081C4DB /* postinstall */; };
-		97E8BA902DE97BED0081C4DB /* postinstall in Resources */ = {isa = PBXBuildFile; fileRef = 97E8BA8E2DE97BED0081C4DB /* postinstall */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -105,17 +87,40 @@
 		77EAD4060A9CA64878A8A272 /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
-		978816E82DE7E9DA0060DA96 /* com.xstream.xray-node-ca.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "com.xstream.xray-node-ca.plist"; sourceTree = "<group>"; };
-		978816E92DE7E9DA0060DA96 /* com.xstream.xray-node-tky.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "com.xstream.xray-node-tky.plist"; sourceTree = "<group>"; };
-		978816EA2DE7E9DA0060DA96 /* com.xstream.xray-node-us.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "com.xstream.xray-node-us.plist"; sourceTree = "<group>"; };
-		978816EB2DE7E9DA0060DA96 /* xray */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = xray; sourceTree = "<group>"; };
-		978816EC2DE7E9DA0060DA96 /* xray-vpn.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "xray-vpn.json"; sourceTree = "<group>"; };
-		978816ED2DE7E9DA0060DA96 /* xray-vpn-ca-node.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "xray-vpn-ca-node.json"; sourceTree = "<group>"; };
-		978816EE2DE7E9DA0060DA96 /* xray-vpn-tky-node.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "xray-vpn-tky-node.json"; sourceTree = "<group>"; };
-		978816EF2DE7E9DA0060DA96 /* xray-vpn-us-node.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "xray-vpn-us-node.json"; sourceTree = "<group>"; };
-		97E8BA8E2DE97BED0081C4DB /* postinstall */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = postinstall; sourceTree = "<group>"; };
 		E7B9D3DA76B1887117E7E2FB /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		97A1D2D22DEC03F500278BA5 /* Exceptions for "xray" folder in "RunnerTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				xray,
+				"xray-vpn-node-ca.json",
+				"xray-vpn-node-tky.json",
+				"xray-vpn-node-us.json",
+				"xray-vpn.json",
+				"xstream.svc.plus.xray-node-ca.plist",
+				"xstream.svc.plus.xray-node-tky.plist",
+				"xstream.svc.plus.xray-node-us.plist",
+			);
+			target = 331C80D4294CF70F00263BE5 /* RunnerTests */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		97A1D2B92DEC03E200278BA5 /* xray */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				97A1D2D22DEC03F500278BA5 /* Exceptions for "xray" folder in "RunnerTests" target */,
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = xray;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		331C80D2294CF70F00263BE5 /* Frameworks */ = {
@@ -180,8 +185,7 @@
 		33CC11242044D66E0003C045 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				97E8BA8E2DE97BED0081C4DB /* postinstall */,
-				978816F02DE7E9DA0060DA96 /* xray */,
+				97A1D2B92DEC03E200278BA5 /* xray */,
 				33CC10F22044A3C60003C045 /* Assets.xcassets */,
 				33CC10F42044A3C60003C045 /* MainMenu.xib */,
 				33CC10F72044A3C60003C045 /* Info.plist */,
@@ -212,21 +216,6 @@
 				33BA886A226E78AF003329D5 /* Configs */,
 			);
 			path = Runner;
-			sourceTree = "<group>";
-		};
-		978816F02DE7E9DA0060DA96 /* xray */ = {
-			isa = PBXGroup;
-			children = (
-				978816E82DE7E9DA0060DA96 /* com.xstream.xray-node-ca.plist */,
-				978816E92DE7E9DA0060DA96 /* com.xstream.xray-node-tky.plist */,
-				978816EA2DE7E9DA0060DA96 /* com.xstream.xray-node-us.plist */,
-				978816EB2DE7E9DA0060DA96 /* xray */,
-				978816EC2DE7E9DA0060DA96 /* xray-vpn.json */,
-				978816ED2DE7E9DA0060DA96 /* xray-vpn-ca-node.json */,
-				978816EE2DE7E9DA0060DA96 /* xray-vpn-tky-node.json */,
-				978816EF2DE7E9DA0060DA96 /* xray-vpn-us-node.json */,
-			);
-			path = xray;
 			sourceTree = "<group>";
 		};
 		D73912EC22F37F3D000D13A0 /* Frameworks */ = {
@@ -290,6 +279,9 @@
 			dependencies = (
 				33CC11202044C79F0003C045 /* PBXTargetDependency */,
 			);
+			fileSystemSynchronizedGroups = (
+				97A1D2B92DEC03E200278BA5 /* xray */,
+			);
 			name = Runner;
 			productName = Runner;
 			productReference = 33CC10ED2044A3C60003C045 /* xstream.app */;
@@ -351,15 +343,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				978816F12DE7E9DA0060DA96 /* xray-vpn-tky-node.json in Resources */,
-				978816F22DE7E9DA0060DA96 /* xray-vpn-us-node.json in Resources */,
-				978816F32DE7E9DA0060DA96 /* xray in Resources */,
-				978816F42DE7E9DA0060DA96 /* com.xstream.xray-node-tky.plist in Resources */,
-				978816F52DE7E9DA0060DA96 /* com.xstream.xray-node-ca.plist in Resources */,
-				97E8BA902DE97BED0081C4DB /* postinstall in Resources */,
-				978816F62DE7E9DA0060DA96 /* xray-vpn.json in Resources */,
-				978816F72DE7E9DA0060DA96 /* com.xstream.xray-node-us.plist in Resources */,
-				978816F82DE7E9DA0060DA96 /* xray-vpn-ca-node.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -367,15 +350,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				978816F92DE7E9DA0060DA96 /* xray-vpn-tky-node.json in Resources */,
-				978816FA2DE7E9DA0060DA96 /* xray-vpn-us-node.json in Resources */,
-				978816FB2DE7E9DA0060DA96 /* xray in Resources */,
-				978816FC2DE7E9DA0060DA96 /* com.xstream.xray-node-tky.plist in Resources */,
-				978816FD2DE7E9DA0060DA96 /* com.xstream.xray-node-ca.plist in Resources */,
-				978816FE2DE7E9DA0060DA96 /* xray-vpn.json in Resources */,
-				978816FF2DE7E9DA0060DA96 /* com.xstream.xray-node-us.plist in Resources */,
-				97E8BA8F2DE97BED0081C4DB /* postinstall in Resources */,
-				978817002DE7E9DA0060DA96 /* xray-vpn-ca-node.json in Resources */,
 				33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */,
 				33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */,
 			);

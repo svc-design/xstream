@@ -12,19 +12,25 @@ class AppDelegate: FlutterAppDelegate {
         binaryMessenger: controller.engine.binaryMessenger
       )
 
-      channel.setMethodCallHandler { call, result in
+      // Dynamically load the bundle identifier
+      let bundleId = Bundle.main.bundleIdentifier ?? "com.xstream" // Fallback to default if not found
+
+      channel.setMethodCallHandler { [self] call, result in  // Explicitly capture `self`
         switch call.method {
+        case "writeConfigFiles":
+          self.writeConfigFiles(call: call, result: result)
+
         case "startNodeService", "stopNodeService", "checkNodeStatus":
           guard let args = call.arguments as? [String: Any],
-                let suffix = args["nodeSuffix"] as? String else {
-            result(FlutterError(code: "INVALID_ARGS", message: "Missing node suffix", details: nil))
+                let plistName = args["plistName"] as? String else {
+            result(FlutterError(code: "INVALID_ARGS", message: "Missing plistName", details: nil))
             return
           }
 
           let userName = NSUserName()
           let uid = getuid()
-          let plistPath = "/Users/\(userName)/Library/LaunchAgents/com.xstream.xray-node-\(suffix).plist"
-          let serviceName = "com.xstream.xray-node-\(suffix)"
+          let serviceName = "\(bundleId).xray-node-\(plistName)"
+          let plistPath = "/Users/\(userName)/Library/LaunchAgents/\(serviceName).plist"
 
           switch call.method {
           case "startNodeService":
@@ -51,7 +57,7 @@ class AppDelegate: FlutterAppDelegate {
           }
 
           if action == "initXray" {
-            self.runInitXray(result: result)
+            self.runInitXray(bundleId: bundleId, result: result)
           } else {
             result(FlutterError(code: "UNKNOWN_ACTION", message: "Unsupported action", details: action))
           }
@@ -65,17 +71,29 @@ class AppDelegate: FlutterAppDelegate {
     super.applicationDidFinishLaunching(notification)
   }
 
-  // ✅ 使用 AppleScript 调用 cp 命令（弹出原生授权对话框）
-  private func runInitXray(result: @escaping FlutterResult) {
+  private func runInitXray(bundleId: String, result: @escaping FlutterResult) {
     guard let resourcePath = Bundle.main.resourcePath else {
         result("❌ 无法获取 Resources 路径")
         return
     }
 
-    // 处理路径中的空格和特殊字符
     let escapedPath = resourcePath.replacingOccurrences(of: "'", with: "'\\''")
 
-    // 拼接正确的路径，确保没有空格问题
+    let plistSuffixes = ["ca", "us", "tky"]
+    let plistCopy = plistSuffixes.map {
+      "cp -f '\(escapedPath)/\(bundleId).xray-node-\($0).plist' $HOME/Library/LaunchAgents;"
+    }.joined(separator: "\n")
+
+    let jsonFiles = [
+      "xray-vpn-node-ca.json",
+      "xray-vpn-node-tky.json",
+      "xray-vpn-node-us.json",
+      "xray-vpn.json"
+    ]
+    let jsonCopy = jsonFiles.map {
+      "cp -f '\(escapedPath)/\($0)' /opt/homebrew/etc/;"
+    }.joined(separator: "\n")
+
     let script = """
     do shell script \"
       mkdir -p /opt/homebrew/etc;
@@ -86,31 +104,105 @@ class AppDelegate: FlutterAppDelegate {
         chmod +x /opt/homebrew/bin/xray;
       fi;
       chmod +x /opt/homebrew/bin/xray;
-      cp -f '\(escapedPath)/com.xstream.xray-node-ca.plist' $HOME/Library/LaunchAgents/;
-      cp -f '\(escapedPath)/com.xstream.xray-node-us.plist' $HOME/Library/LaunchAgents/;
-      cp -f '\(escapedPath)/com.xstream.xray-node-tky.plist' $HOME/Library/LaunchAgents/;
-      cp -f '\(escapedPath)/xray-vpn.json' /opt/homebrew/etc/
-      cp -f '\(escapedPath)/xray-vpn-ca-node.json' /opt/homebrew/etc/
-      cp -f '\(escapedPath)/xray-vpn-us-node.json' /opt/homebrew/etc/
-      cp -f '\(escapedPath)/xray-vpn-tky-node.json' /opt/homebrew/etc/
+      \(plistCopy)
+      \(jsonCopy)
     \" with administrator privileges
     """
 
-    // 执行 AppleScript
     let appleScript = NSAppleScript(source: script)
     var error: NSDictionary? = nil
     let output = appleScript?.executeAndReturnError(&error)
 
     if let error = error {
         result("❌ AppleScript 执行失败: \(error)")
+        logToFlutter("error", "Xray 初始化失败: \(error)")
     } else {
         result("✅ Xray 初始化完成: \(output?.stringValue ?? "Success")")
+        logToFlutter("info", "Xray 初始化完成: \(output?.stringValue ?? "Success")")
     }
   }
 
-  func runShellScript(command: String, returnsBool: Bool, result: @escaping FlutterResult) {
-    logToFlutter("info", "🛠️ 执行命令: \(command)")
+  func writeConfigFiles(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    guard let args = call.arguments as? [String: Any],
+          let configPath = args["configPath"] as? String,
+          let configContent = args["configContent"] as? String,
+          let plistPath = args["plistPath"] as? String,
+          let plistContent = args["plistContent"] as? String,
+          let nodeName = args["nodeName"] as? String,
+          let countryCode = args["countryCode"] as? String,
+          let sudoPass = args["password"] as? String,
+          let vpnNodesJsonPath = args["vpnNodesJsonPath"] as? String else {
+        result(FlutterError(code: "INVALID_ARGS", message: "Missing arguments", details: nil))
+        return
+    }
 
+    // Log the vpn_nodes.json path before update
+    logToFlutter("info", "即将更新 vpn_nodes.json: \(vpnNodesJsonPath)")
+
+    // Read existing vpn_nodes.json file and parse it into a list
+    let fileManager = FileManager.default
+    var vpnNodes: [[String: Any]] = []
+
+    if fileManager.fileExists(atPath: vpnNodesJsonPath) {
+        do {
+            let data = try Data(contentsOf: URL(fileURLWithPath: vpnNodesJsonPath))
+            vpnNodes = try JSONSerialization.jsonObject(with: data, options: []) as? [[String: Any]] ?? []
+            logToFlutter("info", "vpn_nodes.json 文件读取成功: \(vpnNodesJsonPath)")
+        } catch {
+            result(FlutterError(code: "READ_ERROR", message: "Unable to read vpn_nodes.json file", details: error.localizedDescription))
+            logToFlutter("error", "读取 vpn_nodes.json 文件失败: \(error.localizedDescription)")
+            return
+        }
+    } else {
+        logToFlutter("warning", "未找到 vpn_nodes.json 文件: \(vpnNodesJsonPath)")
+        return
+    }
+
+    // Create new node information
+    let newNode: [String: Any] = [
+        "name": nodeName,
+        "countryCode": countryCode,
+        "plistPath": plistPath,
+        "configPath": configPath
+    ]
+    vpnNodes.append(newNode)
+
+    // Log the updated vpn_nodes.json data to verify
+    logToFlutter("info", "即将更新 vpn_nodes.json 内容: \(vpnNodesJsonPath)")
+
+    // Write updated vpn_nodes.json file
+    do {
+        // Write the config and plist files
+        writeFile(path: configPath, content: configContent, password: sudoPass)
+        writeFile(path: plistPath, content: plistContent, password: sudoPass)
+
+        // Write updated vpn_nodes.json file
+        let updatedJsonContent = try JSONSerialization.data(withJSONObject: vpnNodes, options: .prettyPrinted)
+        // Write to the vpn_nodes.json file
+        writeFile(path: vpnNodesJsonPath, content: String(data: updatedJsonContent, encoding: .utf8) ?? "", password: sudoPass)
+
+        // Log success
+        logToFlutter("info", "vpn_nodes.json 更新成功: \(vpnNodesJsonPath)")
+
+        result("Configuration files written successfully")
+    } catch {
+        result(FlutterError(code: "WRITE_ERROR", message: "Unable to write vpn_nodes.json file", details: error.localizedDescription))
+        logToFlutter("error", "写入 vpn_nodes.json 失败: \(error.localizedDescription)")
+    }
+ }
+
+  private func writeFile(path: String, content: String, password: String) {
+    let script = """
+    echo "\(password)" | sudo -S bash -c 'echo "\(content)" > \(path)'
+    """
+
+    // Execute the shell command to write the file
+    runShellScript(command: script, returnsBool: false, result: { _ in
+        // Can handle feedback here if necessary
+    })
+  }
+
+  func runShellScript(command: String, returnsBool: Bool, result: @escaping FlutterResult) {
     let task = Process()
     task.launchPath = "/bin/zsh"
     task.arguments = ["-c", command]
@@ -119,40 +211,44 @@ class AppDelegate: FlutterAppDelegate {
     task.standardOutput = pipe
     task.standardError = pipe
 
+    let fileHandle = pipe.fileHandleForReading
     var outputBuffer = ""
-    // ✅ 实时读取输出
-    pipe.fileHandleForReading.readabilityHandler = { handle in
-      let data = handle.availableData
-      if let output = String(data: data, encoding: .utf8), !output.isEmpty {
-        outputBuffer += output
-        self.logToFlutter("info", output)
-      }
+
+    fileHandle.readabilityHandler = { handle in
+        let data = handle.availableData
+        if let output = String(data: data, encoding: .utf8), !output.isEmpty {
+            outputBuffer += output
+        }
     }
 
     task.terminationHandler = { process in
-      pipe.fileHandleForReading.readabilityHandler = nil // 停止监听
+        fileHandle.readabilityHandler = nil
 
-      DispatchQueue.main.async {
-        if returnsBool {
-          let found = outputBuffer.contains("com.xstream")
-          self.logToFlutter("info", "🔍 服务状态: \(found ? "运行中 ✅" : "未运行 ❌")")
-          result(found)
-        } else {
-          if process.terminationStatus == 0 {
-            self.logToFlutter("info", "✅ 命令执行成功")
-            result("success")
-          } else {
-            self.logToFlutter("error", "❌ 命令执行失败: \(outputBuffer)")
-            result(FlutterError(code: "EXEC_FAILED", message: "Command failed", details: outputBuffer))
-          }
-        }
-      }
+        let found = outputBuffer.contains("xray-node")
+        let isSuccess = (process.terminationStatus == 0)
+
+        DispatchQueue.main.async(execute: {
+            if returnsBool {
+                result(found)
+            } else {
+                if isSuccess {
+                    result("success")
+                    self.logToFlutter("info", "命令执行成功: \(outputBuffer)")  // Success log
+                } else {
+                    result(FlutterError(code: "EXEC_FAILED", message: "Command failed", details: outputBuffer))
+                    self.logToFlutter("error", "命令执行失败: \(outputBuffer)")  // Failure log
+                }
+            }
+        })
     }
 
     do {
-      try task.run()
+        try task.run()
     } catch {
-      result(FlutterError(code: "EXEC_ERROR", message: "Process failed to run", details: error.localizedDescription))
+        result(FlutterError(code: "EXEC_ERROR", message: "Process failed to run", details: error.localizedDescription))
+        DispatchQueue.main.async(execute: {
+            self.logToFlutter("error", "Process failed to run: \(error.localizedDescription)")  // Failure log
+        })
     }
   }
 
