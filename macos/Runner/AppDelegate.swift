@@ -15,20 +15,21 @@ class AppDelegate: FlutterAppDelegate {
       // Dynamically load the bundle identifier
       let bundleId = Bundle.main.bundleIdentifier ?? "com.xstream" // Fallback to default if not found
 
-      channel.setMethodCallHandler { call, result in
+      channel.setMethodCallHandler { [self] call, result in  // Explicitly capture `self`
         switch call.method {
         case "writeConfigFiles":
-          self.writeConfigFiles(call: call, result: result) // Call writeConfigFiles method
+          self.writeConfigFiles(call: call, result: result)
+
         case "startNodeService", "stopNodeService", "checkNodeStatus":
           guard let args = call.arguments as? [String: Any],
-                let suffix = args["nodeSuffix"] as? String else {
-            result(FlutterError(code: "INVALID_ARGS", message: "Missing node suffix", details: nil))
+                let plistName = args["plistName"] as? String else {
+            result(FlutterError(code: "INVALID_ARGS", message: "Missing plistName", details: nil))
             return
           }
 
           let userName = NSUserName()
           let uid = getuid()
-          let serviceName = "\(bundleId).xray-node-\(suffix)"
+          let serviceName = "\(bundleId).xray-node-\(plistName)"
           let plistPath = "/Users/\(userName)/Library/LaunchAgents/\(serviceName).plist"
 
           switch call.method {
@@ -114,8 +115,10 @@ class AppDelegate: FlutterAppDelegate {
 
     if let error = error {
         result("❌ AppleScript 执行失败: \(error)")
+        logToFlutter("error", "Xray 初始化失败: \(error)")
     } else {
         result("✅ Xray 初始化完成: \(output?.stringValue ?? "Success")")
+        logToFlutter("info", "Xray 初始化完成: \(output?.stringValue ?? "Success")")
     }
   }
 
@@ -147,6 +150,7 @@ class AppDelegate: FlutterAppDelegate {
             logToFlutter("info", "vpn_nodes.json 文件读取成功: \(vpnNodesJsonPath)")
         } catch {
             result(FlutterError(code: "READ_ERROR", message: "Unable to read vpn_nodes.json file", details: error.localizedDescription))
+            logToFlutter("error", "读取 vpn_nodes.json 文件失败: \(error.localizedDescription)")
             return
         }
     } else {
@@ -207,35 +211,44 @@ class AppDelegate: FlutterAppDelegate {
     task.standardOutput = pipe
     task.standardError = pipe
 
+    let fileHandle = pipe.fileHandleForReading
     var outputBuffer = ""
-    pipe.fileHandleForReading.readabilityHandler = { handle in
-      let data = handle.availableData
-      if let output = String(data: data, encoding: .utf8), !output.isEmpty {
-        outputBuffer += output
-      }
+
+    fileHandle.readabilityHandler = { handle in
+        let data = handle.availableData
+        if let output = String(data: data, encoding: .utf8), !output.isEmpty {
+            outputBuffer += output
+        }
     }
 
     task.terminationHandler = { process in
-      pipe.fileHandleForReading.readabilityHandler = nil
+        fileHandle.readabilityHandler = nil
 
-      DispatchQueue.main.async {
-        if returnsBool {
-          let found = outputBuffer.contains("xray-node")
-          result(found)
-        } else {
-          if process.terminationStatus == 0 {
-            result("success")
-          } else {
-            result(FlutterError(code: "EXEC_FAILED", message: "Command failed", details: outputBuffer))
-          }
-        }
-      }
+        let found = outputBuffer.contains("xray-node")
+        let isSuccess = (process.terminationStatus == 0)
+
+        DispatchQueue.main.async(execute: {
+            if returnsBool {
+                result(found)
+            } else {
+                if isSuccess {
+                    result("success")
+                    self.logToFlutter("info", "命令执行成功: \(outputBuffer)")  // Success log
+                } else {
+                    result(FlutterError(code: "EXEC_FAILED", message: "Command failed", details: outputBuffer))
+                    self.logToFlutter("error", "命令执行失败: \(outputBuffer)")  // Failure log
+                }
+            }
+        })
     }
 
     do {
-      try task.run()
+        try task.run()
     } catch {
-      result(FlutterError(code: "EXEC_ERROR", message: "Process failed to run", details: error.localizedDescription))
+        result(FlutterError(code: "EXEC_ERROR", message: "Process failed to run", details: error.localizedDescription))
+        DispatchQueue.main.async(execute: {
+            self.logToFlutter("error", "Process failed to run: \(error.localizedDescription)")  // Failure log
+        })
     }
   }
 

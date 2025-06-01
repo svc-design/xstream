@@ -1,4 +1,5 @@
 // lib/screens/home_screen.dart
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../utils/native_bridge.dart';
@@ -16,6 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String _activeNode = '';
   List<VpnNode> vpnNodes = [];
   final Set<String> _selectedNodeNames = {};
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -23,22 +25,38 @@ class _HomeScreenState extends State<HomeScreen> {
     _initializeConfig();
   }
 
+  // 初始化配置并加载节点
   Future<void> _initializeConfig() async {
+    setState(() {
+      _isLoading = true;
+    });
     await VpnConfig.load();
     setState(() {
       vpnNodes = VpnConfig.nodes;
+      _isLoading = false;
     });
   }
 
+  // 刷新节点列表
   Future<void> _reloadNodes() async {
     setState(() {
+      _isLoading = true;
+    });
+    await VpnConfig.load();
+    setState(() {
       vpnNodes = VpnConfig.nodes;
+      _isLoading = false;
     });
   }
 
+  // 启动/停止节点服务
   Future<void> _toggleNode(VpnNode node) async {
     final nodeName = node.name.trim();
     if (nodeName.isEmpty) return;
+
+    setState(() {
+      _isLoading = true;
+    });
 
     if (_activeNode == nodeName) {
       final msg = await NativeBridge.stopNodeService(nodeName);
@@ -52,18 +70,32 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() => _activeNode = nodeName);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     }
+
+    setState(() {
+      _isLoading = false;
+    });
   }
 
+  // 删除选中的节点
   Future<void> _deleteSelectedNodes() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     final toDelete = vpnNodes.where((e) => _selectedNodeNames.contains(e.name)).toList();
     for (final node in toDelete) {
       await VpnConfig.deleteNodeFiles(node);
     }
     _selectedNodeNames.clear();
-    _reloadNodes();
+    await _reloadNodes();
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('✅ 已删除 ${toDelete.length} 个节点并更新配置')),
     );
+
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   @override
@@ -140,48 +172,53 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ElevatedButton.icon(
                                     icon: const Icon(Icons.sync),
                                     label: const Text('同步配置'),
-                                    onPressed: () async {
-                                      try {
-                                        await VpnConfig.load();
-                                        await _reloadNodes();
-                                        final path = await VpnConfig.getConfigPath();
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: Text('🔄 已同步配置文件：\n- assets/vpn_nodes.json\n- $path'),
-                                            duration: const Duration(seconds: 3),
-                                          ),
-                                        );
-                                      } catch (e) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: Text('❌ 同步失败: $e'),
-                                            backgroundColor: Colors.red,
-                                          ),
-                                        );
-                                      }
-                                    },
+                                    onPressed: _isLoading
+                                        ? null
+                                        : () async {
+                                            try {
+                                              await _reloadNodes();
+                                              final path = await VpnConfig.getConfigPath();
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(
+                                                  content: Text('🔄 已同步配置文件：\n- assets/vpn_nodes.json\n- $path'),
+                                                  duration: const Duration(seconds: 3),
+                                                ),
+                                              );
+                                            } catch (e) {
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(
+                                                  content: Text('❌ 同步失败: $e'),
+                                                  backgroundColor: Colors.red,
+                                                ),
+                                              );
+                                            }
+                                          },
                                   ),
                                   const SizedBox(height: 4),
                                   ElevatedButton.icon(
                                     icon: const Icon(Icons.delete_forever),
                                     label: const Text('删除配置'),
-                                    onPressed: _selectedNodeNames.isNotEmpty ? _deleteSelectedNodes : null,
+                                    onPressed: _isLoading || _selectedNodeNames.isEmpty
+                                        ? null
+                                        : _deleteSelectedNodes,
                                   ),
                                 ],
                               ),
                               ElevatedButton.icon(
                                 icon: const Icon(Icons.save),
                                 label: const Text('保存配置'),
-                                onPressed: () async {
-                                  final path = await VpnConfig.getConfigPath();
-                                  await VpnConfig.saveToFile();
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('✅ 配置已保存到：\n$path'),
-                                      duration: const Duration(seconds: 3),
-                                    ),
-                                  );
-                                },
+                                onPressed: _isLoading
+                                    ? null
+                                    : () async {
+                                        final path = await VpnConfig.getConfigPath();
+                                        await VpnConfig.saveToFile();
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('✅ 配置已保存到：\n$path'),
+                                            duration: const Duration(seconds: 3),
+                                          ),
+                                        );
+                                      },
                               ),
                             ],
                           ),
