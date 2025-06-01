@@ -3,18 +3,18 @@
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.xstream.xray-node-us</string>
+  <string>xstream.svc.plus.xray-node-us</string>
   <key>ProgramArguments</key>
   <array>
     <string>/opt/homebrew/bin/xray</string>
     <string>run</string>
     <string>-c</string>
-    <string>/opt/homebrew/etc/xray-vpn-us-node.json</string>
+    <string>/opt/homebrew/etc/xray-vpn-node-us.json</string>
   </array>
   <key>StandardOutPath</key>
-  <string>/tmp/xray-vpn-us-node.log</string>
+  <string>/tmp/xray-vpn-node-us.log</string>
   <key>StandardErrorPath</key>
-  <string>/tmp/xray-vpn-us-node.err</string>
+  <string>/tmp/xray-vpn-node-us.err</string>
   <key>RunAtLoad</key>
   <true/>
   <key>KeepAlive</key>

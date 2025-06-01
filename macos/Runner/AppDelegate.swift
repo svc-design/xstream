@@ -12,6 +12,9 @@ class AppDelegate: FlutterAppDelegate {
         binaryMessenger: controller.engine.binaryMessenger
       )
 
+      // Dynamically load the bundle identifier
+      let bundleId = Bundle.main.bundleIdentifier ?? "com.xstream" // Fallback to default if not found
+
       channel.setMethodCallHandler { call, result in
         switch call.method {
         case "startNodeService", "stopNodeService", "checkNodeStatus":
@@ -23,8 +26,8 @@ class AppDelegate: FlutterAppDelegate {
 
           let userName = NSUserName()
           let uid = getuid()
-          let plistPath = "/Users/\(userName)/Library/LaunchAgents/com.xstream.xray-node-\(suffix).plist"
-          let serviceName = "com.xstream.xray-node-\(suffix)"
+          let serviceName = "\(bundleId).xray-node-\(suffix)"
+          let plistPath = "/Users/\(userName)/Library/LaunchAgents/\(serviceName).plist"
 
           switch call.method {
           case "startNodeService":
@@ -51,7 +54,7 @@ class AppDelegate: FlutterAppDelegate {
           }
 
           if action == "initXray" {
-            self.runInitXray(result: result)
+            self.runInitXray(bundleId: bundleId, result: result)
           } else {
             result(FlutterError(code: "UNKNOWN_ACTION", message: "Unsupported action", details: action))
           }
@@ -65,17 +68,30 @@ class AppDelegate: FlutterAppDelegate {
     super.applicationDidFinishLaunching(notification)
   }
 
-  // ✅ 使用 AppleScript 调用 cp 命令（弹出原生授权对话框）
-  private func runInitXray(result: @escaping FlutterResult) {
+  private func runInitXray(bundleId: String, result: @escaping FlutterResult) {
     guard let resourcePath = Bundle.main.resourcePath else {
         result("❌ 无法获取 Resources 路径")
         return
     }
 
-    // 处理路径中的空格和特殊字符
     let escapedPath = resourcePath.replacingOccurrences(of: "'", with: "'\\''")
 
-    // 拼接正确的路径，确保没有空格问题
+    // Define plist suffixes and json files dynamically based on bundleId
+    let plistSuffixes = ["ca", "us", "tky"]
+    let plistCopy = plistSuffixes.map {
+      "cp -f '\(escapedPath)/\(bundleId).xray-node-\($0).plist' $HOME/Library/LaunchAgents;"
+    }.joined(separator: "\n")
+
+    let jsonFiles = [
+      "xray-vpn-node-ca.json",
+      "xray-vpn-node-tky.json",
+      "xray-vpn-node-us.json",
+      "xray-vpn.json"
+    ]
+    let jsonCopy = jsonFiles.map {
+      "cp -f '\(escapedPath)/\($0)' /opt/homebrew/etc/;"
+    }.joined(separator: "\n")
+
     let script = """
     do shell script \"
       mkdir -p /opt/homebrew/etc;
@@ -86,17 +102,11 @@ class AppDelegate: FlutterAppDelegate {
         chmod +x /opt/homebrew/bin/xray;
       fi;
       chmod +x /opt/homebrew/bin/xray;
-      cp -f '\(escapedPath)/com.xstream.xray-node-ca.plist' $HOME/Library/LaunchAgents/;
-      cp -f '\(escapedPath)/com.xstream.xray-node-us.plist' $HOME/Library/LaunchAgents/;
-      cp -f '\(escapedPath)/com.xstream.xray-node-tky.plist' $HOME/Library/LaunchAgents/;
-      cp -f '\(escapedPath)/xray-vpn.json' /opt/homebrew/etc/
-      cp -f '\(escapedPath)/xray-vpn-ca-node.json' /opt/homebrew/etc/
-      cp -f '\(escapedPath)/xray-vpn-us-node.json' /opt/homebrew/etc/
-      cp -f '\(escapedPath)/xray-vpn-tky-node.json' /opt/homebrew/etc/
+      \(plistCopy)
+      \(jsonCopy)
     \" with administrator privileges
     """
 
-    // 执行 AppleScript
     let appleScript = NSAppleScript(source: script)
     var error: NSDictionary? = nil
     let output = appleScript?.executeAndReturnError(&error)
@@ -120,7 +130,6 @@ class AppDelegate: FlutterAppDelegate {
     task.standardError = pipe
 
     var outputBuffer = ""
-    // ✅ 实时读取输出
     pipe.fileHandleForReading.readabilityHandler = { handle in
       let data = handle.availableData
       if let output = String(data: data, encoding: .utf8), !output.isEmpty {
@@ -130,11 +139,11 @@ class AppDelegate: FlutterAppDelegate {
     }
 
     task.terminationHandler = { process in
-      pipe.fileHandleForReading.readabilityHandler = nil // 停止监听
+      pipe.fileHandleForReading.readabilityHandler = nil
 
       DispatchQueue.main.async {
         if returnsBool {
-          let found = outputBuffer.contains("com.xstream")
+          let found = outputBuffer.contains("xray-node")
           self.logToFlutter("info", "🔍 服务状态: \(found ? "运行中 ✅" : "未运行 ❌")")
           result(found)
         } else {
