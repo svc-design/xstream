@@ -3,11 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../models/vpn_node.dart';
-import '../../utils/global_state.dart';
-import '../../utils/global_keys.dart';
 import '../../utils/vpn_config.dart';
+import '../../utils/global_config.dart';
+import '../../services/vpn_config_service.dart';
 import '../../widgets/log_console.dart';
-import '../../services/vpn_config_service.dart';  // Import the service
 
 class SubscriptionScreen extends StatefulWidget {
   const SubscriptionScreen({Key? key}) : super(key: key);

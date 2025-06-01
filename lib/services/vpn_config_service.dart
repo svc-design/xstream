@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import '../utils/global_config.dart';  // 引入 global_application_config.dart
 
 class VpnConfigService {
   static Future<void> generateContent({
@@ -48,8 +49,8 @@ class VpnConfigService {
       return;
     }
 
-    // Generate paths
-    final configPath = '/opt/homebrew/etc/xray-vpn-${nodeName.toLowerCase()}.json';
+    // Generate paths dynamically
+    final configPath = await GlobalApplicationConfig.getLocalConfigPath(); // 获取 configPath
     final homeDir = Platform.environment['HOME'] ?? '/Users/unknown';
     final plistPath = '$homeDir/Library/LaunchAgents/$bundleId.xray-node-${nodeName.toLowerCase()}.plist';
 
@@ -68,8 +69,8 @@ class VpnConfigService {
         .replaceAll('<NAME>', nodeName.toLowerCase())
         .replaceAll('<CONFIG_PATH>', configPath);
 
-    // Get vpn_nodes.json path dynamically
-    final vpnNodesJsonPath = '$homeDir/Library/Application Support/xstream.svc.plus/com.xstream/vpn_nodes.json';
+    // Log the vpn_nodes.json path before update
+    logMessage('即将更新 vpn_nodes.json: $configPath');
 
     // Now communicate with AppDelegate to write files to system paths
     try {
@@ -81,9 +82,10 @@ class VpnConfigService {
         'nodeName': nodeName,
         'countryCode': nodeName.substring(0, 2),
         'password': password,
-        'vpnNodesJsonPath': vpnNodesJsonPath,
+        'vpnNodesJsonPath': configPath,  // Using configPath as vpnNodesJsonPath
       });
 
+      // Log success message
       setMessage('✅ 配置已保存: $configPath\n✅ 服务项已生成: $plistPath');
       logMessage('配置已成功保存并生成');
     } on PlatformException catch (e) {
