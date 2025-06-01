@@ -2,11 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../models/vpn_node.dart';
-import '../../utils/vpn_config.dart';
 import '../../utils/global_config.dart';
-import '../../services/vpn_config_service.dart';
 import '../../widgets/log_console.dart';
+import '../../services/vpn_config_service.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   const SubscriptionScreen({Key? key}) : super(key: key);
@@ -57,7 +55,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       logConsoleKey.currentState?.addLog('请先解锁后再创建配置', level: LogLevel.warning); // Log warning
     } else if (password.isNotEmpty) {
       // Call VpnConfigService to generate content
-      VpnConfigService.generateContent(
+      VpnConfig.generateContent(
         nodeName: _nodeNameController.text.trim(),
         domain: _domainController.text.trim(),
         port: _portController.text.trim(),

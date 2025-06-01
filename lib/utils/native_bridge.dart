@@ -1,12 +1,13 @@
 import 'package:flutter/services.dart';
-import 'vpn_config.dart';
+import '../../services/vpn_config_service.dart';  // 引入新的 VpnConfig 类
 
 class NativeBridge {
   static const MethodChannel _channel = MethodChannel('com.xstream/native');
   static const MethodChannel _loggerChannel = MethodChannel('com.xstream/logger');
 
+  // 启动节点服务
   static Future<String> startNodeService(String nodeName) async {
-    final node = VpnConfigManager.getNodeByName(nodeName);
+    final node = VpnConfig.getNodeByName(nodeName);
     if (node == null) return '未知节点: $nodeName';
     final suffix = node.plistName;
 
@@ -21,8 +22,9 @@ class NativeBridge {
     }
   }
 
+  // 停止节点服务
   static Future<String> stopNodeService(String nodeName) async {
-    final node = VpnConfigManager.getNodeByName(nodeName);
+    final node = VpnConfig.getNodeByName(nodeName);
     if (node == null) return '未知节点: $nodeName';
     final suffix = node.plistName;
 
@@ -37,8 +39,9 @@ class NativeBridge {
     }
   }
 
+  // 检查节点状态
   static Future<bool> checkNodeStatus(String nodeName) async {
-    final node = VpnConfigManager.getNodeByName(nodeName);
+    final node = VpnConfig.getNodeByName(nodeName);
     if (node == null) return false;
     final suffix = node.plistName;
 
@@ -53,6 +56,7 @@ class NativeBridge {
     }
   }
 
+  // 初始化日志
   static void initializeLogger(Function(String log) onLog) {
     _loggerChannel.setMethodCallHandler((call) async {
       if (call.method == 'log') {
@@ -62,6 +66,7 @@ class NativeBridge {
     });
   }
 
+  // 初始化 Xray
   static Future<String> initXray() async {
     try {
       final result = await _channel.invokeMethod<String>(

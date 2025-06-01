@@ -3,8 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../utils/native_bridge.dart';
 import '../../utils/global_config.dart';
-import '../../models/vpn_node.dart';
-import '../../utils/vpn_config.dart';
+import '../../services/vpn_config_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -25,15 +24,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _initializeConfig() async {
-    await VpnConfigManager.load();
+    await VpnConfig.load();
     setState(() {
-      vpnNodes = VpnConfigManager.nodes;
+      vpnNodes = VpnConfig.nodes;
     });
   }
 
   Future<void> _reloadNodes() async {
     setState(() {
-      vpnNodes = VpnConfigManager.nodes;
+      vpnNodes = VpnConfig.nodes;
     });
   }
 
@@ -58,7 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _deleteSelectedNodes() async {
     final toDelete = vpnNodes.where((e) => _selectedNodeNames.contains(e.name)).toList();
     for (final node in toDelete) {
-      await VpnConfigManager.deleteNodeFiles(node);
+      await VpnConfig.deleteNodeFiles(node);
     }
     _selectedNodeNames.clear();
     _reloadNodes();
@@ -143,9 +142,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                     label: const Text('同步配置'),
                                     onPressed: () async {
                                       try {
-                                        await VpnConfigManager.load();
+                                        await VpnConfig.load();
                                         await _reloadNodes();
-                                        final path = await VpnConfigManager.getConfigPath();
+                                        final path = await VpnConfig.getConfigPath();
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           SnackBar(
                                             content: Text('🔄 已同步配置文件：\n- assets/vpn_nodes.json\n- $path'),
@@ -174,8 +173,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 icon: const Icon(Icons.save),
                                 label: const Text('保存配置'),
                                 onPressed: () async {
-                                  final path = await VpnConfigManager.getConfigPath();
-                                  await VpnConfigManager.saveToFile();
+                                  final path = await VpnConfig.getConfigPath();
+                                  await VpnConfig.saveToFile();
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text('✅ 配置已保存到：\n$path'),

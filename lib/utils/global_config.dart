@@ -20,7 +20,7 @@ class GlobalState {
 /// 用于获取应用相关的配置信息
 class GlobalApplicationConfig {
   /// 从 macOS 配置文件中动态获取 PRODUCT_BUNDLE_IDENTIFIER
-  static Future<String> _getBundleId() async {
+  static Future<String> getBundleId() async {
     try {
       // 读取 macOS 配置文件，获取 PRODUCT_BUNDLE_IDENTIFIER
       final config = await rootBundle.loadString('macos/Runner/Configs/AppInfo.xcconfig');
@@ -33,7 +33,7 @@ class GlobalApplicationConfig {
 
   /// 默认本地配置文件路径（macOS）
   static Future<String> getLocalConfigPath() async {
-    final bundleId = await _getBundleId();  // 获取 PRODUCT_BUNDLE_IDENTIFIER
+    final bundleId = await getBundleId();  // 获取 PRODUCT_BUNDLE_IDENTIFIER
     final baseDir = await getApplicationSupportDirectory();  // 获取应用支持目录
     final xstreamDir = Directory('${baseDir.path}/$bundleId');  // 拼接目录路径
     await xstreamDir.create(recursive: true);  // 创建目录（如果不存在）
