@@ -17,6 +17,8 @@ class AppDelegate: FlutterAppDelegate {
 
       channel.setMethodCallHandler { call, result in
         switch call.method {
+        case "writeConfigFiles":
+          self.writeConfigFiles(call: call, result: result) // Call writeConfigFiles method
         case "startNodeService", "stopNodeService", "checkNodeStatus":
           guard let args = call.arguments as? [String: Any],
                 let suffix = args["nodeSuffix"] as? String else {
@@ -76,7 +78,6 @@ class AppDelegate: FlutterAppDelegate {
 
     let escapedPath = resourcePath.replacingOccurrences(of: "'", with: "'\\''")
 
-    // Define plist suffixes and json files dynamically based on bundleId
     let plistSuffixes = ["ca", "us", "tky"]
     let plistCopy = plistSuffixes.map {
       "cp -f '\(escapedPath)/\(bundleId).xray-node-\($0).plist' $HOME/Library/LaunchAgents;"
@@ -118,9 +119,38 @@ class AppDelegate: FlutterAppDelegate {
     }
   }
 
-  func runShellScript(command: String, returnsBool: Bool, result: @escaping FlutterResult) {
-    logToFlutter("info", "🛠️ 执行命令: \(command)")
+  // New method to write files (plist or json)
+  func writeConfigFiles(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    guard let args = call.arguments as? [String: Any],
+          let configPath = args["configPath"] as? String,
+          let configContent = args["configContent"] as? String,
+          let plistPath = args["plistPath"] as? String,
+          let plistContent = args["plistContent"] as? String,
+          let sudoPass = args["password"] as? String else {
+        result(FlutterError(code: "INVALID_ARGS", message: "Missing arguments", details: nil))
+        return
+    }
 
+    // Write the json file
+    writeFile(path: configPath, content: configContent, password: sudoPass)
+    // Write the plist file
+    writeFile(path: plistPath, content: plistContent, password: sudoPass)
+
+    result("配置文件已写入成功")
+  }
+
+  private func writeFile(path: String, content: String, password: String) {
+    let script = """
+    echo "\(password)" | sudo -S bash -c 'echo "\(content)" > \(path)'
+    """
+
+    // Execute the shell command to write the file
+    runShellScript(command: script, returnsBool: false, result: { result in
+        // Can handle feedback here if necessary
+    })
+  }
+
+  func runShellScript(command: String, returnsBool: Bool, result: @escaping FlutterResult) {
     let task = Process()
     task.launchPath = "/bin/zsh"
     task.arguments = ["-c", command]
@@ -134,7 +164,6 @@ class AppDelegate: FlutterAppDelegate {
       let data = handle.availableData
       if let output = String(data: data, encoding: .utf8), !output.isEmpty {
         outputBuffer += output
-        self.logToFlutter("info", output)
       }
     }
 
@@ -144,14 +173,11 @@ class AppDelegate: FlutterAppDelegate {
       DispatchQueue.main.async {
         if returnsBool {
           let found = outputBuffer.contains("xray-node")
-          self.logToFlutter("info", "🔍 服务状态: \(found ? "运行中 ✅" : "未运行 ❌")")
           result(found)
         } else {
           if process.terminationStatus == 0 {
-            self.logToFlutter("info", "✅ 命令执行成功")
             result("success")
           } else {
-            self.logToFlutter("error", "❌ 命令执行失败: \(outputBuffer)")
             result(FlutterError(code: "EXEC_FAILED", message: "Command failed", details: outputBuffer))
           }
         }
