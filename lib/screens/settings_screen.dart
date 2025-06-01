@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../utils/global_state.dart';
+import '../../utils/global_config.dart';
 import '../../utils/native_bridge.dart';
-import '../../utils/global_keys.dart'; // ✅ 引入全局 logConsoleKey
 import '../widgets/log_console.dart';
 
 class SettingsScreen extends StatefulWidget {

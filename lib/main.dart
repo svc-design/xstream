@@ -5,15 +5,14 @@ import 'screens/settings_screen.dart';
 import 'screens/subscription_screen.dart';
 import 'utils/app_theme.dart';
 import 'utils/log_store.dart';
-import 'utils/global_keys.dart';
-import 'utils/global_state.dart';
 import 'utils/native_bridge.dart';
-import 'utils/vpn_config.dart';
+import 'utils/global_config.dart';
 import 'widgets/log_console.dart';
+import 'services/vpn_config_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await VpnConfigManager.load(); // ✅ 启动时加载 assets + 本地配置
+  await VpnConfig.load(); // ✅ 启动时加载 assets + 本地配置
   runApp(MyApp());
 }
 
@@ -58,7 +57,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.detached || state == AppLifecycleState.inactive) {
       // ✅ 退出前自动保存配置
-      VpnConfigManager.saveToFile();
+      VpnConfig.saveToFile();
     }
   }
 
