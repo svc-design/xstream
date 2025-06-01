@@ -1,32 +1,23 @@
 [
   {
     "name": "US-VPN",
-    "plistName": "us",
     "countryCode": "us",
+    "plistName": "xstream.svc.plus.xray-node-us.plist",
     "configPath": "/opt/homebrew/etc/xray-vpn-node-us.json",
-    "server": "us-connector.onwalk.net",
-    "port": 1443,
-    "uuid": "18d270a9-533d-4b13-b3f1-e7f55540a9b2",
     "enabled": true
   },
   {
     "name": "CA-VPN",
     "countryCode": "ca",
     "configPath": "/opt/homebrew/etc/xray-vpn-node-ca.json",
-    "plistName": "ca",
-    "server": "ca-connector.onwalk.net",
-    "port": 1443,
-    "uuid": "18d270a9-533d-4b13-b3f1-e7f55540a9b2",
+    "plistName": "xstream.svc.plus.xray-node-ca.plist",
     "enabled": true
   },
   {
     "name": "Tokyo-VPN",
     "countryCode": "tky",
+    "plistName": "xstream.svc.plus.xray-node-tky.plist",
     "configPath": "/opt/homebrew/etc/xray-vpn-node-tky.json",
-    "plistName": "tky",
-    "server": "tky-connector.onwalk.net",
-    "port": 1443,
-    "uuid": "18d270a9-533d-4b13-b3f1-e7f55540a9b2",
     "enabled": true
   }
 ]
