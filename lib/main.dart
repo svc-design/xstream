@@ -5,10 +5,9 @@ import 'screens/settings_screen.dart';
 import 'screens/subscription_screen.dart';
 import 'utils/app_theme.dart';
 import 'utils/log_store.dart';
-import 'utils/global_keys.dart';
-import 'utils/global_state.dart';
-import 'utils/native_bridge.dart';
 import 'utils/vpn_config.dart';
+import 'utils/native_bridge.dart';
+import 'utils/global_config.dart';
 import 'widgets/log_console.dart';
 
 void main() async {

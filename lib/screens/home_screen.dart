@@ -2,7 +2,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../utils/native_bridge.dart';
-import '../../utils/global_state.dart';
+import '../../utils/global_config.dart';
 import '../../models/vpn_node.dart';
 import '../../utils/vpn_config.dart';
 
