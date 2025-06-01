@@ -119,24 +119,64 @@ class AppDelegate: FlutterAppDelegate {
     }
   }
 
-  // New method to write files (plist or json)
   func writeConfigFiles(call: FlutterMethodCall, result: @escaping FlutterResult) {
     guard let args = call.arguments as? [String: Any],
           let configPath = args["configPath"] as? String,
           let configContent = args["configContent"] as? String,
           let plistPath = args["plistPath"] as? String,
           let plistContent = args["plistContent"] as? String,
-          let sudoPass = args["password"] as? String else {
+          let nodeName = args["nodeName"] as? String,
+          let countryCode = args["countryCode"] as? String,
+          let sudoPass = args["password"] as? String,
+          let vpnNodesJsonPath = args["vpnNodesJsonPath"] as? String else {
         result(FlutterError(code: "INVALID_ARGS", message: "Missing arguments", details: nil))
         return
     }
 
-    // Write the json file
+    // Log the paths being used for writing
+    logToFlutter("info", "准备写入配置文件:\nconfigPath: \(configPath)\nplistPath: \(plistPath)\nvpnNodesJsonPath: \(vpnNodesJsonPath)")
+
+    // Read existing vpn_nodes.json file
+    let fileManager = FileManager.default
+    var vpnNodes: [[String: Any]] = []
+
+    if fileManager.fileExists(atPath: vpnNodesJsonPath) {
+        do {
+            let data = try Data(contentsOf: URL(fileURLWithPath: vpnNodesJsonPath))
+            vpnNodes = try JSONSerialization.jsonObject(with: data, options: []) as? [[String: Any]] ?? []
+        } catch {
+            result(FlutterError(code: "READ_ERROR", message: "Unable to read vpn_nodes.json file", details: error.localizedDescription))
+            return
+        }
+    }
+
+    // Create new node information
+    let newNode: [String: Any] = [
+        "name": nodeName,
+        "countryCode": countryCode,
+        "plistPath": plistPath,
+        "configPath": configPath
+    ]
+
+    vpnNodes.append(newNode)
+
+    // Log that we are about to write the updated JSON data
+    logToFlutter("info", "即将更新 vpn_nodes.json: \(vpnNodesJsonPath)")
+
+    // Write updated vpn_nodes.json file
+    do {
+        let updatedData = try JSONSerialization.data(withJSONObject: vpnNodes, options: .prettyPrinted)
+        try updatedData.write(to: URL(fileURLWithPath: vpnNodesJsonPath))
+    } catch {
+        result(FlutterError(code: "WRITE_ERROR", message: "Unable to write vpn_nodes.json file", details: error.localizedDescription))
+        return
+    }
+
+    // Write the json file and plist file
     writeFile(path: configPath, content: configContent, password: sudoPass)
-    // Write the plist file
     writeFile(path: plistPath, content: plistContent, password: sudoPass)
 
-    result("配置文件已写入成功")
+    result("Configuration files written successfully")
   }
 
   private func writeFile(path: String, content: String, password: String) {
@@ -145,7 +185,7 @@ class AppDelegate: FlutterAppDelegate {
     """
 
     // Execute the shell command to write the file
-    runShellScript(command: script, returnsBool: false, result: { result in
+    runShellScript(command: script, returnsBool: false, result: { _ in
         // Can handle feedback here if necessary
     })
   }

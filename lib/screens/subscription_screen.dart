@@ -6,7 +6,8 @@ import '../../models/vpn_node.dart';
 import '../../utils/global_state.dart';
 import '../../utils/global_keys.dart';
 import '../../utils/vpn_config.dart';
-import '../../widgets/log_console.dart';  // Ensure LogConsole import
+import '../../widgets/log_console.dart';
+import '../../services/vpn_config_service.dart';  // Import the service
 
 class SubscriptionScreen extends StatefulWidget {
   const SubscriptionScreen({Key? key}) : super(key: key);
@@ -46,99 +47,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     }
   }
 
-  Future<String> _loadConfigTemplate() async {
-    return await rootBundle.loadString('assets/xray-template.json');
-  }
-
-  Future<String> _loadPlistTemplate() async {
-    return await rootBundle.loadString('assets/xray-template.plist');
-  }
-
-  Future<void> _generateContent(String password) async {
-    final nodeName = _nodeNameController.text.trim();
-    final domain = _domainController.text.trim();
-    final port = _portController.text.trim();
-    final uuid = _uuidController.text.trim();
-
-    if (nodeName.isEmpty || domain.isEmpty || port.isEmpty || uuid.isEmpty) {
-      setState(() => _message = '所有字段均不能为空');
-      logConsoleKey.currentState?.addLog('所有字段均不能为空', level: LogLevel.error); // Log error
-      return;
-    }
-
-    String configTemplate;
-    try {
-      configTemplate = await _loadConfigTemplate();
-      logConsoleKey.currentState?.addLog('模板加载成功'); // Log success
-    } catch (e) {
-      setState(() => _message = '加载模板失败: $e');
-      logConsoleKey.currentState?.addLog('加载模板失败: $e', level: LogLevel.error); // Log error
-      return;
-    }
-
-    String rawJson = configTemplate
-        .replaceAll('<SERVER_DOMAIN>', domain)
-        .replaceAll('<PORT>', port)
-        .replaceAll('<UUID>', uuid);
-
-    late String fixedJsonContent;
-    try {
-      final jsonObj = jsonDecode(rawJson);
-      fixedJsonContent = JsonEncoder.withIndent('  ').convert(jsonObj);
-      logConsoleKey.currentState?.addLog('配置文件 JSON 生成成功'); // Log success
-    } catch (e) {
-      setState(() => _message = '生成的配置文件无效: $e');
-      logConsoleKey.currentState?.addLog('生成的配置文件无效: $e', level: LogLevel.error); // Log error
-      return;
-    }
-
-    // Generate paths
-    final configPath = '/opt/homebrew/etc/xray-vpn-${nodeName.toLowerCase()}.json';
-    final homeDir = Platform.environment['HOME'] ?? '/Users/unknown';
-    final plistPath = '$homeDir/Library/LaunchAgents/${_bundleId}.xray-node-${nodeName.toLowerCase()}.plist';
-
-    String plistTemplate;
-    try {
-      plistTemplate = await _loadPlistTemplate();
-      logConsoleKey.currentState?.addLog('Plist 模板加载成功');
-    } catch (e) {
-      setState(() => _message = '加载 Plist 模板失败: $e');
-      logConsoleKey.currentState?.addLog('加载 Plist 模板失败: $e', level: LogLevel.error);
-      return;
-    }
-
-    final plistContent = plistTemplate
-        .replaceAll('<BUNDLE_ID>', _bundleId)
-        .replaceAll('<NAME>', nodeName.toLowerCase())
-        .replaceAll('<CONFIG_PATH>', configPath);
-
-    // Now communicate with AppDelegate to write files to system paths
-    try {
-      await platform.invokeMethod('writeConfigFiles', {
-        'configPath': configPath,
-        'configContent': fixedJsonContent,
-        'plistPath': plistPath,
-        'plistContent': plistContent,
-        'password': password, // Pass password for sudo if needed
-      });
-
-      setState(() {
-        _message = '✅ 配置已保存: $configPath\n✅ 服务项已生成: $plistPath';
-        logConsoleKey.currentState?.addLog('配置已成功保存并生成', level: LogLevel.info); // Log success
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('配置文件生成成功：\n$configPath\n$plistPath'),
-          duration: const Duration(seconds: 3),
-        ),
-      );
-    } on PlatformException catch (e) {
-      setState(() => _message = '生成配置失败: $e');
-      logConsoleKey.currentState?.addLog('生成配置失败: $e', level: LogLevel.error); // Log error
-    }
-  }
-
   void _onCreateConfig() {
     final unlocked = GlobalState.isUnlocked.value;
     final password = GlobalState.sudoPassword.value;
@@ -149,7 +57,24 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       });
       logConsoleKey.currentState?.addLog('请先解锁后再创建配置', level: LogLevel.warning); // Log warning
     } else if (password.isNotEmpty) {
-      _generateContent(password);
+      // Call VpnConfigService to generate content
+      VpnConfigService.generateContent(
+        nodeName: _nodeNameController.text.trim(),
+        domain: _domainController.text.trim(),
+        port: _portController.text.trim(),
+        uuid: _uuidController.text.trim(),
+        password: password,
+        bundleId: _bundleId,
+        platform: platform,
+        setMessage: (msg) {
+          setState(() {
+            _message = msg;
+          });
+        },
+        logMessage: (msg) {
+          logConsoleKey.currentState?.addLog(msg);
+        },
+      );
     } else {
       setState(() {
         _message = '⚠️ 无法获取 sudo 密码。';
