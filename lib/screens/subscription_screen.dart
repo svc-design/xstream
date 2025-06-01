@@ -19,35 +19,41 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   final _portController = TextEditingController(text: '443');
   final _uuidController = TextEditingController();
   String _message = '';
+  String _bundleId = 'com.xstream'; // default fallback
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBundleId();
+  }
+
+  Future<void> _loadBundleId() async {
+    try {
+      final config = await rootBundle.loadString('macos/Runner/Configs/AppInfo.xcconfig');
+      for (final line in config.split('\n')) {
+        if (line.trim().startsWith('PRODUCT_BUNDLE_IDENTIFIER')) {
+          setState(() {
+            _bundleId = line.split('=').last.trim();
+          });
+          break;
+        }
+      }
+    } catch (_) {
+      // silently fallback
+    }
+  }
 
   Future<String> _loadTemplate() async {
     return await rootBundle.loadString('assets/xray-template.json');
   }
 
-  String _generatePlistContent(String name, String configPath) {
-    return '''<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>Label</key>
-  <string>com.xstream.xray-node-$name</string>
-  <key>ProgramArguments</key>
-  <array>
-    <string>/opt/homebrew/bin/xray</string>
-    <string>run</string>
-    <string>-c</string>
-    <string>$configPath</string>
-  </array>
-  <key>StandardOutPath</key>
-  <string>/tmp/xray-vpn-$name-node.log</string>
-  <key>StandardErrorPath</key>
-  <string>/tmp/xray-vpn-$name-node.err</string>
-  <key>RunAtLoad</key>
-  <true/>
-  <key>KeepAlive</key>
-  <true/>
-</dict>
-</plist>''';
+  Future<String> _generatePlistContent(String name, String configPath) async {
+  final template = await rootBundle.loadString('assets/xray-template.plist');
+  final bundleId = _bundleId;
+  return template
+      .replaceAll('<BUNDLE_ID>', bundleId)
+      .replaceAll('<NAME>', name)
+      .replaceAll('<CONFIG_PATH>', configPath);
   }
 
   Future<void> _generateConfig(String password) async {
@@ -57,9 +63,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     final uuid = _uuidController.text.trim();
 
     if (nodeName.isEmpty || domain.isEmpty || port.isEmpty || uuid.isEmpty) {
-      setState(() {
-        _message = '所有字段均不能为空';
-      });
+      setState(() => _message = '所有字段均不能为空');
       return;
     }
 
@@ -67,9 +71,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     try {
       template = await _loadTemplate();
     } catch (e) {
-      setState(() {
-        _message = '加载模板失败: $e';
-      });
+      setState(() => _message = '加载模板失败: $e');
       return;
     }
 
@@ -83,15 +85,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       final jsonObj = jsonDecode(rawJson);
       fixedJsonContent = JsonEncoder.withIndent('  ').convert(jsonObj);
     } catch (e) {
-      setState(() {
-        _message = '生成的配置文件无效: $e';
-      });
+      setState(() => _message = '生成的配置文件无效: $e');
       return;
     }
 
     final configPath = '/opt/homebrew/etc/xray-vpn-${nodeName.toLowerCase()}.json';
     final homeDir = Platform.environment['HOME'] ?? '/Users/unknown';
-    final plistPath = '$homeDir/Library/LaunchAgents/com.xstream.xray-node-${nodeName.toLowerCase()}.plist';
+    final plistPath = '$homeDir/Library/LaunchAgents/${_bundleId}.xray-node-${nodeName.toLowerCase()}.plist';
     final plistContent = _generatePlistContent(nodeName.toLowerCase(), configPath);
 
     try {
@@ -121,14 +121,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           _message = '✅ 配置已保存: $configPath\n✅ 服务项已生成: $plistPath';
         });
       } else {
-        setState(() {
-          _message = '生成配置失败，错误码: $result';
-        });
+        setState(() => _message = '生成配置失败，错误码: $result');
       }
     } catch (e) {
-      setState(() {
-        _message = '生成配置失败: $e';
-      });
+      setState(() => _message = '生成配置失败: $e');
     }
   }
 
@@ -137,24 +133,18 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     final password = GlobalState.sudoPassword.value;
 
     if (!unlocked) {
-      setState(() {
-        _message = '🔒 请先点击右上角的解锁按钮。';
-      });
+      setState(() => _message = '🔒 请先点击右上角的解锁按钮。');
     } else if (password.isNotEmpty) {
       _generateConfig(password);
     } else {
-      setState(() {
-        _message = '⚠️ 无法获取 sudo 密码。';
-      });
+      setState(() => _message = '⚠️ 无法获取 sudo 密码。');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('添加 VPN 节点配置'),
-      ),
+      appBar: AppBar(title: const Text('添加 VPN 节点配置')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

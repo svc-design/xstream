@@ -1,3 +1,4 @@
+// lib/utils/vpn_config.dart
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/services.dart';
@@ -7,11 +8,27 @@ import '../models/vpn_node.dart';
 class VpnConfigManager {
   static List<VpnNode> _nodes = [];
 
+  /// 从 macOS 配置文件中动态获取 PRODUCT_BUNDLE_IDENTIFIER
+  static Future<String> _getBundleId() async {
+    try {
+      final config = await rootBundle.loadString('macos/Runner/Configs/AppInfo.xcconfig');
+      final line = config.split('\n').firstWhere((l) => l.startsWith('PRODUCT_BUNDLE_IDENTIFIER='));
+      return line.split('=').last.trim();
+    } catch (_) {
+      return 'com.xstream'; // fallback
+    }
+  }
+
   /// 默认本地配置文件路径（macOS）
   static Future<String> _getLocalConfigPath() async {
-    final dir = await getApplicationSupportDirectory();
-    return '${dir.path}/vpn_nodes.json';
+    final bundleId = await _getBundleId();
+    final baseDir = await getApplicationSupportDirectory();
+    final xstreamDir = Directory('${baseDir.path}/$bundleId');
+    await xstreamDir.create(recursive: true);
+    return '${xstreamDir.path}/vpn_nodes.json';
   }
+
+  static Future<String> getConfigPath() async => await _getLocalConfigPath();
 
   /// 加载 VPN 节点配置（本地文件优先，其次 assets）并合并
   static Future<void> load() async {
@@ -38,7 +55,6 @@ class VpnConfigManager {
       print('⚠️ Failed to load local vpn_nodes.json: $e');
     }
 
-    // 合并（本地配置覆盖 asset 中相同 name 的节点）
     final Map<String, VpnNode> merged = {
       for (var node in fromAssets) node.name: node,
       for (var node in fromLocal) node.name: node,
@@ -76,7 +92,6 @@ class VpnConfigManager {
     return json.encode(_nodes.map((e) => e.toJson()).toList());
   }
 
-  /// 保存配置并返回保存路径
   static Future<String> saveToFile() async {
     final path = await _getLocalConfigPath();
     final file = File(path);
@@ -91,7 +106,7 @@ class VpnConfigManager {
     await saveToFile();
   }
 
-  /// 删除节点对应的配置文件和 plist 文件（如果存在），并从内存移除
+  /// 删除节点相关文件
   static Future<void> deleteNodeFiles(VpnNode node) async {
     try {
       final jsonFile = File(node.configPath);
@@ -100,7 +115,8 @@ class VpnConfigManager {
       }
 
       final homeDir = Platform.environment['HOME'] ?? '/Users/unknown';
-      final plistPath = '$homeDir/Library/LaunchAgents/com.xstream.xray-node-${node.plistName}.plist';
+      final bundleId = await _getBundleId();
+      final plistPath = '$homeDir/Library/LaunchAgents/$bundleId.xray-node-${node.plistName}.plist';
       final plistFile = File(plistPath);
       if (await plistFile.exists()) {
         await plistFile.delete();
