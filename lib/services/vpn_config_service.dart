@@ -147,7 +147,6 @@ class VpnConfig {
     }
   }
 
-  /// 生成 VPN 配置文件并保存
   static Future<void> generateContent({
     required String nodeName,
     required String domain,
@@ -165,60 +164,26 @@ class VpnConfig {
       return;
     }
 
-    String configTemplate;
-    try {
-      configTemplate = await rootBundle.loadString('assets/xray-template.json');
-      logMessage('模板加载成功');
-    } catch (e) {
-      setMessage('加载模板失败: $e');
-      logMessage('加载模板失败: $e');
-      return;
-    }
+    // Generate the Xray configuration
+    final xrayJsonContent = await _generateXrayJsonConfig(domain, port, uuid, setMessage, logMessage);
+    if (xrayJsonContent.isEmpty) return;
 
-    String rawJson = configTemplate
-        .replaceAll('<SERVER_DOMAIN>', domain)
-        .replaceAll('<PORT>', port)
-        .replaceAll('<UUID>', uuid);
+    // Generate the Plist configuration
+    final plistContent = await _generatePlistFile(nodeName, bundleId, xrayJsonContent, setMessage, logMessage);
+    if (plistContent.isEmpty) return;
 
-    late String fixedJsonContent;
-    try {
-      final jsonObj = jsonDecode(rawJson);
-      fixedJsonContent = JsonEncoder.withIndent('  ').convert(jsonObj);
-      logMessage('配置文件 JSON 生成成功');
-    } catch (e) {
-      setMessage('生成的配置文件无效: $e');
-      logMessage('生成的配置文件无效: $e');
-      return;
-    }
-
-    // Get vpn_nodes.json path dynamically
+    // Get vpn_nodes.json path dynamically and update vpn_nodes.json
     final configPath = await GlobalApplicationConfig.getLocalConfigPath();
     final homeDir = Platform.environment['HOME'] ?? '/Users/unknown';
     final plistPath = '$homeDir/Library/LaunchAgents/$bundleId.xray-node-${nodeName.toLowerCase()}.plist';
 
-    String plistTemplate;
-    try {
-      plistTemplate = await rootBundle.loadString('assets/xray-template.plist');
-      logMessage('Plist 模板加载成功');
-    } catch (e) {
-      setMessage('加载 Plist 模板失败: $e');
-      logMessage('加载 Plist 模板失败: $e');
-      return;
-    }
-
-    final plistContent = plistTemplate
-        .replaceAll('<BUNDLE_ID>', bundleId)
-        .replaceAll('<NAME>', nodeName.toLowerCase())
-        .replaceAll('<CONFIG_PATH>', configPath);
-
-    // Log the vpn_nodes.json path before update
-    logMessage('即将更新 vpn_nodes.json: $configPath');
+    await _updateVpnNodesJson(configPath, nodeName, nodeName.substring(0, 2), plistPath, configPath, password, platform, setMessage, logMessage);
 
     // Now communicate with AppDelegate to write files to system paths
     try {
       await platform.invokeMethod('writeConfigFiles', {
         'configPath': configPath,
-        'configContent': fixedJsonContent,
+        'configContent': xrayJsonContent,
         'plistPath': plistPath,
         'plistContent': plistContent,
         'nodeName': nodeName,
@@ -227,12 +192,86 @@ class VpnConfig {
         'vpnNodesJsonPath': configPath,  // Using configPath as vpnNodesJsonPath
       });
 
-      // Log success message
       setMessage('✅ 配置已保存: $configPath\n✅ 服务项已生成: $plistPath');
       logMessage('配置已成功保存并生成');
     } on PlatformException catch (e) {
       setMessage('生成配置失败: $e');
       logMessage('生成配置失败: $e');
+    }
+  }
+
+  /// Helper function to handle Xray JSON file generation
+  static Future<String> _generateXrayJsonConfig(String domain, String port, String uuid, Function(String) setMessage, Function(String) logMessage) async {
+    String configTemplate;
+    try {
+      configTemplate = await rootBundle.loadString('assets/xray-template.json');
+      logMessage('模板加载成功');
+    } catch (e) {
+      setMessage('加载模板失败: $e');
+      logMessage('加载模板失败: $e');
+      return ''; // Return empty string to indicate failure
+    }
+
+    String rawJson = configTemplate
+        .replaceAll('<SERVER_DOMAIN>', domain)
+        .replaceAll('<PORT>', port)
+        .replaceAll('<UUID>', uuid);
+
+    late String xrayJsonContent;
+    try {
+      final jsonObj = jsonDecode(rawJson);
+      xrayJsonContent = JsonEncoder.withIndent('  ').convert(jsonObj);
+      logMessage('配置文件 JSON 生成成功');
+    } catch (e) {
+      setMessage('生成的配置文件无效: $e');
+      logMessage('生成的配置文件无效: $e');
+      return ''; // Return empty string to indicate failure
+    }
+
+    return xrayJsonContent;
+  }
+
+  /// Helper function to handle Plist file generation
+  static Future<String> _generatePlistFile(String nodeName, String bundleId, String configPath, Function(String) setMessage, Function(String) logMessage) async {
+    String plistTemplate;
+    try {
+      plistTemplate = await rootBundle.loadString('assets/xray-template.plist');
+      logMessage('Plist 模板加载成功');
+    } catch (e) {
+      setMessage('加载 Plist 模板失败: $e');
+      logMessage('加载 Plist 模板失败: $e');
+      return ''; // Return empty string to indicate failure
+    }
+
+    final plistContent = plistTemplate
+        .replaceAll('<BUNDLE_ID>', bundleId)
+        .replaceAll('<NAME>', nodeName.toLowerCase())
+        .replaceAll('<CONFIG_PATH>', configPath);
+
+    return plistContent;
+  }
+
+  /// Helper function to update vpn_nodes.json with new data
+  static Future<void> _updateVpnNodesJson(String configPath, String nodeName, String countryCode, String plistPath, String vpnNodesJsonPath, String password, MethodChannel platform, Function(String) setMessage, Function(String) logMessage) async {
+    try {
+      await platform.invokeMethod('writeConfigFiles', {
+        'configPath': vpnNodesJsonPath,
+        'configContent': json.encode({
+          'nodeName': nodeName,
+          'countryCode': countryCode,
+          'plistName': plistPath,
+          'configPath': configPath,
+          // Add other necessary fields here
+        }),
+        'nodeName': nodeName,
+        'countryCode': countryCode,
+        'password': password,
+        'vpnNodesJsonPath': vpnNodesJsonPath,
+      });
+      logMessage('vpn_nodes.json 更新成功');
+    } catch (e) {
+      setMessage('vpn_nodes.json 更新失败: $e');
+      logMessage('vpn_nodes.json 更新失败: $e');
     }
   }
 }
