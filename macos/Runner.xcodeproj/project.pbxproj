@@ -111,6 +111,7 @@
 				"xray-vpn-node-tky.json",
 				"xray-vpn-node-us.json",
 				"xray-vpn.json",
+				"xray-x86_64",
 				"xstream.svc.plus.xray-node-ca.plist",
 				"xstream.svc.plus.xray-node-tky.plist",
 				"xstream.svc.plus.xray-node-us.plist",
