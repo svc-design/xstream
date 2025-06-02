@@ -57,10 +57,10 @@ extension AppDelegate {
           result(found)
         } else if isSuccess {
           result("success")
-          self.logToFlutter("info", "命令执行成功: \(outputBuffer)")
+          self.logToFlutter("info", "命令执行成功: \nCommand: \(command)\nOutput: \(outputBuffer)")
         } else {
           result(FlutterError(code: "EXEC_FAILED", message: "Command failed", details: outputBuffer))
-          self.logToFlutter("error", "命令执行失败: \(outputBuffer)")
+          self.logToFlutter("error", "命令执行失败: \nCommand: \(command)\nOutput: \(outputBuffer)")
         }
       }
     }
