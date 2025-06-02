@@ -23,41 +23,39 @@ extension AppDelegate {
       return
     }
 
-    let escapedPath = resourcePath.replacingOccurrences(of: "'", with: "'\\''")
+    let escapedPath = resourcePath.replacingOccurrences(of: "\"", with: "\\\"")
     let plistSuffixes = ["ca", "us", "tky"]
     let plistCopy = plistSuffixes.map {
-      "cp -f '\(escapedPath)/\(bundleId).xray-node-\($0).plist' \"$HOME/Library/LaunchAgents\""
-    }.joined(separator: "\n")
+      "cp -f \\\"\(escapedPath)/\(bundleId).xray-node-\($0).plist\\\" \\\"$HOME/Library/LaunchAgents\\\""
+    }
 
     let jsonFiles = ["xray-vpn-node-ca.json", "xray-vpn-node-tky.json", "xray-vpn-node-us.json", "xray-vpn.json"]
     let jsonCopy = jsonFiles.map {
-      "cp -f '\(escapedPath)/\($0)' /opt/homebrew/etc/"
-    }.joined(separator: "\n")
+      "cp -f \\\"\(escapedPath)/\($0)\\\" /opt/homebrew/etc/"
+    }
 
-    let shellCommand = """
-    mkdir -p /opt/homebrew/etc
-    mkdir -p "$HOME/Library/LaunchAgents"
-    arch=$(uname -m)
-    if [ "$arch" = "arm64" ]; then
-      cp -f '\(escapedPath)/xray' /opt/homebrew/bin/xray
-    elif [ "$arch" = "i386" ]; then
-      cp -f '\(escapedPath)/xray.i386' /opt/homebrew/bin/xray
-    elif [ "$arch" = "x86_64" ]; then
-      cp -f '\(escapedPath)/xray.x86_64' /opt/homebrew/bin/xray
-    else
-      echo "Unsupported architecture: $arch"
-      exit 1
-    fi
-    chmod +x /opt/homebrew/bin/xray || chmod +x /usr/local/bin/xray
-    \(plistCopy)
-    \(jsonCopy)
-    """
+    var commands: [String] = []
+    commands.append("mkdir -p /opt/homebrew/etc")
+    commands.append("mkdir -p \\\"$HOME/Library/LaunchAgents\\\"")
+    commands.append("arch=$(uname -m)")
+    commands.append("""
+if [ \\\"$arch\\\" = \\\"arm64\\\" ]; then
+  cp -f \\\"\(escapedPath)/xray\\\" /opt/homebrew/bin/xray
+elif [ \\\"$arch\\\" = \\\"i386\\\" ]; then
+  cp -f \\\"\(escapedPath)/xray.i386\\\" /opt/homebrew/bin/xray
+elif [ \\\"$arch\\\" = \\\"x86_64\\\" ]; then
+  cp -f \\\"\(escapedPath)/xray.x86_64\\\" /opt/homebrew/bin/xray
+else
+  echo \\\"Unsupported architecture: $arch\\\"
+  exit 1
+fi
+""")
+    commands.append("chmod +x /opt/homebrew/bin/xray || chmod +x /usr/local/bin/xray")
+    commands.append(contentsOf: plistCopy)
+    commands.append(contentsOf: jsonCopy)
 
-    let escapedCommand = shellCommand
-      .replacingOccurrences(of: "\"", with: "\\\"")
-      .replacingOccurrences(of: "\n", with: "; ")
-
-    let script = "do shell script \"\(escapedCommand)\" with administrator privileges"
+    let commandJoined = commands.joined(separator: " ; ")
+    let script = "do shell script \"\(commandJoined)\" with administrator privileges"
 
     let appleScript = NSAppleScript(source: script)
     var error: NSDictionary? = nil
