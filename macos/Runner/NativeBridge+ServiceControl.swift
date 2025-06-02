@@ -12,16 +12,30 @@ extension AppDelegate {
     let userName = NSUserName()
     let uid = getuid()
     let plistPath = "/Users/\(userName)/Library/LaunchAgents/\(plistName)"
+    let serviceName = plistName.replacingOccurrences(of: ".plist", with: "")
+
+    // 检查 macOS 是否为现代版本（>= 10.15）
+    let os = ProcessInfo.processInfo.operatingSystemVersion
+    let useModernLaunchctl = os.majorVersion >= 11 || (os.majorVersion == 10 && os.minorVersion >= 15)
 
     switch call.method {
     case "startNodeService":
-      runShellScript(command: "launchctl bootstrap gui/\(uid) \"\(plistPath)\"", returnsBool: false, result: result)
+      let command = useModernLaunchctl
+        ? "launchctl bootstrap gui/\(uid) \"\(plistPath)\""
+        : "launchctl load \"\(plistPath)\""
+      runShellScript(command: command, returnsBool: false, result: result)
 
     case "stopNodeService":
-      runShellScript(command: "launchctl bootout gui/\(uid) \"\(plistPath)\"", returnsBool: false, result: result)
+      let command = useModernLaunchctl
+        ? "launchctl bootout gui/\(uid) \"\(plistPath)\""
+        : "launchctl unload \"\(plistPath)\""
+      runShellScript(command: command, returnsBool: false, result: result)
 
     case "checkNodeStatus":
-      runShellScript(command: "launchctl list | grep \"\(plistName)\"", returnsBool: true, result: result)
+      let command = useModernLaunchctl
+        ? "launchctl print gui/\(uid)/\(serviceName)"
+        : "launchctl list | grep \"\(serviceName)\""
+      runShellScript(command: command, returnsBool: true, result: result)
 
     default:
       result(FlutterMethodNotImplemented)
