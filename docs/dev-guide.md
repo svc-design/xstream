@@ -41,3 +41,12 @@ assets/：图标、Xray 配置等静态资源
 检查是否正确授予 macOS 网络和文件访问权限
 
 使用 flutter clean 清除缓存后重新构建
+
+
+macos/
+└── Runner/
+    ├── AppDelegate.swift               # 保留主入口和 Flutter channel 注册逻辑
+    ├── NativeBridge+ConfigWriter.swift # 包含 writeConfigFiles、writeFile 等配置写入相关函数
+    ├── NativeBridge+XrayInit.swift     # 包含 runInitXray 的 AppleScript 权限处理与初始化逻辑
+    ├── NativeBridge+ServiceControl.swift # 启动/停止/check 服务的 launchctl 相关逻辑
+    └── NativeBridge+Logger.swift       # logToFlutter 日志通道封装
