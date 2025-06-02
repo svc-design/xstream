@@ -11,8 +11,7 @@ extension AppDelegate {
 
     let userName = NSUserName()
     let uid = getuid()
-    let serviceName = "\(bundleId).xray-node-\(plistName)"
-    let plistPath = "/Users/\(userName)/Library/LaunchAgents/\(serviceName).plist"
+    let plistPath = "/Users/\(userName)/Library/LaunchAgents/\(plistName)"
 
     switch call.method {
     case "startNodeService":
@@ -22,7 +21,7 @@ extension AppDelegate {
       runShellScript(command: "launchctl bootout gui/\(uid) \"\(plistPath)\"", returnsBool: false, result: result)
 
     case "checkNodeStatus":
-      runShellScript(command: "launchctl list | grep \"\(serviceName)\"", returnsBool: true, result: result)
+      runShellScript(command: "launchctl list | grep \"\(plistName)\"", returnsBool: true, result: result)
 
     default:
       result(FlutterMethodNotImplemented)
