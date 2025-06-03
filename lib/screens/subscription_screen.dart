@@ -5,7 +5,7 @@ import '../../widgets/log_console.dart';
 import '../../services/vpn_config_service.dart';
 
 class SubscriptionScreen extends StatefulWidget {
-  const SubscriptionScreen({Key? key}) : super(key: key);
+  const SubscriptionScreen({super.key});
 
   @override
   State<SubscriptionScreen> createState() => _SubscriptionScreenState();
