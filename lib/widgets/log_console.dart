@@ -26,7 +26,7 @@ class LogEntry {
 }
 
 class LogConsole extends StatefulWidget {
-  const LogConsole({Key? key}) : super(key: key);
+  const LogConsole({super.key});
 
   @override
   LogConsoleState createState() => LogConsoleState();
