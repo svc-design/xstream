@@ -4,7 +4,7 @@ class CustomListTile extends StatelessWidget {
   final String title;
   final String subtitle;
 
-  CustomListTile({required this.title, required this.subtitle});
+  const CustomListTile({super.key, required this.title, required this.subtitle});
 
   @override
   Widget build(BuildContext context) {

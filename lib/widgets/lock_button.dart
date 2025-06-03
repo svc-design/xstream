@@ -6,7 +6,7 @@ class LockButton extends StatefulWidget {
   final Function(String)? onUnlock;
   final Function()? onLock;
 
-  const LockButton({Key? key, this.onUnlock, this.onLock}) : super(key: key);
+  const LockButton({super.key, this.onUnlock, this.onLock});
 
   @override
   _LockButtonState createState() => _LockButtonState();
