@@ -172,6 +172,7 @@ class VpnConfig {
 
     // Plist 文件路径
     final plistPath = '$homeDir/Library/LaunchAgents/$bundleId.xray-node-${nodeName.toLowerCase()}.plist';
+    final plistName = '$bundleId.xray-node-${nodeName.toLowerCase()}.plist';
     // 生成 Xray 配置
     final xrayConfigContent = await _generateXrayJsonConfig(domain, port, uuid, setMessage, logMessage);
     if (xrayConfigContent.isEmpty) return;
@@ -181,14 +182,14 @@ class VpnConfig {
     if (plistContent.isEmpty) return;
 
     // 生成 vpn_nodes.json 内容
-    final vpnNodesConfigContent = await _generateVpnNodesJsonContent(nodeName, plistPath, xrayConfigPath, setMessage, logMessage);
+    final vpnNodesConfigContent = await _generateVpnNodesJsonContent(nodeName, plistName, xrayConfigPath, setMessage, logMessage);
 
     // 通过原生代码写入文件
     try {
       await platform.invokeMethod('writeConfigFiles', {
         'xrayConfigPath': xrayConfigPath,
         'xrayConfigContent': xrayConfigContent,
-        'plistPath': plistPath,
+        'plistPath': plistName,
         'plistContent': plistContent,
         'vpnNodesConfigPath': vpnNodesConfigPath,
         'vpnNodesConfigContent': vpnNodesConfigContent,
