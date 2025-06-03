@@ -39,11 +39,15 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     final unlocked = GlobalState.isUnlocked.value;
     final password = GlobalState.sudoPassword.value;
 
-    if (_bundleId == null) {
+    // Perform null/empty checks for required fields
+    if (_nodeNameController.text.trim().isEmpty ||
+        _domainController.text.trim().isEmpty ||
+        _uuidController.text.trim().isEmpty ||
+        _bundleId == null || _bundleId!.isEmpty) {
       setState(() {
-        _message = '⚠️ 未能加载 Bundle ID';
+        _message = '⚠️ 请填写所有必填项！';
       });
-      logConsoleKey.currentState?.addLog('未能加载 Bundle ID', level: LogLevel.error); // Log error
+      logConsoleKey.currentState?.addLog('缺少必填项或 Bundle ID', level: LogLevel.error); // Log missing fields or bundleId
       return;
     }
 
