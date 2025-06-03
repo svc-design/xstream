@@ -4,7 +4,7 @@ import '../../utils/native_bridge.dart';
 import '../widgets/log_console.dart';
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({Key? key}) : super(key: key);
+  const SettingsScreen({super.key});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
