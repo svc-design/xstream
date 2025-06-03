@@ -1,6 +1,6 @@
 // lib/widgets/lock_button.dart
 import 'package:flutter/material.dart';
-import '../../utils/global_state.dart';
+import '../utils/global_config.dart';
 
 class LockButton extends StatefulWidget {
   final Function(String)? onUnlock;
