@@ -17,34 +17,35 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   final _portController = TextEditingController(text: '443');
   final _uuidController = TextEditingController();
   String _message = '';
-  String _bundleId = 'com.xstream'; // default fallback
+  String? _bundleId; // Start with null and load it asynchronously
   static const platform = MethodChannel('com.xstream/native');
 
   @override
   void initState() {
     super.initState();
-    _loadBundleId();
-  }
-
-  Future<void> _loadBundleId() async {
-    try {
-      final config = await rootBundle.loadString('macos/Runner/Configs/AppInfo.xcconfig');
-      for (final line in config.split('\n')) {
-        if (line.trim().startsWith('PRODUCT_BUNDLE_IDENTIFIER')) {
-          setState(() {
-            _bundleId = line.split('=').last.trim();
-          });
-          break;
-        }
-      }
-    } catch (_) {
-      // silently fallback
-    }
+    // Directly load bundleId when the state is initialized
+    GlobalApplicationConfig.getBundleId().then((bundleId) {
+      setState(() {
+        _bundleId = bundleId;
+      });
+    }).catchError((_) {
+      setState(() {
+        _bundleId = 'com.xstream'; // Fallback value if error occurs
+      });
+    });
   }
 
   void _onCreateConfig() {
     final unlocked = GlobalState.isUnlocked.value;
     final password = GlobalState.sudoPassword.value;
+
+    if (_bundleId == null) {
+      setState(() {
+        _message = '⚠️ 未能加载 Bundle ID';
+      });
+      logConsoleKey.currentState?.addLog('未能加载 Bundle ID', level: LogLevel.error); // Log error
+      return;
+    }
 
     if (!unlocked) {
       setState(() {
@@ -59,7 +60,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         port: _portController.text.trim(),
         uuid: _uuidController.text.trim(),
         password: password,
-        bundleId: _bundleId,
+        bundleId: _bundleId!,
         platform: platform,
         setMessage: (msg) {
           setState(() {
