@@ -10,8 +10,8 @@ extension AppDelegate {
           let xrayConfigContent = args["xrayConfigContent"] as? String, // 修改这里
           let plistPath = args["plistPath"] as? String,
           let plistContent = args["plistContent"] as? String,
-          let vpnNodesJsonPath = args["vpnNodesJsonPath"] as? String,
-          let vpnNodesJsonContent = args["vpnNodesJsonContent"] as? String,
+          let vpnNodesConfigPath = args["vpnNodesConfigPath"] as? String,
+          let vpnNodesConfigContent = args["vpnNodesConfigContent"] as? String,
           let sudoPass = args["password"] as? String else {
       result(FlutterError(code: "INVALID_ARGS", message: "缺少必要的参数", details: nil))
       return
@@ -19,11 +19,11 @@ extension AppDelegate {
 
     do {
       // 写入 Xray 配置文件
-      try writeXrayJson(path: xrayConfigPath, content: xrayConfigContent, password: sudoPass, result: result)
+      try writeXrayConfig(path: xrayConfigPath, content: xrayConfigContent, password: sudoPass, result: result)
       // 写入 Plist 配置文件
       try writePlistFile(path: plistPath, content: plistContent, password: sudoPass, result: result)
       // 更新 vpn_nodes.json 文件
-      try updateVpnNodesJson(path: vpnNodesJsonPath, content: vpnNodesJsonContent, password: sudoPass, result: result)
+      try updateVpnNodesConfig(path: vpnNodesConfigPath, content: vpnNodesConfigContent, password: sudoPass, result: result)
       // 返回成功消息
       result("Configuration files written successfully")
     } catch {
@@ -33,7 +33,7 @@ extension AppDelegate {
     }
   }
 
-  private func writeXrayJson(path: String, content: String, password: String, result: @escaping FlutterResult) throws {
+  private func writeXrayConfig(path: String, content: String, password: String, result: @escaping FlutterResult) throws {
     logToFlutter("info", "创建 Xray 配置文件: \(path)")
     try runPrivilegedWrite(path: path, content: content, password: password, result: result)
   }
@@ -43,7 +43,7 @@ extension AppDelegate {
     try runPrivilegedWrite(path: path, content: content, password: password, result: result)
   }
 
-  private func updateVpnNodesJson(path: String, content: String, password: String, result: @escaping FlutterResult) throws {
+  private func updateVpnNodesConfig(path: String, content: String, password: String, result: @escaping FlutterResult) throws {
     logToFlutter("info", "更新 vpn_nodes.json: \(path)")
     let fileManager = FileManager.default
 
@@ -57,10 +57,10 @@ extension AppDelegate {
     }
 
     // 将新的节点数据添加到现有内容中
-    if let newNode = try? JSONSerialization.jsonObject(with: content.data(using: .utf8)!, options: []) as? [String: Any] {
-      vpnNodes.append(newNode)
+    if let newNodes = try? JSONSerialization.jsonObject(with: content.data(using: .utf8)!, options: []) as? [[String: Any]] {
+        vpnNodes.append(contentsOf: newNodes)
     } else {
-      throw NSError(domain: "vpn_nodes_json", code: 400, userInfo: [NSLocalizedDescriptionKey: "Invalid content for new node"])
+    throw NSError(domain: "vpn_nodes_json", code: 400, userInfo: [NSLocalizedDescriptionKey: "Invalid content for new node"])
     }
 
     // 更新 vpn_nodes.json 文件
