@@ -102,38 +102,13 @@
 		E7B9D3DA76B1887117E7E2FB /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		97A1D2D22DEC03F500278BA5 /* Exceptions for "xray" folder in "RunnerTests" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				xray,
-				"xray-vpn-node-ca.json",
-				"xray-vpn-node-tky.json",
-				"xray-vpn-node-us.json",
-				"xray-vpn.json",
-				"xray-x86_64",
-				"xstream.svc.plus.xray-node-ca.plist",
-				"xstream.svc.plus.xray-node-tky.plist",
-				"xstream.svc.plus.xray-node-us.plist",
-			);
-			target = 331C80D4294CF70F00263BE5 /* RunnerTests */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		97A1D2B92DEC03E200278BA5 /* xray */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				97A1D2D22DEC03F500278BA5 /* Exceptions for "xray" folder in "RunnerTests" target */,
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = xray;
-			sourceTree = "<group>";
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
+/* Begin PBXGroup section (xray folder) */
+               97A1D2B92DEC03E200278BA5 /* xray */ = {
+                       isa = PBXGroup;
+                       path = xray;
+                       sourceTree = "<group>";
+               };
+/* End PBXGroup section (xray folder) */
 
 /* Begin PBXFrameworksBuildPhase section */
 		331C80D2294CF70F00263BE5 /* Frameworks */ = {
@@ -295,9 +270,6 @@
 			);
 			dependencies = (
 				33CC11202044C79F0003C045 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				97A1D2B92DEC03E200278BA5 /* xray */,
 			);
 			name = Runner;
 			productName = Runner;
