@@ -9,7 +9,7 @@ class LockButton extends StatefulWidget {
   const LockButton({super.key, this.onUnlock, this.onLock});
 
   @override
-  _LockButtonState createState() => _LockButtonState();
+  State<LockButton> createState() => _LockButtonState();
 }
 
 class _LockButtonState extends State<LockButton> {
