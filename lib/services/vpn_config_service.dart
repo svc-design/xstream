@@ -119,8 +119,7 @@ class VpnConfig {
       }
 
       final homeDir = Platform.environment['HOME'] ?? '/Users/unknown';
-      final bundleId = await GlobalApplicationConfig.getBundleId();
-      final plistPath = '$homeDir/Library/LaunchAgents/$bundleId.xray-node-${node.plistName}.plist';
+      final plistPath = '$homeDir/Library/LaunchAgents/${node.plistName}';
       final plistFile = File(plistPath);
       if (await plistFile.exists()) {
         await plistFile.delete();
@@ -186,23 +185,33 @@ class VpnConfig {
     // HOME 路径
     final homeDir = Platform.environment['HOME'] ?? '/Users/unknown';
 
+    // 根据节点名称提取国家/地区缩写，如 US-VPN -> us
+    final code = nodeName.split('-').first.toLowerCase();
+
     // Xray 配置文件路径
-    final xrayConfigPath = '/opt/homebrew/etc/xray-node-${nodeName.toLowerCase()}.json';
+    final xrayConfigPath = '/opt/homebrew/etc/xray-vpn-node-$code.json';
     // 生成 Xray 配置
     final xrayConfigContent = await _generateXrayJsonConfig(domain, port, uuid, setMessage, logMessage);
     if (xrayConfigContent.isEmpty) return;
 
     // Plist 文件路径
-    final plistName = '$bundleId.xray-node-${nodeName.toLowerCase()}.plist';
-    final plistPath = '$homeDir/Library/LaunchAgents/$bundleId.xray-node-${nodeName.toLowerCase()}.plist';
+    final plistName = '$bundleId.xray-node-$code.plist';
+    final plistPath = '$homeDir/Library/LaunchAgents/$plistName';
     // 生成 Plist 配置
-    final plistContent = await _generatePlistFile(nodeName, bundleId, xrayConfigPath, setMessage, logMessage);
+    final plistContent = await _generatePlistFile(code, bundleId, xrayConfigPath, setMessage, logMessage);
     if (plistContent.isEmpty) return;
 
     // 获取不同路径
     final vpnNodesConfigPath = await GlobalApplicationConfig.getLocalConfigPath(); // vpn_nodes.json 路径
     // 生成 vpn_nodes.json 内容
-    final vpnNodesConfigContent = await _generateVpnNodesJsonContent(nodeName, plistName, xrayConfigPath, setMessage, logMessage);
+    final vpnNodesConfigContent = await _generateVpnNodesJsonContent(
+      nodeName,
+      code,
+      plistName,
+      xrayConfigPath,
+      setMessage,
+      logMessage,
+    );
 
     // 通过原生代码写入文件
     try {
@@ -260,13 +269,13 @@ class VpnConfig {
 
   /// Helper function to handle Plist file generation
   static Future<String> _generatePlistFile(
-    String nodeName,
+    String nodeCode,
     String bundleId,
     String configPath,
     Function(String) setMessage,
     Function(String) logMessage,
   ) async {
-    if (nodeName.length < 2) {
+    if (nodeCode.length < 2) {
       final err = '节点名长度不足，无法提取国家码';
       setMessage('❌ $err');
       logMessage(err);
@@ -286,7 +295,7 @@ class VpnConfig {
 
     final plistContent = plistTemplate
         .replaceAll('<BUNDLE_ID>', bundleId)
-        .replaceAll('<NAME>', nodeName.toLowerCase())
+        .replaceAll('<NAME>', nodeCode.toLowerCase())
         .replaceAll('<CONFIG_PATH>', configPath);
 
     logMessage('✅ Plist 内容生成完成');
@@ -296,12 +305,13 @@ class VpnConfig {
   /// Helper function to generate vpn_nodes.json content
   static Future<String> _generateVpnNodesJsonContent(
     String nodeName,
-    String plistPath,
+    String nodeCode,
+    String plistName,
     String xrayConfigPath,
     Function(String) setMessage,
     Function(String) logMessage,
   ) async {
-    if (nodeName.trim().isEmpty || plistPath.trim().isEmpty || xrayConfigPath.trim().isEmpty) {
+    if (nodeName.trim().isEmpty || nodeCode.trim().isEmpty || plistName.trim().isEmpty || xrayConfigPath.trim().isEmpty) {
       final err = 'VPN 节点信息不完整，无法生成 JSON 配置';
       setMessage('❌ $err');
       logMessage(err);
@@ -310,8 +320,8 @@ class VpnConfig {
 
     final vpnNode = {
       'name': nodeName,
-      'countryCode': nodeName.substring(0, 2),
-      'plistName': plistPath,
+      'countryCode': nodeCode,
+      'plistName': plistName,
       'configPath': xrayConfigPath,
       'enabled': true,
     };
