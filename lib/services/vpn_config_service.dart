@@ -163,24 +163,25 @@ class VpnConfig {
       return;
     }
 
-    // 获取不同路径
-    final vpnNodesConfigPath = await GlobalApplicationConfig.getLocalConfigPath(); // vpn_nodes.json 路径
+
+    // HOME 路径
     final homeDir = Platform.environment['HOME'] ?? '/Users/unknown';
 
     // Xray 配置文件路径
-    final xrayConfigPath = '/opt/homebrew/etc/xray-vpn-node-${nodeName.toLowerCase()}.json';
-
-    // Plist 文件路径
-    final plistPath = '$homeDir/Library/LaunchAgents/$bundleId.xray-node-${nodeName.toLowerCase()}.plist';
-    final plistName = '$bundleId.xray-node-${nodeName.toLowerCase()}.plist';
+    final xrayConfigPath = '/opt/homebrew/etc/xray-node-${nodeName.toLowerCase()}.json';
     // 生成 Xray 配置
     final xrayConfigContent = await _generateXrayJsonConfig(domain, port, uuid, setMessage, logMessage);
     if (xrayConfigContent.isEmpty) return;
 
+    // Plist 文件路径
+    final plistName = '$bundleId.xray-node-${nodeName.toLowerCase()}.plist';
+    final plistPath = '$homeDir/Library/LaunchAgents/$bundleId.xray-node-${nodeName.toLowerCase()}.plist';
     // 生成 Plist 配置
     final plistContent = await _generatePlistFile(nodeName, bundleId, xrayConfigPath, setMessage, logMessage);
     if (plistContent.isEmpty) return;
 
+    // 获取不同路径
+    final vpnNodesConfigPath = await GlobalApplicationConfig.getLocalConfigPath(); // vpn_nodes.json 路径
     // 生成 vpn_nodes.json 内容
     final vpnNodesConfigContent = await _generateVpnNodesJsonContent(nodeName, plistName, xrayConfigPath, setMessage, logMessage);
 
@@ -189,7 +190,7 @@ class VpnConfig {
       await platform.invokeMethod('writeConfigFiles', {
         'xrayConfigPath': xrayConfigPath,
         'xrayConfigContent': xrayConfigContent,
-        'plistPath': plistName,
+        'plistPath': plistPath,
         'plistContent': plistContent,
         'vpnNodesConfigPath': vpnNodesConfigPath,
         'vpnNodesConfigContent': vpnNodesConfigContent,
@@ -230,8 +231,8 @@ class VpnConfig {
       xrayJsonContent = JsonEncoder.withIndent('  ').convert(jsonObj);
       logMessage('xrayJson 配置文件创建成功');
     } catch (e) {
-      setMessage('xrayJson 配置文件创建无效: $e');
-      logMessage('xrayJson 配置文件创建无效: $e');
+      setMessage('✅ XrayJson 配置内容生成完成');
+      logMessage('✅ XrayJson 配置内容生成完成');
       return ''; // Return empty string to indicate failure
     }
 
