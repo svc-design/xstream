@@ -6,10 +6,100 @@
 #endif
 
 #include "flutter/generated_plugin_registrant.h"
+#include <flutter_linux/fl_method_channel.h>
+#include <flutter_linux/fl_standard_method_codec.h>
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+static void log_to_flutter(MyApplication* self,
+                           const gchar* level,
+                           const gchar* message) {
+  if (self->logger_channel == nullptr) return;
+  gchar* log = g_strdup_printf("[%s] %s", level, message);
+  g_autoptr(FlValue) val = fl_value_new_string(log);
+  fl_method_channel_invoke_method(self->logger_channel, "log", val, NULL, NULL, NULL);
+  g_free(log);
+}
+
+static void run_shell_command(const gchar* command,
+                              gboolean returns_bool,
+                              FlMethodChannel* channel,
+                              FlMethodCall* method_call,
+                              MyApplication* self) {
+  gchar* stdout_data = NULL;
+  gchar* stderr_data = NULL;
+  gint exit_status = 0;
+
+  g_autoptr(GError) error = nullptr;
+  gboolean success = g_spawn_command_line_sync(command, &stdout_data, &stderr_data,
+                                               &exit_status, &error);
+
+  if (!success || error != NULL) {
+    g_autoptr(FlValue) details = fl_value_new_string(stderr_data ? stderr_data : "spawn failed");
+    g_autoptr(FlMethodResponse) response = fl_method_error_response_new("EXEC_ERROR", "Failed to run", details);
+    fl_method_channel_respond(channel, method_call, response, nullptr);
+    if (self) log_to_flutter(self, "error", command);
+    g_free(stdout_data);
+    g_free(stderr_data);
+    return;
+  }
+
+  if (returns_bool) {
+    gboolean is_active = g_strstr_len(stdout_data, -1, "active") != NULL;
+    g_autoptr(FlValue) result = fl_value_new_bool(is_active);
+    g_autoptr(FlMethodResponse) response = fl_method_success_response_new(result);
+    fl_method_channel_respond(channel, method_call, response, nullptr);
+    if (self) log_to_flutter(self, "info", command);
+  } else {
+    g_autoptr(FlValue) result = fl_value_new_string(stdout_data ? stdout_data : "");
+    g_autoptr(FlMethodResponse) response = fl_method_success_response_new(result);
+    fl_method_channel_respond(channel, method_call, response, nullptr);
+    if (self) log_to_flutter(self, "info", stdout_data ? stdout_data : command);
+  }
+
+  g_free(stdout_data);
+  g_free(stderr_data);
+}
+
+static void handle_native_call(FlMethodChannel* channel,
+                               FlMethodCall* method_call,
+                               gpointer user_data) {
+  MyApplication* self = MY_APPLICATION(user_data);
+  const gchar* method = fl_method_call_get_name(method_call);
+  g_autoptr(FlValue) args = fl_method_call_get_args(method_call);
+  const gchar* service_name = nullptr;
+  if (args != nullptr && fl_value_get_type(args) == FL_VALUE_TYPE_MAP) {
+    FlValue* val = fl_value_lookup_string(args, "plistName");
+    if (val != nullptr && fl_value_get_type(val) == FL_VALUE_TYPE_STRING) {
+      service_name = fl_value_get_string(val);
+    }
+  }
+
+  if (g_strcmp0(method, "startNodeService") == 0 && service_name != NULL) {
+    gchar* cmd = g_strdup_printf("sudo systemctl start %s", service_name);
+    run_shell_command(cmd, FALSE, channel, method_call, self);
+    g_free(cmd);
+  } else if (g_strcmp0(method, "stopNodeService") == 0 && service_name != NULL) {
+    gchar* cmd = g_strdup_printf("sudo systemctl stop %s", service_name);
+    run_shell_command(cmd, FALSE, channel, method_call, self);
+    g_free(cmd);
+  } else if (g_strcmp0(method, "checkNodeStatus") == 0 && service_name != NULL) {
+    gchar* cmd = g_strdup_printf("systemctl is-active %s", service_name);
+    run_shell_command(cmd, TRUE, channel, method_call, self);
+    g_free(cmd);
+  } else {
+    g_autoptr(FlMethodResponse) response = fl_method_not_implemented_response_new();
+    fl_method_channel_respond(channel, method_call, response, nullptr);
+  }
+}
 
 struct _MyApplication {
   GtkApplication parent_instance;
   char** dart_entrypoint_arguments;
+  FlMethodChannel* native_channel;
+  FlMethodChannel* logger_channel;
 };
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
@@ -59,6 +149,13 @@ static void my_application_activate(GApplication* application) {
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
 
+  FlEngine* engine = fl_view_get_engine(view);
+  FlBinaryMessenger* messenger = fl_engine_get_binary_messenger(engine);
+  g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
+  self->native_channel = fl_method_channel_new(messenger, "com.xstream/native", FL_METHOD_CODEC(codec), nullptr, nullptr);
+  self->logger_channel = fl_method_channel_new(messenger, "com.xstream/logger", FL_METHOD_CODEC(codec), nullptr, nullptr);
+  fl_method_channel_set_method_call_handler(self->native_channel, handle_native_call, g_object_ref(self), g_object_unref);
+
   gtk_widget_grab_focus(GTK_WIDGET(view));
 }
 
@@ -103,6 +200,8 @@ static void my_application_shutdown(GApplication* application) {
 static void my_application_dispose(GObject* object) {
   MyApplication* self = MY_APPLICATION(object);
   g_clear_pointer(&self->dart_entrypoint_arguments, g_strfreev);
+  g_clear_object(&self->native_channel);
+  g_clear_object(&self->logger_channel);
   G_OBJECT_CLASS(my_application_parent_class)->dispose(object);
 }
 
@@ -114,7 +213,11 @@ static void my_application_class_init(MyApplicationClass* klass) {
   G_OBJECT_CLASS(klass)->dispose = my_application_dispose;
 }
 
-static void my_application_init(MyApplication* self) {}
+static void my_application_init(MyApplication* self) {
+  self->dart_entrypoint_arguments = nullptr;
+  self->native_channel = nullptr;
+  self->logger_channel = nullptr;
+}
 
 MyApplication* my_application_new() {
   return MY_APPLICATION(g_object_new(my_application_get_type(),
