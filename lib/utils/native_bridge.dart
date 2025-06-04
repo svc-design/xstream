@@ -57,8 +57,8 @@ class NativeBridge {
   static void initializeLogger(Function(String log) onLog) {
     _loggerChannel.setMethodCallHandler((call) async {
       if (call.method == 'log') {
-        final log = call.arguments as String?;
-        if (log != null) onLog(log);
+        final log = call.arguments;
+        if (log is String) onLog(log);
       }
     });
   }
