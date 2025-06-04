@@ -34,7 +34,7 @@ class GlobalApplicationConfig {
   static Future<String> getLocalConfigPath() async {
     final bundleId = await getBundleId();  // 获取 PRODUCT_BUNDLE_IDENTIFIER
     final baseDir = await getApplicationSupportDirectory();  // 获取应用支持目录
-    final xstreamDir = Directory('${baseDir.path}/$bundleId');  // 拼接目录路径
+    final xstreamDir = Directory('${baseDir.path}/$bundleId/com.xstream');  // 拼接目录路径
     await xstreamDir.create(recursive: true);  // 创建目录（如果不存在）
     return '${xstreamDir.path}/vpn_nodes.json';  // 返回完整路径
   }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../utils/global_config.dart';
 import '../../utils/native_bridge.dart';
+import '../../services/vpn_config_service.dart';
 import '../widgets/log_console.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -12,6 +14,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   String _selectedTab = 'log';
+  static const platform = MethodChannel('com.xstream/native');
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +51,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   try {
                                     final output = await NativeBridge.initXray();
                                     logConsoleKey.currentState?.addLog(output);
+                                    await VpnConfig.generateDefaultNodes(
+                                      password: GlobalState.sudoPassword.value,
+                                      platform: platform,
+                                      setMessage: (msg) {
+                                        logConsoleKey.currentState?.addLog(msg);
+                                      },
+                                      logMessage: (msg) {
+                                        logConsoleKey.currentState?.addLog(msg);
+                                      },
+                                    );
                                   } catch (e) {
                                     logConsoleKey.currentState?.addLog('[错误] $e', level: LogLevel.error);
                                   }
