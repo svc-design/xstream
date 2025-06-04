@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import '../utils/global_config.dart';
 
 class VpnNode {
@@ -57,7 +58,7 @@ class VpnConfig {
       final List<dynamic> jsonList = json.decode(jsonStr);
       fromAssets = jsonList.map((e) => VpnNode.fromJson(e)).toList();
     } catch (e) {
-      print('⚠️ Failed to load assets/vpn_nodes.json: $e');
+      debugPrint('⚠️ Failed to load assets/vpn_nodes.json: $e');
     }
 
     try {
@@ -69,7 +70,7 @@ class VpnConfig {
         fromLocal = jsonList.map((e) => VpnNode.fromJson(e)).toList();
       }
     } catch (e) {
-      print('⚠️ Failed to load local vpn_nodes.json: $e');
+      debugPrint('⚠️ Failed to load local vpn_nodes.json: $e');
     }
 
     final Map<String, VpnNode> merged = {
@@ -142,7 +143,7 @@ class VpnConfig {
       removeNode(node.name);
       await saveToFile();
     } catch (e) {
-      print('⚠️ 删除节点文件失败: $e');
+      debugPrint('⚠️ 删除节点文件失败: $e');
     }
   }
 
