@@ -30,6 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _isLoading = true;
     });
     await VpnConfig.load();
+    if (!mounted) return;
     setState(() {
       vpnNodes = VpnConfig.nodes;
       _isLoading = false;
@@ -42,6 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _isLoading = true;
     });
     await VpnConfig.load();
+    if (!mounted) return;
     setState(() {
       vpnNodes = VpnConfig.nodes;
       _isLoading = false;
@@ -59,13 +61,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (_activeNode == nodeName) {
       final msg = await NativeBridge.stopNodeService(nodeName);
+      if (!mounted) return;
       setState(() => _activeNode = '');
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } else {
       if (_activeNode.isNotEmpty) {
         await NativeBridge.stopNodeService(_activeNode);
+        if (!mounted) return;
       }
       final msg = await NativeBridge.startNodeService(nodeName);
+      if (!mounted) return;
       setState(() => _activeNode = nodeName);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     }
@@ -87,6 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     _selectedNodeNames.clear();
     await _reloadNodes();
+    if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('✅ 已删除 ${toDelete.length} 个节点并更新配置')),
