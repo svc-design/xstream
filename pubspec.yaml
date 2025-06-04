@@ -28,3 +28,5 @@ flutter:
     - assets/vpn_nodes.json
     - assets/xray-template.json
     - assets/xray-template.plist
+    - android/app/src/main/assets/xray-vpn.json
+    - android/app/src/main/assets/xray-android-arm64
