@@ -182,9 +182,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                         : () async {
                                             try {
                                               await _reloadNodes();
-                                              if (!mounted) return;
+                                              if (!context.mounted) return;
                                               final path = await VpnConfig.getConfigPath();
-                                              if (!mounted) return;
+                                              if (!context.mounted) return;
                                               ScaffoldMessenger.of(context).showSnackBar(
                                                 SnackBar(
                                                   content: Text('🔄 已同步配置文件：\n- assets/vpn_nodes.json\n- $path'),
@@ -192,7 +192,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 ),
                                               );
                                             } catch (e) {
-                                              if (!mounted) return;
+                                              if (!context.mounted) return;
                                               ScaffoldMessenger.of(context).showSnackBar(
                                                 SnackBar(
                                                   content: Text('❌ 同步失败: $e'),
@@ -219,9 +219,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ? null
                                     : () async {
                                         final path = await VpnConfig.getConfigPath();
-                                        if (!mounted) return;
+                                        if (!context.mounted) return;
                                         await VpnConfig.saveToFile();
-                                        if (!mounted) return;
+                                        if (!context.mounted) return;
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           SnackBar(
                                             content: Text('✅ 配置已保存到：\n$path'),
