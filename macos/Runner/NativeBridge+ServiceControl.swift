@@ -3,16 +3,13 @@ import FlutterMacOS
 
 extension AppDelegate {
   func handleServiceControl(call: FlutterMethodCall, bundleId: String, result: @escaping FlutterResult) {
-    guard let args = call.arguments as? [String: Any],
-          let plistName = args["plistName"] as? String else {
-      result(FlutterError(code: "INVALID_ARGS", message: "Missing plistName", details: nil))
-      return
-    }
+    let args = call.arguments as? [String: Any]
+    let plistName = args?["plistName"] as? String
 
     let userName = NSUserName()
     let uid = getuid()
-    let plistPath = "/Users/\(userName)/Library/LaunchAgents/\(plistName)"
-    let serviceName = plistName.replacingOccurrences(of: ".plist", with: "")
+    let plistPath = plistName != nil ? "/Users/\(userName)/Library/LaunchAgents/\(plistName!)" : ""
+    let serviceName = plistName?.replacingOccurrences(of: ".plist", with: "") ?? ""
 
     // 检查 macOS 是否为现代版本（>= 10.15）
     let os = ProcessInfo.processInfo.operatingSystemVersion
@@ -20,22 +17,34 @@ extension AppDelegate {
 
     switch call.method {
     case "startNodeService":
-      let command = useModernLaunchctl
-        ? "launchctl bootstrap gui/\(uid) \"\(plistPath)\""
-        : "launchctl load \"\(plistPath)\""
-      runShellScript(command: command, returnsBool: false, result: result)
+      if let plistName = plistName {
+        let command = useModernLaunchctl
+          ? "launchctl bootstrap gui/\(uid) \"\(plistPath)\""
+          : "launchctl load \"\(plistPath)\""
+        runShellScript(command: command, returnsBool: false, result: result)
+      } else {
+        startLocalXray(result: result)
+      }
 
     case "stopNodeService":
-      let command = useModernLaunchctl
-        ? "launchctl bootout gui/\(uid) \"\(plistPath)\""
-        : "launchctl unload \"\(plistPath)\""
-      runShellScript(command: command, returnsBool: false, result: result)
+      if let _ = plistName {
+        let command = useModernLaunchctl
+          ? "launchctl bootout gui/\(uid) \"\(plistPath)\""
+          : "launchctl unload \"\(plistPath)\""
+        runShellScript(command: command, returnsBool: false, result: result)
+      } else {
+        stopLocalXray(result: result)
+      }
 
     case "checkNodeStatus":
-      let command = useModernLaunchctl
-        ? "launchctl print gui/\(uid)/\(serviceName)"
-        : "launchctl list | grep \"\(serviceName)\""
-      runShellScript(command: command, returnsBool: true, result: result)
+      if let _ = plistName {
+        let command = useModernLaunchctl
+          ? "launchctl print gui/\(uid)/\(serviceName)"
+          : "launchctl list | grep \"\(serviceName)\""
+        runShellScript(command: command, returnsBool: true, result: result)
+      } else {
+        result(false)
+      }
 
     default:
       result(FlutterMethodNotImplemented)
@@ -88,3 +97,41 @@ extension AppDelegate {
     }
   }
 }
+
+  private func startLocalXray(result: @escaping FlutterResult) {
+    guard let resourcePath = Bundle.main.resourcePath else {
+      result("❌ Resource path not found")
+      return
+    }
+    let script = """
+    do shell script \"arch=$(uname -m); bin=\\\"\(resourcePath)/xray\\\"; if [ \\\"$arch\\\" = \\\"x86_64\\\" ]; then bin=\\\"\(resourcePath)/xray-x86_64\\\"; fi; chmod +x \\\"$bin\\\"; \\\"$bin\\\" -config \\\"\(resourcePath)/xray-vpn.json\\\" >/tmp/xray.log 2>&1 &; networksetup -listallnetworkservices | tail -n +2 | while read svc; do networksetup -setwebproxy \\\"$svc\\\" 127.0.0.1 1080; networksetup -setsecurewebproxy \\\"$svc\\\" 127.0.0.1 1080; networksetup -setsocksfirewallproxy \\\"$svc\\\" 127.0.0.1 1080; done\" with administrator privileges
+    """
+    let appleScript = NSAppleScript(source: script)
+    var error: NSDictionary? = nil
+    appleScript?.executeAndReturnError(&error)
+    if let error = error {
+      result("❌ Xray 启动失败: \(error)")
+      logToFlutter("error", "Xray 启动失败: \(error)")
+    } else {
+      result("✅ Xray 已启动")
+      logToFlutter("info", "Xray 已启动")
+    }
+  }
+
+  private func stopLocalXray(result: @escaping FlutterResult) {
+    let script = """
+    do shell script \"pkill -f xray-vpn.json || true; networksetup -listallnetworkservices | tail -n +2 | while read svc; do networksetup -setwebproxystate \\\"$svc\\\" off; networksetup -setsecurewebproxystate \\\"$svc\\\" off; networksetup -setsocksfirewallproxystate \\\"$svc\\\" off; done\" with administrator privileges
+    """
+    let appleScript = NSAppleScript(source: script)
+    var error: NSDictionary? = nil
+    appleScript?.executeAndReturnError(&error)
+    if let error = error {
+      result("❌ Xray 停止失败: \(error)")
+      logToFlutter("error", "Xray 停止失败: \(error)")
+    } else {
+      result("✅ Xray 已停止")
+      logToFlutter("info", "Xray 已停止")
+    }
+  }
+}
+

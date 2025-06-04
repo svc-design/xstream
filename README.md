@@ -12,7 +12,7 @@
 
 - 多节点支持，快速切换
 - 实时日志输出与故障诊断
-- 支持 macOS 权限验证与服务管理
+- 支持 macOS 内置代理服务与权限管理
 - 解耦式界面设计，支持跨平台构建
 
 ---
@@ -26,7 +26,7 @@
 | Linux    | x64      | ⚠️ 未测试   |
 | Linux    | arm64    | ⚠️ 未测试   |
 | Windows  | x64      | ⚠️ 未测试   |
-| Android  | arm64    | ⚠️ 未测试   |
+| Android  | arm64    | ✅ 已支持   |
 | iOS      | arm64    | ⚠️ 未测试   |
 
 ---
@@ -38,3 +38,4 @@
 
 - 📘 [用户使用手册](docs/user-manual.md)
 - 🛠️ [开发者文档（macOS 开发环境搭建）](docs/dev-guide.md)
+- 🤖 [开发者文档（Android 开发环境搭建）](docs/dev-guide-android.md)
