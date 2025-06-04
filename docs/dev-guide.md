@@ -24,6 +24,7 @@ sudo gem install cocoapods
 4. 拉取依赖并构建
 
 flutter pub get
+sh scripts/generate_icons.sh  # 生成 iOS App 图标
 flutter build macos
 开发调试
 使用 VS Code 或 Android Studio 打开项目根目录，可执行如下命令调试：
