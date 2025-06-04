@@ -38,3 +38,8 @@
 
 - 📘 [用户使用手册](docs/user-manual.md)
 - 🛠️ [开发者文档（macOS 开发环境搭建）](docs/dev-guide.md)
+
+## 🖼 更新应用图标
+
+使用 `scripts/generate_icons.sh` 可一键生成并替换 Android、iOS、macOS、Linux 与 Windows 平台的应用图标。
+依赖 ImageMagick，若未安装请先安装 `convert` 命令。
