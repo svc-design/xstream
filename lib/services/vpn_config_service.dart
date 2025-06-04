@@ -48,18 +48,9 @@ class VpnConfig {
     return await GlobalApplicationConfig.getLocalConfigPath();  // 获取配置路径
   }
 
-  /// 加载 VPN 节点配置（本地文件优先，其次 assets）并合并
+  /// 加载 VPN 节点配置（仅本地文件）
   static Future<void> load() async {
-    List<VpnNode> fromAssets = [];
     List<VpnNode> fromLocal = [];
-
-    try {
-      final String jsonStr = await rootBundle.loadString('assets/vpn_nodes.json');
-      final List<dynamic> jsonList = json.decode(jsonStr);
-      fromAssets = jsonList.map((e) => VpnNode.fromJson(e)).toList();
-    } catch (e) {
-      debugPrint('⚠️ Failed to load assets/vpn_nodes.json: $e');
-    }
 
     try {
       final path = await GlobalApplicationConfig.getLocalConfigPath();
@@ -73,12 +64,7 @@ class VpnConfig {
       debugPrint('⚠️ Failed to load local vpn_nodes.json: $e');
     }
 
-    final Map<String, VpnNode> merged = {
-      for (var node in fromAssets) node.name: node,
-      for (var node in fromLocal) node.name: node,
-    };
-
-    _nodes = merged.values.toList();
+    _nodes = fromLocal;
   }
 
   static List<VpnNode> get nodes => _nodes;
@@ -144,6 +130,38 @@ class VpnConfig {
       await saveToFile();
     } catch (e) {
       debugPrint('⚠️ 删除节点文件失败: $e');
+    }
+  }
+
+  /// 生成默认的三个 VPN 节点配置并写入系统路径
+  static Future<void> generateDefaultNodes({
+    required String password,
+    required MethodChannel platform,
+    required Function(String) setMessage,
+    required Function(String) logMessage,
+  }) async {
+    final bundleId = await GlobalApplicationConfig.getBundleId();
+
+    const port = '1443';
+    const uuid = '18d270a9-533d-4b13-b3f1-e7f55540a9b2';
+    const nodes = [
+      {'name': 'US-VPN', 'domain': 'us-connector.onwalk.net'},
+      {'name': 'CA-VPN', 'domain': 'ca-connector.onwalk.net'},
+      {'name': 'Tokyo-VPN', 'domain': 'tky-connector.onwalk.net'},
+    ];
+
+    for (final node in nodes) {
+      await generateContent(
+        nodeName: node['name'] as String,
+        domain: node['domain'] as String,
+        port: port,
+        uuid: uuid,
+        password: password,
+        bundleId: bundleId,
+        platform: platform,
+        setMessage: setMessage,
+        logMessage: logMessage,
+      );
     }
   }
 
