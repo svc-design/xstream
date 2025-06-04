@@ -29,6 +29,8 @@ _nodes：一个存储所有 VpnNode 实例的列表，用于管理 VPN 节点。
 2.2 _getLocalConfigPath()
 获取本地配置文件路径（vpn_nodes.json）的动态路径。此路径基于 PRODUCT_BUNDLE_IDENTIFIER 和 macOS 应用支持目录。
 
+默认返回值示例：`~/Library/Application Support/xstream.svc.plus/com.xstream/vpn_nodes.json`。
+
 返回值：String 类型，表示 vpn_nodes.json 文件的完整路径。
 
 2.3 getConfigPath()
