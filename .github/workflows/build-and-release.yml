@@ -93,6 +93,12 @@ jobs:
           refreshenv
           flutter --version
 
+      - name: Run Flutter tests
+        if: ${{ matrix.platform == 'linux' && matrix.arch == 'x64' }}
+        run: |
+          flutter test --reporter expanded
+
+
       - name: Build Flutter App (Unix-like)
         if: ${{ matrix.platform != 'windows' }}
         shell: bash
