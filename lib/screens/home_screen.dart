@@ -24,7 +24,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _initializeConfig();
   }
 
-  // 初始化配置并加载节点
   Future<void> _initializeConfig() async {
     setState(() {
       _isLoading = true;
@@ -37,7 +36,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // 刷新节点列表
   Future<void> _reloadNodes() async {
     setState(() {
       _isLoading = true;
@@ -50,7 +48,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // 启动/停止节点服务
   Future<void> _toggleNode(VpnNode node) async {
     final nodeName = node.name.trim();
     if (nodeName.isEmpty) return;
@@ -80,7 +77,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // 删除选中的节点
   Future<void> _deleteSelectedNodes() async {
     setState(() {
       _isLoading = true;
@@ -210,25 +206,26 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ? null
                                         : _deleteSelectedNodes,
                                   ),
+                                  const SizedBox(height: 4),
+                                  ElevatedButton.icon(
+                                    icon: const Icon(Icons.save),
+                                    label: const Text('保存配置'),
+                                    onPressed: _isLoading
+                                        ? null
+                                        : () async {
+                                            final path = await VpnConfig.getConfigPath();
+                                            if (!context.mounted) return;
+                                            await VpnConfig.saveToFile();
+                                            if (!context.mounted) return;
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: Text('✅ 配置已保存到：\n$path'),
+                                                duration: const Duration(seconds: 3),
+                                              ),
+                                            );
+                                          },
+                                  ),
                                 ],
-                              ),
-                              ElevatedButton.icon(
-                                icon: const Icon(Icons.save),
-                                label: const Text('保存配置'),
-                                onPressed: _isLoading
-                                    ? null
-                                    : () async {
-                                        final path = await VpnConfig.getConfigPath();
-                                        if (!context.mounted) return;
-                                        await VpnConfig.saveToFile();
-                                        if (!context.mounted) return;
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: Text('✅ 配置已保存到：\n$path'),
-                                            duration: const Duration(seconds: 3),
-                                          ),
-                                        );
-                                      },
                               ),
                             ],
                           ),

@@ -3,22 +3,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:xstream/screens/home_screen.dart';
 
 void main() {
-  testWidgets('HomeScreen shows service status and launch button', (WidgetTester tester) async {
+  testWidgets('HomeScreen shows placeholder when no VPN nodes',
+      (WidgetTester tester) async {
     // Build the HomeScreen widget.
-    await tester.pumpWidget(MaterialApp(home: HomeScreen()));
+    await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
-    // Verify that the service status is displayed.
-    expect(find.text('服务状态'), findsOneWidget);
-    expect(find.text('服务未运行'), findsOneWidget);
-    
-    // Verify that the launch button is displayed.
-    expect(find.text('启动服务'), findsOneWidget);
+    // Wait for async initialization to finish.
+    await tester.pumpAndSettle();
 
-    // Verify that the custom list tiles are displayed.
-    expect(find.text('VLESS'), findsOneWidget);
-    expect(find.text('VMess'), findsOneWidget);
-    expect(find.text('Shadowsocks'), findsOneWidget);
-    expect(find.text('Trojan'), findsOneWidget);
-    expect(find.text('Socks'), findsOneWidget);
+    // Verify that a placeholder message is displayed when there are no nodes.
+    expect(find.text('暂无 VPN 节点，请先添加。'), findsOneWidget);
   });
 }
