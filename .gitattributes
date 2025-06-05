@@ -1,6 +1,5 @@
 macos/Resources/xray/xray filter=lfs diff=lfs merge=lfs -text
 assets/logo.png filter=lfs diff=lfs merge=lfs -text
-*.png filter=lfs diff=lfs merge=lfs -text
 assets/*.png filter=lfs diff=lfs merge=lfs -text
 macos/Runner/Assets.xcassets/AppIcon.appiconset/*.png filter=lfs diff=lfs merge=lfs -text
 macos/xray/xray filter=lfs diff=lfs merge=lfs -text
@@ -58,3 +57,9 @@ windows/runner/resources/iconset/icon_48x48.png filter=lfs diff=lfs merge=lfs -t
 windows/runner/resources/iconset/icon_16x16.png filter=lfs diff=lfs merge=lfs -text
 windows/runner/resources/iconset/icon_256x256.png filter=lfs diff=lfs merge=lfs -text
 linux/app_icon.png filter=lfs diff=lfs merge=lfs -text
+ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-57x57@1x.png filter=lfs diff=lfs merge=lfs -text
+ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-72x72@1x.png filter=lfs diff=lfs merge=lfs -text
+ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-50x50@2x.png filter=lfs diff=lfs merge=lfs -text
+ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-50x50@1x.png filter=lfs diff=lfs merge=lfs -text
+ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-72x72@2x.png filter=lfs diff=lfs merge=lfs -text
+ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-57x57@2x.png filter=lfs diff=lfs merge=lfs -text

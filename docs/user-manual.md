@@ -57,7 +57,7 @@ XStream 是一个用户友好的多平台代理客户端，基于 Xray-core 构�
 
 点击 `生成配置并保存` 按钮，系统将自动写入对应配置并可用于同步服务。
 
-![步骤4](images/custom-odeorm.p5g)
+![步骤4](images/custom-node-form.png)
 
 ---
 ## 步骤 5：同步配置文件
