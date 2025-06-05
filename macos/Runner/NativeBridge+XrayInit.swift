@@ -26,22 +26,25 @@ extension AppDelegate {
     let escapedPath = resourcePath.replacingOccurrences(of: "\"", with: "\\\"")
 
     var commands: [String] = []
-    commands.append("mkdir -p /opt/homebrew/etc")
-    commands.append("mkdir -p \\\"$HOME/Library/LaunchAgents\\\"")
+    // Select Homebrew prefix dynamically.
+    commands.append("HB_PREFIX=/opt/homebrew; [ -d $HB_PREFIX ] || HB_PREFIX=/usr/local")
+    commands.append("mkdir -p \"$HB_PREFIX/etc\"")
+    commands.append("mkdir -p \"$HB_PREFIX/bin\"")
+    commands.append("mkdir -p \"$HOME/Library/LaunchAgents\"")
     commands.append("arch=$(uname -m)")
     commands.append("""
 if [ \\\"$arch\\\" = \\\"arm64\\\" ]; then
-  cp -f \\\"\(escapedPath)/xray\\\" /opt/homebrew/bin/xray
+  cp -f \\\"\(escapedPath)/xray\\\" $HB_PREFIX/bin/xray
 elif [ \\\"$arch\\\" = \\\"i386\\\" ]; then
-  cp -f \\\"\(escapedPath)/xray.i386\\\" /opt/homebrew/bin/xray
+  cp -f \\\"\(escapedPath)/xray.i386\\\" $HB_PREFIX/bin/xray
 elif [ \\\"$arch\\\" = \\\"x86_64\\\" ]; then
-  cp -f \\\"\(escapedPath)/xray.x86_64\\\" /opt/homebrew/bin/xray
+  cp -f \\\"\(escapedPath)/xray.x86_64\\\" $HB_PREFIX/bin/xray
 else
   echo \\\"Unsupported architecture: $arch\\\"
   exit 1
 fi
 """)
-    commands.append("chmod +x /opt/homebrew/bin/xray || chmod +x /usr/local/bin/xray")
+    commands.append("chmod +x $HB_PREFIX/bin/xray || chmod +x /usr/local/bin/xray")
 
     let commandJoined = commands.joined(separator: " ; ")
     let script = "do shell script \"\(commandJoined)\" with administrator privileges"
