@@ -75,6 +75,7 @@ generate_linux_icon() {
 generate_windows_icons() {
   echo "🪟 Generating Windows .ico source PNGs..."
   local ICO_TMP="windows/runner/resources/iconset"
+  local ICO_OUT="windows/runner/resources/app_icon.ico"
   mkdir -p "$ICO_TMP"
 
   for SIZE in 16 32 48 256; do
@@ -83,10 +84,16 @@ generate_windows_icons() {
     resize_sips "$BASE_IMAGE" "$SIZE" "$OUT"
   done
 
-  echo "👉 You can generate .ico using png2ico or ImageMagick if needed."
+  if command -v convert &>/dev/null; then
+    echo "🛠  Converting PNGs to Windows .ico"
+    convert "$ICO_TMP"/icon_*.png "$ICO_OUT"
+    echo "✅ Generated .ico: $ICO_OUT"
+  else
+    echo "⚠️  ImageMagick 'convert' not found. Please install it with 'brew install imagemagick'."
+  fi
 }
 
-### --- Run only platforms NOT handled by flutter_launcher_icons ---
+### --- Run ---
 generate_macos_icons
 generate_linux_icon
 generate_windows_icons
