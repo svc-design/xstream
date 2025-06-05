@@ -99,6 +99,11 @@ jobs:
         run: |
           flutter test --reporter expanded
 
+      - name: Generate launcher icons
+        if: ${{ matrix.platform == 'android' }}
+        run: |
+          flutter pub get
+          dart run flutter_launcher_icons
 
       - name: Build Flutter App (Unix-like)
         if: ${{ matrix.platform != 'windows' }}
