@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../utils/global_config.dart';
 import '../../utils/native_bridge.dart';
 import '../widgets/log_console.dart';
+import 'package:flutter/services.dart';
+import '../../services/vpn_config_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -12,6 +14,25 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   String _selectedTab = 'log';
+  static const platform = MethodChannel('com.xstream/native');
+
+  void _onGenerateDefaultNodes() async {
+    final isUnlocked = GlobalState.isUnlocked.value;
+    final password = GlobalState.sudoPassword.value;
+
+    if (!isUnlocked) {
+      logConsoleKey.currentState?.addLog('请先解锁以执行生成操作', level: LogLevel.warning);
+      return;
+    }
+
+    logConsoleKey.currentState?.addLog('开始生成默认节点...');
+    await VpnConfig.generateDefaultNodes(
+      password: password,
+      platform: platform,
+      setMessage: (msg) => logConsoleKey.currentState?.addLog(msg),
+      logMessage: (msg) => logConsoleKey.currentState?.addLog(msg),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +74,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   }
                                 }
                               : null,
+                        ),
+                        const SizedBox(height: 8),
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.settings),
+                          label: const Text('生成默认节点'),
+                          onPressed: isUnlocked ? _onGenerateDefaultNodes : null,
                         ),
                         if (!isUnlocked)
                           const Padding(

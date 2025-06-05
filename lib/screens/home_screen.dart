@@ -187,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                               if (!context.mounted) return;
                                               ScaffoldMessenger.of(context).showSnackBar(
                                                 SnackBar(
-                                                  content: Text('🔄 已同步配置文件：\n- assets/vpn_nodes.json\n- $path'),
+                                                  content: Text('🔄 已同步配置文件：\n- $path'),
                                                   duration: const Duration(seconds: 3),
                                                 ),
                                               );

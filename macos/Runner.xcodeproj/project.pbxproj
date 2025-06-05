@@ -37,6 +37,10 @@
 		979170322DED493800ABF9A6 /* NativeBridge+ServiceControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702B2DED493800ABF9A6 /* NativeBridge+ServiceControl.swift */; };
 		979170332DED493800ABF9A6 /* NativeBridge+XrayInit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702C2DED493800ABF9A6 /* NativeBridge+XrayInit.swift */; };
 		979170342DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 979170292DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift */; };
+		97AFCB8B2DF1211E00629C1A /* xray-x86_64 in Resources */ = {isa = PBXBuildFile; fileRef = 97AFCB8A2DF1211E00629C1A /* xray-x86_64 */; };
+		97AFCB8C2DF1211E00629C1A /* xray in Resources */ = {isa = PBXBuildFile; fileRef = 97AFCB892DF1211E00629C1A /* xray */; };
+		97AFCB8D2DF1211E00629C1A /* xray-x86_64 in Resources */ = {isa = PBXBuildFile; fileRef = 97AFCB8A2DF1211E00629C1A /* xray-x86_64 */; };
+		97AFCB8E2DF1211E00629C1A /* xray in Resources */ = {isa = PBXBuildFile; fileRef = 97AFCB892DF1211E00629C1A /* xray */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -99,16 +103,10 @@
 		9791702A2DED493800ABF9A6 /* NativeBridge+Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+Logger.swift"; sourceTree = "<group>"; };
 		9791702B2DED493800ABF9A6 /* NativeBridge+ServiceControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+ServiceControl.swift"; sourceTree = "<group>"; };
 		9791702C2DED493800ABF9A6 /* NativeBridge+XrayInit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+XrayInit.swift"; sourceTree = "<group>"; };
+		97AFCB892DF1211E00629C1A /* xray */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = xray; sourceTree = "<group>"; };
+		97AFCB8A2DF1211E00629C1A /* xray-x86_64 */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = "xray-x86_64"; sourceTree = "<group>"; };
 		E7B9D3DA76B1887117E7E2FB /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
-
-/* Begin PBXGroup section (xray folder) */
-               97A1D2B92DEC03E200278BA5 /* xray */ = {
-                       isa = PBXGroup;
-                       path = xray;
-                       sourceTree = "<group>";
-               };
-/* End PBXGroup section (xray folder) */
 
 /* Begin PBXFrameworksBuildPhase section */
 		331C80D2294CF70F00263BE5 /* Frameworks */ = {
@@ -208,6 +206,15 @@
 				33BA886A226E78AF003329D5 /* Configs */,
 			);
 			path = Runner;
+			sourceTree = "<group>";
+		};
+		97A1D2B92DEC03E200278BA5 /* xray */ = {
+			isa = PBXGroup;
+			children = (
+				97AFCB892DF1211E00629C1A /* xray */,
+				97AFCB8A2DF1211E00629C1A /* xray-x86_64 */,
+			);
+			path = xray;
 			sourceTree = "<group>";
 		};
 		D73912EC22F37F3D000D13A0 /* Frameworks */ = {
@@ -333,6 +340,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				97AFCB8B2DF1211E00629C1A /* xray-x86_64 in Resources */,
+				97AFCB8C2DF1211E00629C1A /* xray in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -342,6 +351,8 @@
 			files = (
 				33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */,
 				33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */,
+				97AFCB8D2DF1211E00629C1A /* xray-x86_64 in Resources */,
+				97AFCB8E2DF1211E00629C1A /* xray in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -394,9 +405,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;

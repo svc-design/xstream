@@ -25,6 +25,5 @@ flutter:
   # 注册外部资源
   assets:
     - assets/logo.png
-    - assets/vpn_nodes.json
     - assets/xray-template.json
     - assets/xray-template.plist
