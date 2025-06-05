@@ -24,7 +24,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return branch;
     }
     if (branch == 'main') {
-      return 'latest+${prId}';
+      return 'latest+$prId';
     }
     return 'dev';
   }
