@@ -225,9 +225,9 @@ class VpnConfig {
         'password': password,
       });
 
-      setMessage('✅ 配置已保存: $plistPath\n✅ 服务项已生成: $plistPath');
-      setMessage('✅ 配置已保存: $xrayConfigPath\n✅ 服务项已生成: $xrayConfigPath');
-      setMessage('✅ 配置已保存: $vpnNodesConfigPath\n✅ 服务项已生成: $vpnNodesConfigPath');
+      setMessage('✅ 配置已保存: $xrayConfigPath');
+      setMessage('✅ 服务项已生成: $plistPath');
+      setMessage('✅ 菜单项已更新: $vpnNodesConfigPath');
       logMessage('配置已成功保存并生成');
     } on PlatformException catch (e) {
       setMessage('生成配置失败: $e');

@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout codebase
         uses: actions/checkout@v4
+        with:
+          lfs: true
 
       # 检查敏感信息
       - name: Install git-secrets
@@ -35,7 +37,3 @@ jobs:
         run: |
           flutter analyze
 
-      # 运行 Flutter 单元测试
-      - name: Run Flutter tests
-        run: |
-          flutter test --reporter expanded

@@ -48,6 +48,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - name: Set up Flutter for Unix-like Platforms
         if: ${{ matrix.platform != 'windows' }}
@@ -82,16 +84,21 @@ jobs:
 
       - name: Set up Flutter for Windows
         if: ${{ matrix.platform == 'windows' }}
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.32.2'
+
+      - name: Display Flutter version (Windows)
+        if: ${{ matrix.platform == 'windows' }}
         shell: powershell
+        run: flutter --version
+
+      - name: Run Flutter tests
+        if: ${{ matrix.platform == 'linux' && matrix.arch == 'x64' }}
         run: |
-          Set-ExecutionPolicy Bypass -Scope Process -Force
-          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
-          iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-          choco install flutter -y
-          echo "C:\tools\flutter\bin" | Out-File -Append -FilePath $env:GITHUB_PATH
-          Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
-          refreshenv
-          flutter --version
+          flutter test --reporter expanded
+
 
       - name: Build Flutter App (Unix-like)
         if: ${{ matrix.platform != 'windows' }}
@@ -161,6 +168,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
