@@ -146,7 +146,7 @@ class VpnConfig {
     const nodes = [
       {'name': 'US-VPN', 'domain': 'us-connector.onwalk.net'},
       {'name': 'CA-VPN', 'domain': 'ca-connector.onwalk.net'},
-      {'name': 'Tokyo-VPN', 'domain': 'tky-connector.onwalk.net'},
+      {'name': 'JP-VPN', 'domain': 'tky-connector.onwalk.net'},
     ];
 
     for (final node in nodes) {
