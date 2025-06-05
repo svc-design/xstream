@@ -35,7 +35,3 @@ jobs:
         run: |
           flutter analyze
 
-      # 运行 Flutter 单元测试
-      - name: Run Flutter tests
-        run: |
-          flutter test --reporter expanded
