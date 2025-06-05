@@ -33,7 +33,6 @@ XStream 是一个用户友好的多平台代理客户端，基于 Xray-core 构�
 
 系统会弹出 macOS 原生权限窗口，请再次输入密码确认操作。
 
-![macOS 权限确认](images/mac-auth.png)
 
 ---
 
@@ -47,11 +46,25 @@ XStream 是一个用户友好的多平台代理客户端，基于 Xray-core 构�
 
 ---
 
-## 步骤 4：同步配置文件
+## 步骤 4：添加自定义 VPN 节点配置
+
+点击底部导航栏中的 `Subscriptions` 标签页，在添加页面中填写你自己的节点信息，例如：
+
+- 节点名（如 `Global-Proxy`）
+- 服务器域名（如 `global-proxy.onwalk.net`）
+- 端口号（如 `1443`）
+- UUID（如 `18dxxxxx-xxxx-xxxx-xxxx-e7fxxxxx9b2`）
+
+点击 `生成配置并保存` 按钮，系统将自动写入对应配置并可用于同步服务。
+
+![步骤4](images/custom-odeorm.p5g)
+
+---
+## 步骤 5：同步配置文件
 
 在主界面中点击左侧的 `同步配置` 按钮，将当前选中的节点配置写入系统服务中。
 
-![步骤4](images/sync-config.png)
+![步骤5](images/sync-config.png)
 
 此操作会根据选中的节点保存并应用配置到本地服务。
 

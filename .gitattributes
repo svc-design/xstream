@@ -10,3 +10,5 @@ docs/images/init-xray.png filter=lfs diff=lfs merge=lfs -text
 docs/images/log-result.png filter=lfs diff=lfs merge=lfs -text
 docs/images/sync-config.png filter=lfs diff=lfs merge=lfs -text
 docs/images/unlock-button.png filter=lfs diff=lfs merge=lfs -text
+docs/images/*.png filter=lfs diff=lfs merge=lfs -text
+docs/images/custom-node-form.png filter=lfs diff=lfs merge=lfs -text
