@@ -18,12 +18,12 @@ for node in "${NODES[@]}"; do
     <string>/opt/homebrew/bin/xray</string>
     <string>run</string>
     <string>-c</string>
-    <string>/opt/xray/etc/xray-vpn-${node}-node.json</string>
+    <string>/opt/homebrew/etc/xray-vpn-node-${node}.json</string>
   </array>
   <key>StandardOutPath</key>
-  <string>/tmp/xray-vpn-${node}-node.log</string>
+  <string>/tmp/xray-vpn-node-${node}.log</string>
   <key>StandardErrorPath</key>
-  <string>/tmp/xray-vpn-${node}-node.err</string>
+  <string>/tmp/xray-vpn-node-${node}.err</string>
   <key>RunAtLoad</key>
   <true/>
   <key>KeepAlive</key>
