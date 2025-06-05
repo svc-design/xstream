@@ -4,6 +4,7 @@ import '../../utils/native_bridge.dart';
 import '../widgets/log_console.dart';
 import 'package:flutter/services.dart';
 import '../../services/vpn_config_service.dart';
+import 'help_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -15,6 +16,18 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   String _selectedTab = 'log';
   static const platform = MethodChannel('com.xstream/native');
+
+  String _buildVersion() {
+    const branch = String.fromEnvironment('BRANCH_NAME', defaultValue: '');
+    const prId = String.fromEnvironment('PR_ID', defaultValue: '0');
+    if (branch.startsWith('release/')) {
+      return branch;
+    }
+    if (branch == 'main') {
+      return 'latest+${prId}';
+    }
+    return 'dev';
+  }
 
   void _onGenerateDefaultNodes() async {
     final isUnlocked = GlobalState.isUnlocked.value;
@@ -106,13 +119,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 },
               ),
               ListTile(
+                leading: const Icon(Icons.help),
+                title: const Text('帮助'),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => const HelpScreen()),
+                  );
+                },
+              ),
+              ListTile(
                 leading: const Icon(Icons.info),
                 title: const Text('关于'),
                 onTap: () {
                   showAboutDialog(
                     context: context,
                     applicationName: 'XStream',
-                    applicationVersion: '1.0.0',
+                    applicationVersion: _buildVersion(),
+                    applicationLegalese: '© svc.plus GPLv3',
                     children: const [
                       Text('由 XStream 驱动的多节点代理 UI'),
                     ],
