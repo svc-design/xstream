@@ -75,4 +75,16 @@ class NativeBridge {
       return '初始化失败: $e';
     }
   }
+
+  // iOS: 启动 xray-core，并设置默认代理模式
+  static Future<String> startXrayCore({String mode = 'proxy'}) async {
+    try {
+      final result = await _channel.invokeMethod<String>('startXrayCore', {
+        'mode': mode,
+      });
+      return result ?? '启动成功';
+    } catch (e) {
+      return '启动失败: $e';
+    }
+  }
 }
