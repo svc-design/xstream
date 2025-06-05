@@ -51,40 +51,27 @@ extension AppDelegate {
     task.standardOutput = pipe
     task.standardError = pipe
 
-    let fileHandle = pipe.fileHandleForReading
-    var outputBuffer = ""
-
-    fileHandle.readabilityHandler = { handle in
-      if let output = String(data: handle.availableData, encoding: .utf8), !output.isEmpty {
-        outputBuffer += output
-      }
-    }
-
-    task.terminationHandler = { process in
-      fileHandle.readabilityHandler = nil
-      let found = outputBuffer.contains("xray-node")
-      let isSuccess = (process.terminationStatus == 0)
-
-      DispatchQueue.main.async {
-        if returnsBool {
-          result(found)
-        } else if isSuccess {
-          result("success")
-          self.logToFlutter("info", "命令执行成功: \nCommand: \(command)\nOutput: \(outputBuffer)")
-        } else {
-          result(FlutterError(code: "EXEC_FAILED", message: "Command failed", details: outputBuffer))
-          self.logToFlutter("error", "命令执行失败: \nCommand: \(command)\nOutput: \(outputBuffer)")
-        }
-      }
-    }
-
     do {
       try task.run()
+      task.waitUntilExit()
+
+      let data = pipe.fileHandleForReading.readDataToEndOfFile()
+      let output = String(data: data, encoding: .utf8) ?? ""
+      let found = output.contains("xray-node")
+      let isSuccess = (task.terminationStatus == 0)
+
+      if returnsBool {
+        result(found)
+      } else if isSuccess {
+        result("success")
+        self.logToFlutter("info", "命令执行成功: \nCommand: \(command)\nOutput: \(output)")
+      } else {
+        result(FlutterError(code: "EXEC_FAILED", message: "Command failed", details: output))
+        self.logToFlutter("error", "命令执行失败: \nCommand: \(command)\nOutput: \(output)")
+      }
     } catch {
       result(FlutterError(code: "EXEC_ERROR", message: "Process failed to run", details: error.localizedDescription))
-      DispatchQueue.main.async {
-        self.logToFlutter("error", "Process failed to run: \(error.localizedDescription)")
-      }
+      self.logToFlutter("error", "Process failed to run: \(error.localizedDescription)")
     }
   }
 }
