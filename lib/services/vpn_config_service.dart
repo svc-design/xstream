@@ -189,7 +189,7 @@ class VpnConfig {
     final code = nodeName.split('-').first.toLowerCase();
 
     // Xray 配置文件路径
-    final xrayConfigPath = '/opt/homebrew/etc/xray-vpn-node-$code.json';
+    final xrayConfigPath = '/opt/xray/etc/xray-vpn-node-$code.json';
     // 生成 Xray 配置
     final xrayConfigContent = await _generateXrayJsonConfig(domain, port, uuid, setMessage, logMessage);
     if (xrayConfigContent.isEmpty) return;
