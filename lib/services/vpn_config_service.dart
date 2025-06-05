@@ -48,18 +48,9 @@ class VpnConfig {
     return await GlobalApplicationConfig.getLocalConfigPath();  // 获取配置路径
   }
 
-  /// 加载 VPN 节点配置（本地文件优先，其次 assets）并合并
+  /// 加载 VPN 节点配置（仅本地文件）
   static Future<void> load() async {
-    List<VpnNode> fromAssets = [];
     List<VpnNode> fromLocal = [];
-
-    try {
-      final String jsonStr = await rootBundle.loadString('assets/vpn_nodes.json');
-      final List<dynamic> jsonList = json.decode(jsonStr);
-      fromAssets = jsonList.map((e) => VpnNode.fromJson(e)).toList();
-    } catch (e) {
-      debugPrint('⚠️ Failed to load assets/vpn_nodes.json: $e');
-    }
 
     try {
       final path = await GlobalApplicationConfig.getLocalConfigPath();
@@ -73,12 +64,7 @@ class VpnConfig {
       debugPrint('⚠️ Failed to load local vpn_nodes.json: $e');
     }
 
-    final Map<String, VpnNode> merged = {
-      for (var node in fromAssets) node.name: node,
-      for (var node in fromLocal) node.name: node,
-    };
-
-    _nodes = merged.values.toList();
+    _nodes = fromLocal;
   }
 
   static List<VpnNode> get nodes => _nodes;
@@ -133,8 +119,7 @@ class VpnConfig {
       }
 
       final homeDir = Platform.environment['HOME'] ?? '/Users/unknown';
-      final bundleId = await GlobalApplicationConfig.getBundleId();
-      final plistPath = '$homeDir/Library/LaunchAgents/$bundleId.xray-node-${node.plistName}.plist';
+      final plistPath = '$homeDir/Library/LaunchAgents/${node.plistName}';
       final plistFile = File(plistPath);
       if (await plistFile.exists()) {
         await plistFile.delete();
@@ -144,6 +129,38 @@ class VpnConfig {
       await saveToFile();
     } catch (e) {
       debugPrint('⚠️ 删除节点文件失败: $e');
+    }
+  }
+
+  /// 生成默认的三个 VPN 节点配置并写入系统路径
+  static Future<void> generateDefaultNodes({
+    required String password,
+    required MethodChannel platform,
+    required Function(String) setMessage,
+    required Function(String) logMessage,
+  }) async {
+    final bundleId = await GlobalApplicationConfig.getBundleId();
+
+    const port = '1443';
+    const uuid = '18d270a9-533d-4b13-b3f1-e7f55540a9b2';
+    const nodes = [
+      {'name': 'US-VPN', 'domain': 'us-connector.onwalk.net'},
+      {'name': 'CA-VPN', 'domain': 'ca-connector.onwalk.net'},
+      {'name': 'JP-VPN', 'domain': 'tky-connector.onwalk.net'},
+    ];
+
+    for (final node in nodes) {
+      await generateContent(
+        nodeName: node['name'] as String,
+        domain: node['domain'] as String,
+        port: port,
+        uuid: uuid,
+        password: password,
+        bundleId: bundleId,
+        platform: platform,
+        setMessage: setMessage,
+        logMessage: logMessage,
+      );
     }
   }
 
@@ -168,23 +185,33 @@ class VpnConfig {
     // HOME 路径
     final homeDir = Platform.environment['HOME'] ?? '/Users/unknown';
 
+    // 根据节点名称提取国家/地区缩写，如 US-VPN -> us
+    final code = nodeName.split('-').first.toLowerCase();
+
     // Xray 配置文件路径
-    final xrayConfigPath = '/opt/homebrew/etc/xray-node-${nodeName.toLowerCase()}.json';
+    final xrayConfigPath = '/opt/homebrew/etc/xray-vpn-node-$code.json';
     // 生成 Xray 配置
     final xrayConfigContent = await _generateXrayJsonConfig(domain, port, uuid, setMessage, logMessage);
     if (xrayConfigContent.isEmpty) return;
 
     // Plist 文件路径
-    final plistName = '$bundleId.xray-node-${nodeName.toLowerCase()}.plist';
-    final plistPath = '$homeDir/Library/LaunchAgents/$bundleId.xray-node-${nodeName.toLowerCase()}.plist';
+    final plistName = '$bundleId.xray-node-$code.plist';
+    final plistPath = '$homeDir/Library/LaunchAgents/$plistName';
     // 生成 Plist 配置
-    final plistContent = await _generatePlistFile(nodeName, bundleId, xrayConfigPath, setMessage, logMessage);
+    final plistContent = await _generatePlistFile(code, bundleId, xrayConfigPath, setMessage, logMessage);
     if (plistContent.isEmpty) return;
 
     // 获取不同路径
     final vpnNodesConfigPath = await GlobalApplicationConfig.getLocalConfigPath(); // vpn_nodes.json 路径
     // 生成 vpn_nodes.json 内容
-    final vpnNodesConfigContent = await _generateVpnNodesJsonContent(nodeName, plistName, xrayConfigPath, setMessage, logMessage);
+    final vpnNodesConfigContent = await _generateVpnNodesJsonContent(
+      nodeName,
+      code,
+      plistName,
+      xrayConfigPath,
+      setMessage,
+      logMessage,
+    );
 
     // 通过原生代码写入文件
     try {
@@ -242,13 +269,13 @@ class VpnConfig {
 
   /// Helper function to handle Plist file generation
   static Future<String> _generatePlistFile(
-    String nodeName,
+    String nodeCode,
     String bundleId,
     String configPath,
     Function(String) setMessage,
     Function(String) logMessage,
   ) async {
-    if (nodeName.length < 2) {
+    if (nodeCode.length < 2) {
       final err = '节点名长度不足，无法提取国家码';
       setMessage('❌ $err');
       logMessage(err);
@@ -268,7 +295,7 @@ class VpnConfig {
 
     final plistContent = plistTemplate
         .replaceAll('<BUNDLE_ID>', bundleId)
-        .replaceAll('<NAME>', nodeName.toLowerCase())
+        .replaceAll('<NAME>', nodeCode.toLowerCase())
         .replaceAll('<CONFIG_PATH>', configPath);
 
     logMessage('✅ Plist 内容生成完成');
@@ -278,12 +305,13 @@ class VpnConfig {
   /// Helper function to generate vpn_nodes.json content
   static Future<String> _generateVpnNodesJsonContent(
     String nodeName,
-    String plistPath,
+    String nodeCode,
+    String plistName,
     String xrayConfigPath,
     Function(String) setMessage,
     Function(String) logMessage,
   ) async {
-    if (nodeName.trim().isEmpty || plistPath.trim().isEmpty || xrayConfigPath.trim().isEmpty) {
+    if (nodeName.trim().isEmpty || nodeCode.trim().isEmpty || plistName.trim().isEmpty || xrayConfigPath.trim().isEmpty) {
       final err = 'VPN 节点信息不完整，无法生成 JSON 配置';
       setMessage('❌ $err');
       logMessage(err);
@@ -292,8 +320,8 @@ class VpnConfig {
 
     final vpnNode = {
       'name': nodeName,
-      'countryCode': nodeName.substring(0, 2),
-      'plistName': plistPath,
+      'countryCode': nodeCode,
+      'plistName': plistName,
       'configPath': xrayConfigPath,
       'enabled': true,
     };

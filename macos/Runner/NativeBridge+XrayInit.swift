@@ -24,15 +24,6 @@ extension AppDelegate {
     }
 
     let escapedPath = resourcePath.replacingOccurrences(of: "\"", with: "\\\"")
-    let plistSuffixes = ["ca", "us", "tky"]
-    let plistCopy = plistSuffixes.map {
-      "cp -f \\\"\(escapedPath)/\(bundleId).xray-node-\($0).plist\\\" \\\"$HOME/Library/LaunchAgents\\\""
-    }
-
-    let jsonFiles = ["xray-vpn-node-ca.json", "xray-vpn-node-tky.json", "xray-vpn-node-us.json", "xray-vpn.json"]
-    let jsonCopy = jsonFiles.map {
-      "cp -f \\\"\(escapedPath)/\($0)\\\" /opt/homebrew/etc/"
-    }
 
     var commands: [String] = []
     commands.append("mkdir -p /opt/homebrew/etc")
@@ -51,8 +42,6 @@ else
 fi
 """)
     commands.append("chmod +x /opt/homebrew/bin/xray || chmod +x /usr/local/bin/xray")
-    commands.append(contentsOf: plistCopy)
-    commands.append(contentsOf: jsonCopy)
 
     let commandJoined = commands.joined(separator: " ; ")
     let script = "do shell script \"\(commandJoined)\" with administrator privileges"
