@@ -22,22 +22,40 @@ ios-arm64: ios-arm64
 
 all: macos-intel macos-arm64 windows-x64 linux-x64 linux-arm64 android-arm64 ios-arm64
 
+# 如果 sips 报错，使用 ImageMagick convert 替代
+define resize_image
+	@echo "🖼 生成 $(2) ($(1)x$(1))"
+	@if sips -z $(1) $(1) $(ICON_SRC) --out $(2) 2>/dev/null; then \
+		echo "✔️ 使用 sips 成功"; \
+	elif command -v convert >/dev/null; then \
+		echo "⚠️ sips 失败，使用 convert 替代"; \
+		convert $(ICON_SRC) -resize $(1)x$(1)\! $(2); \
+	else \
+		echo "❌ 无法处理图片：请安装 ImageMagick (brew install imagemagick)"; \
+		exit 1; \
+	fi
+endef
 
-## 生成并替换 macOS App 图标
+windows-icon:
+	mkdir -p windows/runner/resources
+	magick assets/logo.png -resize 256x256 windows/runner/resources/app_icon.ico
+	@echo "✅ Windows app_icon.ico generated"
+
 icon:
 	@echo "🎨 生成 macOS AppIcon..."
 	rm -rf temp.iconset
 	mkdir -p temp.iconset
-	sips -z 16 16     $(ICON_SRC) --out temp.iconset/icon_16x16.png
-	sips -z 32 32     $(ICON_SRC) --out temp.iconset/icon_16x16@2x.png
-	sips -z 32 32     $(ICON_SRC) --out temp.iconset/icon_32x32.png
-	sips -z 64 64     $(ICON_SRC) --out temp.iconset/icon_32x32@2x.png
-	sips -z 128 128   $(ICON_SRC) --out temp.iconset/icon_128x128.png
-	sips -z 256 256   $(ICON_SRC) --out temp.iconset/icon_128x128@2x.png
-	sips -z 256 256   $(ICON_SRC) --out temp.iconset/icon_256x256.png
-	sips -z 512 512   $(ICON_SRC) --out temp.iconset/icon_256x256@2x.png
-	sips -z 512 512   $(ICON_SRC) --out temp.iconset/icon_512x512.png
-	cp $(ICON_SRC) temp.iconset/icon_512x512@2x.png
+
+	$(call resize_image,16,temp.iconset/icon_16x16.png)
+	$(call resize_image,32,temp.iconset/icon_16x16@2x.png)
+	$(call resize_image,32,temp.iconset/icon_32x32.png)
+	$(call resize_image,64,temp.iconset/icon_32x32@2x.png)
+	$(call resize_image,128,temp.iconset/icon_128x128.png)
+	$(call resize_image,256,temp.iconset/icon_128x128@2x.png)
+	$(call resize_image,256,temp.iconset/icon_256x256.png)
+	$(call resize_image,512,temp.iconset/icon_256x256@2x.png)
+	$(call resize_image,512,temp.iconset/icon_512x512.png)
+	$(call resize_image,1024,temp.iconset/icon_512x512@2x.png)
 
 	@echo "🧼 替换 AppIcon.appiconset 中的图标..."
 	cp temp.iconset/icon_16x16.png       $(ICON_DST)/app_icon_16.png
@@ -49,6 +67,9 @@ icon:
 	cp temp.iconset/icon_256x256.png     $(ICON_DST)/app_icon_256.png
 	cp temp.iconset/icon_256x256@2x.png  $(ICON_DST)/app_icon_512.png
 	cp temp.iconset/icon_512x512@2x.png  $(ICON_DST)/app_icon_1024.png
+
+	@echo "✅ 图标替换完成！"
+
 
 	@echo "✅ 图标替换完成！"
 

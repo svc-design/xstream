@@ -15,17 +15,20 @@ dependencies:
   process_run: ^1.2.4
   flutter_lints: ^6.0.0
   url_launcher: ^6.3.1
+  json_annotation: ^4.4.0
+  flutter_launcher_icons: ^0.13.1  # This is for managing app icons
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_launcher_icons: ^0.13.1
+  build_runner: ^2.1.7
+  json_serializable: ^6.0.1  # Necessary for generating code for JSON serialization
 
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: assets/logo.png
-  remove_alpha_ios: true
+  image_path: assets/logo.png  # Path to your base app icon image
+  remove_alpha_ios: true  # Removes alpha transparency from iOS icons
 
 flutter:
   uses-material-design: true
