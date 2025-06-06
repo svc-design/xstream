@@ -54,9 +54,9 @@ fix-macos-signing:
 macos-intel:
 	@if [ "$(UNAME_S)" = "Darwin" ] && [ "$(UNAME_M)" = "x86_64" ]; then \
 		echo "Building for macOS (Intel)..."; \
-		$(FLUTTER) build macos --release; \
+		$(FLUTTER) build macos --release --dart-define=BRANCH_NAME=release/v0.1.1  --dart-define=BUILD_ID=8d7a5a8 --dart-define=BUILD_DATE=2025-06-06
 		brew install create-dmg || true; \
-		DMG_NAME=xstream-release-v0.1.0.dmg; \
+		DMG_NAME=xstream-release-v0.1.1.dmg; \
 		create-dmg \
 			--volname "XStream Installer" \
 			--window-pos 200 120 \
@@ -74,7 +74,7 @@ macos-arm64:
 		echo "Building for macOS (ARM64)..."; \
 		$(FLUTTER) build macos --release; \
 		brew install create-dmg || true; \
-		DMG_NAME=xstream-release-v0.1.0.dmg; \
+		DMG_NAME=xstream-release-v0.1.1.dmg; \
 		create-dmg \
 			--volname "XStream Installer" \
 			--window-pos 200 120 \
