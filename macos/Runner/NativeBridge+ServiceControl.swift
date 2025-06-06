@@ -43,35 +43,18 @@ extension AppDelegate {
   }
 
   func runShellScript(command: String, returnsBool: Bool, result: @escaping FlutterResult) {
-    let task = Process()
-    task.launchPath = "/bin/zsh"
-    task.arguments = ["-c", command]
-
-    let pipe = Pipe()
-    task.standardOutput = pipe
-    task.standardError = pipe
-
-    do {
-      try task.run()
-      task.waitUntilExit()
-
-      let data = pipe.fileHandleForReading.readDataToEndOfFile()
-      let output = String(data: data, encoding: .utf8) ?? ""
+    runCommandPrivileged(command) { output in
       let found = output.contains("xray-node")
-      let isSuccess = (task.terminationStatus == 0)
 
       if returnsBool {
         result(found)
-      } else if isSuccess {
+      } else if !output.isEmpty {
         result("success")
         self.logToFlutter("info", "命令执行成功: \nCommand: \(command)\nOutput: \(output)")
       } else {
         result(FlutterError(code: "EXEC_FAILED", message: "Command failed", details: output))
         self.logToFlutter("error", "命令执行失败: \nCommand: \(command)\nOutput: \(output)")
       }
-    } catch {
-      result(FlutterError(code: "EXEC_ERROR", message: "Process failed to run", details: error.localizedDescription))
-      self.logToFlutter("error", "Process failed to run: \(error.localizedDescription)")
     }
   }
 }
