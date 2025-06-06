@@ -1,4 +1,5 @@
 // NativeBridge+XrayInit.swift
+
 import Foundation
 import FlutterMacOS
 
@@ -26,7 +27,6 @@ extension AppDelegate {
     let escapedPath = resourcePath.replacingOccurrences(of: "\"", with: "\\\"")
 
     var commands: [String] = []
-    // Use fixed Homebrew prefix on all macOS versions.
     commands.append("HB_PREFIX=/opt/homebrew")
     commands.append("mkdir -p \"$HB_PREFIX\"")
     commands.append("mkdir -p \"$HB_PREFIX/etc\"")
@@ -34,21 +34,23 @@ extension AppDelegate {
     commands.append("mkdir -p \"$HOME/Library/LaunchAgents\"")
     commands.append("arch=$(uname -m)")
     commands.append("""
-if [ \\\"$arch\\\" = \\\"arm64\\\" ]; then
-  cp -f \\\"\(escapedPath)/xray\\\" $HB_PREFIX/bin/xray
-elif [ \\\"$arch\\\" = \\\"i386\\\" ]; then
-  cp -f \\\"\(escapedPath)/xray.i386\\\" $HB_PREFIX/bin/xray
-elif [ \\\"$arch\\\" = \\\"x86_64\\\" ]; then
-  cp -f \\\"\(escapedPath)/xray.x86_64\\\" $HB_PREFIX/bin/xray
+if [ "$arch" = "arm64" ]; then
+  cp -f "\(escapedPath)/xray" $HB_PREFIX/bin/xray
+elif [ "$arch" = "i386" ]; then
+  cp -f "\(escapedPath)/xray.i386" $HB_PREFIX/bin/xray
+elif [ "$arch" = "x86_64" ]; then
+  cp -f "\(escapedPath)/xray.x86_64" $HB_PREFIX/bin/xray
 else
-  echo \\\"Unsupported architecture: $arch\\\"
+  echo "Unsupported architecture: $arch"
   exit 1
 fi
 """)
     commands.append("chmod +x $HB_PREFIX/bin/xray")
 
     let commandJoined = commands.joined(separator: " ; ")
-    let script = "do shell script \"\(commandJoined)\" with administrator privileges"
+    let script = """
+do shell script "\(commandJoined.replacingOccurrences(of: "\"", with: "\\\""))" with administrator privileges
+"""
 
     let appleScript = NSAppleScript(source: script)
     var error: NSDictionary? = nil

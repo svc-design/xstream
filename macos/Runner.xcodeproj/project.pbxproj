@@ -29,6 +29,10 @@
 		33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 33CC10F22044A3C60003C045 /* Assets.xcassets */; };
 		33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 33CC10F42044A3C60003C045 /* MainMenu.xib */; };
 		33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC11122044BFA00003C045 /* MainFlutterWindow.swift */; };
+		972D45842DF2D0D700A356CC /* xray in Resources */ = {isa = PBXBuildFile; fileRef = 972D45822DF2D0D700A356CC /* xray */; };
+		972D45852DF2D0D700A356CC /* xray-x86_64 in Resources */ = {isa = PBXBuildFile; fileRef = 972D45832DF2D0D700A356CC /* xray-x86_64 */; };
+		972D45862DF2D0D700A356CC /* xray in Resources */ = {isa = PBXBuildFile; fileRef = 972D45822DF2D0D700A356CC /* xray */; };
+		972D45872DF2D0D700A356CC /* xray-x86_64 in Resources */ = {isa = PBXBuildFile; fileRef = 972D45832DF2D0D700A356CC /* xray-x86_64 */; };
 		9791702D2DED493800ABF9A6 /* NativeBridge+Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702A2DED493800ABF9A6 /* NativeBridge+Logger.swift */; };
 		9791702E2DED493800ABF9A6 /* NativeBridge+ServiceControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702B2DED493800ABF9A6 /* NativeBridge+ServiceControl.swift */; };
 		9791702F2DED493800ABF9A6 /* NativeBridge+XrayInit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702C2DED493800ABF9A6 /* NativeBridge+XrayInit.swift */; };
@@ -37,10 +41,6 @@
 		979170322DED493800ABF9A6 /* NativeBridge+ServiceControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702B2DED493800ABF9A6 /* NativeBridge+ServiceControl.swift */; };
 		979170332DED493800ABF9A6 /* NativeBridge+XrayInit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702C2DED493800ABF9A6 /* NativeBridge+XrayInit.swift */; };
 		979170342DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 979170292DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift */; };
-		97AFCB8B2DF1211E00629C1A /* xray-x86_64 in Resources */ = {isa = PBXBuildFile; fileRef = 97AFCB8A2DF1211E00629C1A /* xray-x86_64 */; };
-		97AFCB8C2DF1211E00629C1A /* xray in Resources */ = {isa = PBXBuildFile; fileRef = 97AFCB892DF1211E00629C1A /* xray */; };
-		97AFCB8D2DF1211E00629C1A /* xray-x86_64 in Resources */ = {isa = PBXBuildFile; fileRef = 97AFCB8A2DF1211E00629C1A /* xray-x86_64 */; };
-		97AFCB8E2DF1211E00629C1A /* xray in Resources */ = {isa = PBXBuildFile; fileRef = 97AFCB892DF1211E00629C1A /* xray */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -98,13 +98,13 @@
 		73850DB7DC3E1B1EE4AF1620 /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
 		77EAD4060A9CA64878A8A272 /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
+		972D45822DF2D0D700A356CC /* xray */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = xray; path = Resources/xray/xray; sourceTree = SOURCE_ROOT; };
+		972D45832DF2D0D700A356CC /* xray-x86_64 */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = "xray-x86_64"; path = "Resources/xray/xray-x86_64"; sourceTree = SOURCE_ROOT; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 		979170292DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+ConfigWriter.swift"; sourceTree = "<group>"; };
 		9791702A2DED493800ABF9A6 /* NativeBridge+Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+Logger.swift"; sourceTree = "<group>"; };
 		9791702B2DED493800ABF9A6 /* NativeBridge+ServiceControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+ServiceControl.swift"; sourceTree = "<group>"; };
 		9791702C2DED493800ABF9A6 /* NativeBridge+XrayInit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+XrayInit.swift"; sourceTree = "<group>"; };
-		97AFCB892DF1211E00629C1A /* xray */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = xray; sourceTree = "<group>"; };
-		97AFCB8A2DF1211E00629C1A /* xray-x86_64 */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = "xray-x86_64"; sourceTree = "<group>"; };
 		E7B9D3DA76B1887117E7E2FB /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -211,8 +211,8 @@
 		97A1D2B92DEC03E200278BA5 /* xray */ = {
 			isa = PBXGroup;
 			children = (
-				97AFCB892DF1211E00629C1A /* xray */,
-				97AFCB8A2DF1211E00629C1A /* xray-x86_64 */,
+				972D45822DF2D0D700A356CC /* xray */,
+				972D45832DF2D0D700A356CC /* xray-x86_64 */,
 			);
 			path = xray;
 			sourceTree = "<group>";
@@ -340,8 +340,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				97AFCB8B2DF1211E00629C1A /* xray-x86_64 in Resources */,
-				97AFCB8C2DF1211E00629C1A /* xray in Resources */,
+				972D45842DF2D0D700A356CC /* xray in Resources */,
+				972D45852DF2D0D700A356CC /* xray-x86_64 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -349,10 +349,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				972D45862DF2D0D700A356CC /* xray in Resources */,
+				972D45872DF2D0D700A356CC /* xray-x86_64 in Resources */,
 				33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */,
 				33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */,
-				97AFCB8D2DF1211E00629C1A /* xray-x86_64 in Resources */,
-				97AFCB8E2DF1211E00629C1A /* xray in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

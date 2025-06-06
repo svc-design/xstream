@@ -63,7 +63,7 @@ macos-intel:
 		echo "Building for macOS (Intel)..."; \
 		$(FLUTTER) build macos --release; \
 		brew install create-dmg || true; \
-		DMG_NAME=XStream-x86_64.dmg; \
+		DMG_NAME=xstream-release-v0.1.0.dmg; \
 		create-dmg \
 			--volname "XStream Installer" \
 			--window-pos 200 120 \
@@ -81,7 +81,7 @@ macos-arm64:
 		echo "Building for macOS (ARM64)..."; \
 		$(FLUTTER) build macos --release; \
 		brew install create-dmg || true; \
-		DMG_NAME=XStream-arm64.dmg; \
+		DMG_NAME=xstream-release-v0.1.0.dmg; \
 		create-dmg \
 			--volname "XStream Installer" \
 			--window-pos 200 120 \
