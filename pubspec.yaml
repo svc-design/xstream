@@ -27,8 +27,8 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: assets/logo.png  # Path to your base app icon image
-  remove_alpha_ios: true  # Removes alpha transparency from iOS icons
+  image_path: assets/logo.png
+  remove_alpha_ios: true
 
 flutter:
   uses-material-design: true

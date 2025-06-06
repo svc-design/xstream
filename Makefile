@@ -42,35 +42,7 @@ windows-icon:
 	@echo "✅ Windows app_icon.ico generated"
 
 icon:
-	@echo "🎨 生成 macOS AppIcon..."
-	rm -rf temp.iconset
-	mkdir -p temp.iconset
-
-	$(call resize_image,16,temp.iconset/icon_16x16.png)
-	$(call resize_image,32,temp.iconset/icon_16x16@2x.png)
-	$(call resize_image,32,temp.iconset/icon_32x32.png)
-	$(call resize_image,64,temp.iconset/icon_32x32@2x.png)
-	$(call resize_image,128,temp.iconset/icon_128x128.png)
-	$(call resize_image,256,temp.iconset/icon_128x128@2x.png)
-	$(call resize_image,256,temp.iconset/icon_256x256.png)
-	$(call resize_image,512,temp.iconset/icon_256x256@2x.png)
-	$(call resize_image,512,temp.iconset/icon_512x512.png)
-	$(call resize_image,1024,temp.iconset/icon_512x512@2x.png)
-
-	@echo "🧼 替换 AppIcon.appiconset 中的图标..."
-	cp temp.iconset/icon_16x16.png       $(ICON_DST)/app_icon_16.png
-	cp temp.iconset/icon_16x16@2x.png    $(ICON_DST)/app_icon_32.png
-	cp temp.iconset/icon_32x32.png       $(ICON_DST)/app_icon_32.png
-	cp temp.iconset/icon_32x32@2x.png    $(ICON_DST)/app_icon_64.png
-	cp temp.iconset/icon_128x128.png     $(ICON_DST)/app_icon_128.png
-	cp temp.iconset/icon_128x128@2x.png  $(ICON_DST)/app_icon_256.png
-	cp temp.iconset/icon_256x256.png     $(ICON_DST)/app_icon_256.png
-	cp temp.iconset/icon_256x256@2x.png  $(ICON_DST)/app_icon_512.png
-	cp temp.iconset/icon_512x512@2x.png  $(ICON_DST)/app_icon_1024.png
-
-	@echo "✅ 图标替换完成！"
-
-
+	flutter pub run flutter_launcher_icons:main
 	@echo "✅ 图标替换完成！"
 
 fix-macos-signing:
