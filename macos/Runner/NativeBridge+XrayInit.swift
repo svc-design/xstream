@@ -67,8 +67,8 @@ do shell script "\(commandJoined.replacingOccurrences(of: "\"", with: "\\\""))" 
       result("❌ AppleScript 执行失败: \(error)")
       logToFlutter("error", "Xray 初始化失败: \(error)")
     } else {
-      result("✅ Xray 初始化完成: \(output?.stringValue ?? "Success")")
-      logToFlutter("info", "Xray 初始化完成: \(output?.stringValue ?? "Success")")
+      result("✅ Xray 初始化完成")
+      logToFlutter("info", "Xray 初始化完成")
     }
   }
 
@@ -86,7 +86,7 @@ do shell script "\(commandJoined.replacingOccurrences(of: "\"", with: "\\\""))" 
       "rm -rf /opt/homebrew/etc/xray-vpn-node*",
       "rm -f ~/Library/LaunchAgents/com.xstream.*",
       "rm -f ~/Library/LaunchAgents/xstream*",
-      "rm -f ~/Library/Application\ Support/xstream.svc.plus/*"
+      "rm -f ~/Library/Application\\ Support/xstream.svc.plus/*"
     ]
     let script = commands.joined(separator: " ; ")
 
