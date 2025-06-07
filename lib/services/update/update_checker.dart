@@ -31,6 +31,7 @@ class UpdateChecker {
       required UpdateChannel channel,
       bool manual = false}) async {
     final prefs = await SharedPreferences.getInstance();
+    if (!context.mounted) return;
     final lastVersion = prefs.getString(_lastVersionKey) ?? '0.0.0';
 
     final repoName = UpdatePlatform.getRepoName(channel);
@@ -38,6 +39,7 @@ class UpdateChecker {
       repoName: repoName,
       currentVersion: currentVersion,
     );
+    if (!context.mounted) return;
 
     if (info != null && info.version != lastVersion) {
       prefs.setString(_lastVersionKey, info.version);
