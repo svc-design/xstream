@@ -196,3 +196,28 @@ jobs:
             release-artifacts/build-linux-x64/linux/x64/release/bundle/xstream
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  sync-to-oss:
+      runs-on: ubuntu-latest
+      needs: release-assets
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+
+        - name: Download all artifacts
+          uses: actions/download-artifact@v4
+          with:
+            path: release-artifacts
+
+        - name: Install ossutil
+          run: |
+            curl -o ossutil.zip https://gosspublic.alicdn.com/ossutil/1.7.16/ossutil-v1.7.16-linux-amd64.zip
+            unzip ossutil.zip
+            chmod +x ossutil64
+            mv ossutil64 /usr/local/bin/ossutil
+            ossutil config -e oss-cn-wulanchabu.aliyuncs.com -i ${{ secrets.OSS_ACCESS_KEY_ID }} -k ${{ secrets.OSS_ACCESS_KEY_SECRET }} -L CH
+
+        - name: Sync to OSS and update metadata
+          run: bash scripts/sync_to_oss.sh
+          env:
+            GITHUB_RUN_NUMBER: ${{ github.run_number }}
