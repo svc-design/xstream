@@ -61,7 +61,7 @@ do shell script "\(commandJoined.replacingOccurrences(of: "\"", with: "\\\""))" 
 
     let appleScript = NSAppleScript(source: script)
     var error: NSDictionary? = nil
-    let output = appleScript?.executeAndReturnError(&error)
+    _ = appleScript?.executeAndReturnError(&error)
 
     if let error = error {
       result("❌ AppleScript 执行失败: \(error)")
@@ -75,7 +75,7 @@ do shell script "\(commandJoined.replacingOccurrences(of: "\"", with: "\\\""))" 
   func runResetXray(bundleId: String, password: String, result: @escaping FlutterResult) {
     // VPN 配置文件路径
     let supportPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-    let vpnJsonPath = supportPath.appendingPathComponent("\(bundleId)/vpn_nodes.json").path
+    _ = supportPath.appendingPathComponent("\(bundleId)/vpn_nodes.json").path
 
     // 构造脚本
     let commands = [
@@ -96,7 +96,7 @@ do shell script "\(script.replacingOccurrences(of: "\"", with: "\\\""))" with ad
 
     let appleScript = NSAppleScript(source: appleScriptSource)
     var error: NSDictionary? = nil
-    let output = appleScript?.executeAndReturnError(&error)
+    _ = appleScript?.executeAndReturnError(&error)
 
     if let error = error {
       result("❌ 重置失败: \(error)")
