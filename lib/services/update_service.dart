@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 
@@ -8,35 +9,31 @@ class UpdateInfo {
 }
 
 class UpdateService {
-  static const String releaseUrl =
-      'https://mirrors-oss.oss-cn-wulanchabu.aliyuncs.com/xstream-release-v0.1.0.dmg';
-  static const String dailyUrl =
-      'https://mirrors-oss.oss-cn-wulanchabu.aliyuncs.com/xstream-daily-latest.dmg';
+  static const String updateJsonUrl =
+      'https://mirrors-oss.oss-cn-wulanchabu.aliyuncs.com/xstream/update.json';
 
   static Future<UpdateInfo?> checkUpdate({
     required String currentVersion,
     bool daily = false,
   }) async {
-    final url = daily ? dailyUrl : releaseUrl;
-    final match = RegExp(r'v(\d+\.\d+\.\d+)').firstMatch(url);
-    if (match == null) return null;
-    final remoteVersion = match.group(1)!;
-    if (_isNewerVersion(currentVersion, remoteVersion)) {
-      final available = await _urlExists(url);
-      if (available) {
+    try {
+      final resp = await http.get(Uri.parse(updateJsonUrl));
+      if (resp.statusCode != 200) return null;
+      final map = jsonDecode(resp.body) as Map<String, dynamic>;
+      final info = map[daily ? 'daily' : 'release'] as Map<String, dynamic>?;
+      if (info == null) return null;
+      final String url = info['url'] as String? ?? '';
+      final String versionRaw = info['version'] as String? ?? '';
+      final match = RegExp(r'v?(\d+\.\d+\.\d+)').firstMatch(versionRaw);
+      if (match == null) return null;
+      final remoteVersion = match.group(1)!;
+      if (_isNewerVersion(currentVersion, remoteVersion)) {
         return UpdateInfo(version: remoteVersion, url: url);
       }
+    } catch (_) {
+      // ignore errors and return null
     }
     return null;
-  }
-
-  static Future<bool> _urlExists(String url) async {
-    try {
-      final resp = await http.head(Uri.parse(url));
-      return resp.statusCode == 200;
-    } catch (_) {
-      return false;
-    }
   }
 
   static bool _isNewerVersion(String local, String remote) {
