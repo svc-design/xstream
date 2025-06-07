@@ -18,6 +18,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _selectedTab = 'log';
   static const platform = MethodChannel('com.xstream/native');
 
+  static const TextStyle _menuTextStyle = TextStyle(fontSize: 14);
+  static final ButtonStyle _menuButtonStyle = ElevatedButton.styleFrom(
+    minimumSize: const Size.fromHeight(36),
+    textStyle: _menuTextStyle,
+  );
+
   String _buildVersion() {
     const branch = String.fromEnvironment('BRANCH_NAME', defaultValue: '');
     const buildId = String.fromEnvironment('BUILD_ID', defaultValue: 'local');
@@ -92,12 +98,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _onCheckUpdate() async {
+    logConsoleKey.currentState?.addLog('开始检查更新...');
     final info = await UpdateService.checkUpdate(
       currentVersion: _currentVersion(),
       daily: GlobalState.useDailyBuild.value,
     );
     if (!mounted) return;
     if (info != null) {
+      logConsoleKey.currentState?.addLog('发现新版本 ${info.version}');
       final go = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
@@ -119,6 +127,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         await UpdateService.launchDownload(info.url);
       }
     } else {
+      logConsoleKey.currentState?.addLog('已是最新版本');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('已是最新版本')),
       );
@@ -151,25 +160,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        ElevatedButton.icon(
-                          icon: const Icon(Icons.build),
-                          label: const Text('初始化 Xray'),
-                          onPressed: isUnlocked ? _onInitXray : null,
-                        ),
-                        const SizedBox(height: 8),
-                        ElevatedButton.icon(
-                          icon: const Icon(Icons.settings),
-                          label: const Text('生成默认节点'),
-                          onPressed: isUnlocked ? _onGenerateDefaultNodes : null,
-                        ),
-                        const SizedBox(height: 8),
-                        ElevatedButton.icon(
-                          icon: const Icon(Icons.restore),
-                          label: const Text('重置所有配置'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red[400],
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            style: _menuButtonStyle,
+                            icon: const Icon(Icons.build),
+                            label: const Text('初始化 Xray', style: _menuTextStyle),
+                            onPressed: isUnlocked ? _onInitXray : null,
                           ),
-                          onPressed: isUnlocked ? _onResetAll : null,
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            style: _menuButtonStyle,
+                            icon: const Icon(Icons.settings),
+                            label: const Text('生成默认节点', style: _menuTextStyle),
+                            onPressed: isUnlocked ? _onGenerateDefaultNodes : null,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            style: _menuButtonStyle.copyWith(
+                              backgroundColor: MaterialStateProperty.all(Colors.red[400]),
+                            ),
+                            icon: const Icon(Icons.restore),
+                            label: const Text('重置所有配置', style: _menuTextStyle),
+                            onPressed: isUnlocked ? _onResetAll : null,
+                          ),
                         ),
                         if (!isUnlocked)
                           const Padding(
@@ -187,7 +207,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const Divider(height: 32),
               ListTile(
                 leading: const Icon(Icons.article),
-                title: const Text('📜 查看日志'),
+                title: const Text('📜 查看日志', style: _menuTextStyle),
                 selected: _selectedTab == 'log',
                 onTap: () {
                   setState(() {
@@ -197,18 +217,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               SwitchListTile(
                 secondary: const Icon(Icons.bolt),
-                title: const Text('升级 DailyBuild'),
+                title: const Text('升级 DailyBuild', style: _menuTextStyle),
                 value: GlobalState.useDailyBuild.value,
                 onChanged: (v) => setState(() => GlobalState.useDailyBuild.value = v),
               ),
               ListTile(
                 leading: const Icon(Icons.system_update),
-                title: const Text('检查更新'),
+                title: const Text('检查更新', style: _menuTextStyle),
                 onTap: _onCheckUpdate,
               ),
               ListTile(
                 leading: const Icon(Icons.help),
-                title: const Text('帮助'),
+                title: const Text('帮助', style: _menuTextStyle),
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(builder: (context) => const HelpScreen()),
@@ -217,7 +237,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.info),
-                title: const Text('关于'),
+                title: const Text('关于', style: _menuTextStyle),
                 onTap: () {
                   showAboutDialog(
                     context: context,
