@@ -11,9 +11,16 @@ extension AppDelegate {
       return
     }
 
-    if action == "initXray" {
+    switch action {
+    case "initXray":
       self.runInitXray(bundleId: bundleId, result: result)
-    } else {
+    case "resetXrayAndConfig":
+      guard let password = args["password"] as? String else {
+        result(FlutterError(code: "MISSING_PASSWORD", message: "缺少密码", details: nil))
+        return
+      }
+      self.runResetXray(bundleId: bundleId, password: password, result: result)
+    default:
       result(FlutterError(code: "UNKNOWN_ACTION", message: "Unsupported action", details: action))
     }
   }
@@ -62,6 +69,41 @@ do shell script "\(commandJoined.replacingOccurrences(of: "\"", with: "\\\""))" 
     } else {
       result("✅ Xray 初始化完成: \(output?.stringValue ?? "Success")")
       logToFlutter("info", "Xray 初始化完成: \(output?.stringValue ?? "Success")")
+    }
+  }
+
+  func runResetXray(bundleId: String, password: String, result: @escaping FlutterResult) {
+    // VPN 配置文件路径
+    let supportPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+    let vpnJsonPath = supportPath.appendingPathComponent("\(bundleId)/vpn_nodes.json").path
+
+    // 构造脚本
+    let commands = [
+      "launchctl remove com.xstream.xray-node-jp || true",
+      "launchctl remove com.xstream.xray-node-ca || true",
+      "launchctl remove com.xstream.xray-node-us || true",
+      "rm -f /opt/homebrew/bin/xray",
+      "rm -rf /opt/homebrew/etc/xray-vpn-node*",
+      "rm -f ~/Library/LaunchAgents/com.xstream.*",
+      "rm -f ~/Library/LaunchAgents/xstream*",
+      "rm -f ~/Library/Application\ Support/xstream.svc.plus/*"
+    ]
+    let script = commands.joined(separator: " ; ")
+
+    let appleScriptSource = """
+do shell script "\(script.replacingOccurrences(of: "\"", with: "\\\""))" with administrator privileges
+"""
+
+    let appleScript = NSAppleScript(source: appleScriptSource)
+    var error: NSDictionary? = nil
+    let output = appleScript?.executeAndReturnError(&error)
+
+    if let error = error {
+      result("❌ 重置失败: \(error)")
+      logToFlutter("error", "重置失败: \(error)")
+    } else {
+      result("✅ 已清除配置与安装文件")
+      logToFlutter("info", "重置完成")
     }
   }
 }
