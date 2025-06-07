@@ -185,7 +185,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           width: double.infinity,
                           child: ElevatedButton.icon(
                             style: _menuButtonStyle.copyWith(
-                              backgroundColor: MaterialStateProperty.all(Colors.red[400]),
+                              backgroundColor: WidgetStateProperty.all(Colors.red[400]),
                             ),
                             icon: const Icon(Icons.restore),
                             label: const Text('重置所有配置', style: _menuTextStyle),
