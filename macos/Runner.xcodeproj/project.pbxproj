@@ -35,12 +35,14 @@
 		972D45872DF2D0D700A356CC /* xray-x86_64 in Resources */ = {isa = PBXBuildFile; fileRef = 972D45832DF2D0D700A356CC /* xray-x86_64 */; };
 		9791702D2DED493800ABF9A6 /* NativeBridge+Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702A2DED493800ABF9A6 /* NativeBridge+Logger.swift */; };
 		9791702E2DED493800ABF9A6 /* NativeBridge+ServiceControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702B2DED493800ABF9A6 /* NativeBridge+ServiceControl.swift */; };
-		9791702F2DED493800ABF9A6 /* NativeBridge+XrayInit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702C2DED493800ABF9A6 /* NativeBridge+XrayInit.swift */; };
-		979170302DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 979170292DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift */; };
-		979170312DED493800ABF9A6 /* NativeBridge+Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702A2DED493800ABF9A6 /* NativeBridge+Logger.swift */; };
-		979170322DED493800ABF9A6 /* NativeBridge+ServiceControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702B2DED493800ABF9A6 /* NativeBridge+ServiceControl.swift */; };
-		979170332DED493800ABF9A6 /* NativeBridge+XrayInit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702C2DED493800ABF9A6 /* NativeBridge+XrayInit.swift */; };
-		979170342DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 979170292DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift */; };
+                9791702F2DED493800ABF9A6 /* NativeBridge+XrayInit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702C2DED493800ABF9A6 /* NativeBridge+XrayInit.swift */; };
+                979170302DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 979170292DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift */; };
+                979170312DED493800ABF9A6 /* NativeBridge+Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702A2DED493800ABF9A6 /* NativeBridge+Logger.swift */; };
+                979170322DED493800ABF9A6 /* NativeBridge+ServiceControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702B2DED493800ABF9A6 /* NativeBridge+ServiceControl.swift */; };
+                979170332DED493800ABF9A6 /* NativeBridge+XrayInit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702C2DED493800ABF9A6 /* NativeBridge+XrayInit.swift */; };
+                979170342DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 979170292DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift */; };
+                979170352DED493800ABF9A6 /* NativeBridge+Helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 979170352DED493800ABF9A7 /* NativeBridge+Helper.swift */; };
+                979170362DED493800ABF9A6 /* NativeBridge+Helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 979170352DED493800ABF9A7 /* NativeBridge+Helper.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -104,8 +106,9 @@
 		979170292DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+ConfigWriter.swift"; sourceTree = "<group>"; };
 		9791702A2DED493800ABF9A6 /* NativeBridge+Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+Logger.swift"; sourceTree = "<group>"; };
 		9791702B2DED493800ABF9A6 /* NativeBridge+ServiceControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+ServiceControl.swift"; sourceTree = "<group>"; };
-		9791702C2DED493800ABF9A6 /* NativeBridge+XrayInit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+XrayInit.swift"; sourceTree = "<group>"; };
-		E7B9D3DA76B1887117E7E2FB /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+                9791702C2DED493800ABF9A6 /* NativeBridge+XrayInit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+XrayInit.swift"; sourceTree = "<group>"; };
+                979170352DED493800ABF9A7 /* NativeBridge+Helper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+Helper.swift"; sourceTree = "<group>"; };
+                E7B9D3DA76B1887117E7E2FB /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -196,9 +199,10 @@
 			children = (
 				979170292DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift */,
 				9791702A2DED493800ABF9A6 /* NativeBridge+Logger.swift */,
-				9791702B2DED493800ABF9A6 /* NativeBridge+ServiceControl.swift */,
-				9791702C2DED493800ABF9A6 /* NativeBridge+XrayInit.swift */,
-				33CC10F02044A3C60003C045 /* AppDelegate.swift */,
+                                9791702B2DED493800ABF9A6 /* NativeBridge+ServiceControl.swift */, 
+                                9791702C2DED493800ABF9A6 /* NativeBridge+XrayInit.swift */,
+                                979170352DED493800ABF9A7 /* NativeBridge+Helper.swift */,
+                                33CC10F02044A3C60003C045 /* AppDelegate.swift */,
 				33CC11122044BFA00003C045 /* MainFlutterWindow.swift */,
 				33E51913231747F40026EE4D /* DebugProfile.entitlements */,
 				33E51914231749380026EE4D /* Release.entitlements */,
@@ -469,12 +473,13 @@
 				979170312DED493800ABF9A6 /* NativeBridge+Logger.swift in Sources */,
 				979170322DED493800ABF9A6 /* NativeBridge+ServiceControl.swift in Sources */,
 				979170332DED493800ABF9A6 /* NativeBridge+XrayInit.swift in Sources */,
-				979170342DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		33CC10E92044A3C60003C045 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
+                                979170342DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift in Sources */,
+                                979170362DED493800ABF9A6 /* NativeBridge+Helper.swift in Sources */,
+                        );
+                        runOnlyForDeploymentPostprocessing = 0;
+                };
+                33CC10E92044A3C60003C045 /* Sources */ = {
+                        isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */,
@@ -483,10 +488,11 @@
 				9791702D2DED493800ABF9A6 /* NativeBridge+Logger.swift in Sources */,
 				9791702E2DED493800ABF9A6 /* NativeBridge+ServiceControl.swift in Sources */,
 				9791702F2DED493800ABF9A6 /* NativeBridge+XrayInit.swift in Sources */,
-				979170302DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
+                                979170302DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift in Sources */,
+                                979170352DED493800ABF9A6 /* NativeBridge+Helper.swift in Sources */,
+                        );
+                        runOnlyForDeploymentPostprocessing = 0;
+                };
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */

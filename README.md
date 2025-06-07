@@ -39,6 +39,13 @@
 - 📘 [用户使用手册](docs/user-manual.md)
 - 🛠️ [开发者文档（macOS 开发环境搭建）](docs/dev-guide.md)
 
+## 🛡 App Store 策略
+
+Release 构建已默认启用 macOS 沙盒（`com.apple.security.app-sandbox`），
+满足 App Store 上架要求。如需自行构建请确认 `macos/Runner/Release.entitlements`
+中的该项已设置为 `true`。运行时的权限提升流程详见
+[macOS 沙盒与权限提升流程](docs/macos-helper.md)。
+
 ## 🖼 更新应用图标
 
 使用 `scripts/generate_icons.sh` 可一键生成并替换 Android、iOS、macOS、Linux 与 Windows 平台的应用图标。

@@ -4,6 +4,7 @@ import FlutterMacOS
 
 @main
 class AppDelegate: FlutterAppDelegate {
+  var helperConnection: NSXPCConnection?
   override func applicationDidFinishLaunching(_ notification: Notification) {
     if let window = mainFlutterWindow,
        let controller = window.contentViewController as? FlutterViewController {
@@ -27,6 +28,10 @@ class AppDelegate: FlutterAppDelegate {
           result(FlutterMethodNotImplemented)
         }
       }
+
+      // Install privileged helper and establish XPC connection
+      authorizeAndBlessHelper(bundleId: bundleId)
+      connectToHelper(bundleId: bundleId)
     }
 
     super.applicationDidFinishLaunching(notification)
