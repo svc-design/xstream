@@ -70,6 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       // ✅ 检查目标节点是否已在运行，避免重复启动
       final isRunning = await NativeBridge.checkNodeStatus(nodeName);
+      if (!mounted) return;
       if (isRunning) {
         setState(() => _activeNode = nodeName);
         ScaffoldMessenger.of(context).showSnackBar(
