@@ -4,11 +4,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../widgets/log_console.dart';
-import '../../utils/global_config.dart';
 import 'update_service.dart';
 import 'update_platform.dart';
-import 'models/update_info.dart';
+import '../../utils/global_config.dart';
 
 class UpdateChecker {
   static const _lastVersionKey = 'lastCheckedVersion';
