@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../utils/global_config.dart';
 import '../../utils/native_bridge.dart';
 import '../../services/vpn_config_service.dart';
+import '../../services/update_service.dart';
 import '../widgets/log_console.dart';
 import 'help_screen.dart';
 
@@ -30,6 +31,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return 'latest-$buildDate-$buildId';
     }
     return 'dev-$buildDate-$buildId';
+  }
+
+  String _currentVersion() {
+    final match = RegExp(r'v(\d+\.\d+\.\d+)').firstMatch(_buildVersion());
+    return match?.group(1) ?? '0.0.0';
   }
 
   void _onGenerateDefaultNodes() async {
@@ -82,6 +88,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
       logConsoleKey.currentState?.addLog(result);
     } catch (e) {
       logConsoleKey.currentState?.addLog('[错误] 重置失败: $e', level: LogLevel.error);
+    }
+  }
+
+  void _onCheckUpdate() async {
+    final info = await UpdateService.checkUpdate(
+      currentVersion: _currentVersion(),
+      daily: GlobalState.useDailyBuild.value,
+    );
+    if (!mounted) return;
+    if (info != null) {
+      final go = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('发现新版本 ${info.version}'),
+          content: Text(info.notes.isNotEmpty ? info.notes : '是否前往下载?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('取消'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('下载'),
+            ),
+          ],
+        ),
+      );
+      if (go == true) {
+        await UpdateService.launchDownload(info.url);
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('已是最新版本')),
+      );
     }
   }
 
@@ -154,6 +194,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _selectedTab = 'log';
                   });
                 },
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.bolt),
+                title: const Text('升级 DailyBuild'),
+                value: GlobalState.useDailyBuild.value,
+                onChanged: (v) => setState(() => GlobalState.useDailyBuild.value = v),
+              ),
+              ListTile(
+                leading: const Icon(Icons.system_update),
+                title: const Text('检查更新'),
+                onTap: _onCheckUpdate,
               ),
               ListTile(
                 leading: const Icon(Icons.help),
