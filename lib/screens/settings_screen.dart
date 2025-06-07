@@ -106,6 +106,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted) return;
     if (info != null) {
       logConsoleKey.currentState?.addLog('发现新版本 ${info.version}');
+      logConsoleKey.currentState?.addLog('下载地址: ${info.url}');
       final go = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
