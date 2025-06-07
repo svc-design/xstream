@@ -44,6 +44,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return match?.group(1) ?? '0.0.0';
   }
 
+  String _currentBuildDate() {
+    final match = RegExp(r'(\d{4}-\d{2}-\d{2})').firstMatch(_buildVersion());
+    return match?.group(1) ?? '1970-01-01';
+  }
+
   void _onGenerateDefaultNodes() async {
     final isUnlocked = GlobalState.isUnlocked.value;
     final password = GlobalState.sudoPassword.value;
@@ -101,6 +106,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     logConsoleKey.currentState?.addLog('开始检查更新...');
     final info = await UpdateService.checkUpdate(
       currentVersion: _currentVersion(),
+      currentBuildDate: _currentBuildDate(),
       daily: GlobalState.useDailyBuild.value,
     );
     if (!mounted) return;

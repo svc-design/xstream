@@ -18,6 +18,7 @@ class UpdateService {
 
   static Future<UpdateInfo?> checkUpdate({
     required String currentVersion,
+    required String currentBuildDate,
     bool daily = false,
   }) async {
     try {
@@ -31,7 +32,14 @@ class UpdateService {
       if (match == null) return null;
 
       final remoteVersion = match.group(1)!;
-      if (!_isNewerVersion(currentVersion, remoteVersion)) return null;
+      final remoteDateMatch =
+          RegExp(r'(\d{4}-\d{2}-\d{2})').firstMatch(latestRaw);
+      final remoteBuildDate =
+          (map['build_date'] as String?) ?? remoteDateMatch?.group(1) ?? '';
+
+      final versionNewer = _isNewerVersion(currentVersion, remoteVersion);
+      final dateNewer = _isNewerDate(currentBuildDate, remoteBuildDate);
+      if (!versionNewer && !dateNewer) return null;
 
       final String notes = map['release_notes'] as String? ?? '';
       final String releaseUrl = map['download_url'] as String? ?? '';
@@ -57,6 +65,13 @@ class UpdateService {
       if (r[i] < l[i]) return false;
     }
     return false;
+  }
+
+  static bool _isNewerDate(String local, String remote) {
+    final l = DateTime.tryParse(local);
+    final r = DateTime.tryParse(remote);
+    if (l == null || r == null) return false;
+    return r.isAfter(l);
   }
 
   static Future<void> launchDownload(String url) async {
