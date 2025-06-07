@@ -1,7 +1,8 @@
+---
 name: Code Analysis
 
 # 触发条件：在 PR 请求到 'main' 分支时运行
-on:
+"on":
   pull_request:
     branches:
       - main
@@ -23,15 +24,13 @@ jobs:
           git secrets --install
           git secrets --scan
 
-      - name: Install Flutter
-        run: |
-          sudo apt-get update
-          sudo snap install flutter --classic
-          export PATH="$PATH:/snap/bin"
-          flutter doctor
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.32.2'
 
       # 运行 Flutter 的静态分析
       - name: Run flutter analyze
         run: |
           flutter analyze
-

@@ -5,10 +5,14 @@ class NativeBridge {
   static const MethodChannel _channel = MethodChannel('com.xstream/native');
   static const MethodChannel _loggerChannel = MethodChannel('com.xstream/logger');
 
-  // 启动节点服务
+  // 启动节点服务（防止重复启动）
   static Future<String> startNodeService(String nodeName) async {
     final node = VpnConfig.getNodeByName(nodeName);
     if (node == null) return '未知节点: $nodeName';
+
+    // ✅ 新增：避免重复启动
+    final isRunning = await checkNodeStatus(nodeName);
+    if (isRunning) return '服务已在运行';
 
     try {
       final result = await _channel.invokeMethod<String>(
