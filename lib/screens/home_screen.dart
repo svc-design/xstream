@@ -18,6 +18,13 @@ class _HomeScreenState extends State<HomeScreen> {
   final Set<String> _selectedNodeNames = {};
   bool _isLoading = false;
 
+  void _showMessage(String msg, {Color? bgColor}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), backgroundColor: bgColor),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -25,9 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _initializeConfig() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
     await VpnConfig.load();
     if (!mounted) return;
     setState(() {
@@ -37,9 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _reloadNodes() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
     await VpnConfig.load();
     if (!mounted) return;
     setState(() {
@@ -52,30 +55,24 @@ class _HomeScreenState extends State<HomeScreen> {
     final nodeName = node.name.trim();
     if (nodeName.isEmpty) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     if (_activeNode == nodeName) {
       final msg = await NativeBridge.stopNodeService(nodeName);
       if (!mounted) return;
       setState(() => _activeNode = '');
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      _showMessage(msg);
     } else {
-      // ✅ 若有其它节点在运行，先停止
       if (_activeNode.isNotEmpty) {
         await NativeBridge.stopNodeService(_activeNode);
         if (!mounted) return;
       }
 
-      // ✅ 检查目标节点是否已在运行，避免重复启动
       final isRunning = await NativeBridge.checkNodeStatus(nodeName);
       if (!mounted) return;
       if (isRunning) {
         setState(() => _activeNode = nodeName);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('⚠️ 服务已在运行')),
-        );
+        _showMessage('⚠️ 服务已在运行');
         setState(() => _isLoading = false);
         return;
       }
@@ -83,18 +80,14 @@ class _HomeScreenState extends State<HomeScreen> {
       final msg = await NativeBridge.startNodeService(nodeName);
       if (!mounted) return;
       setState(() => _activeNode = nodeName);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      _showMessage(msg);
     }
 
-    setState(() {
-      _isLoading = false;
-    });
+    setState(() => _isLoading = false);
   }
 
   Future<void> _deleteSelectedNodes() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     final toDelete = vpnNodes.where((e) => _selectedNodeNames.contains(e.name)).toList();
     for (final node in toDelete) {
@@ -104,13 +97,9 @@ class _HomeScreenState extends State<HomeScreen> {
     await _reloadNodes();
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('✅ 已删除 ${toDelete.length} 个节点并更新配置')),
-    );
+    _showMessage('✅ 已删除 ${toDelete.length} 个节点并更新配置');
 
-    setState(() {
-      _isLoading = false;
-    });
+    setState(() => _isLoading = false);
   }
 
   @override
@@ -192,23 +181,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                         : () async {
                                             try {
                                               await _reloadNodes();
-                                              if (!context.mounted) return;
+                                              if (!mounted) return;
                                               final path = await VpnConfig.getConfigPath();
-                                              if (!context.mounted) return;
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(
-                                                  content: Text('🔄 已同步配置文件：\n- $path'),
-                                                  duration: const Duration(seconds: 3),
-                                                ),
-                                              );
+                                              if (!mounted) return;
+                                              _showMessage('🔄 已同步配置文件：\n- $path');
                                             } catch (e) {
-                                              if (!context.mounted) return;
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(
-                                                  content: Text('❌ 同步失败: $e'),
-                                                  backgroundColor: Colors.red,
-                                                ),
-                                              );
+                                              if (!mounted) return;
+                                              _showMessage('❌ 同步失败: $e', bgColor: Colors.red);
                                             }
                                           },
                                   ),
@@ -228,15 +207,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ? null
                                         : () async {
                                             final path = await VpnConfig.getConfigPath();
-                                            if (!context.mounted) return;
+                                            if (!mounted) return;
                                             await VpnConfig.saveToFile();
-                                            if (!context.mounted) return;
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(
-                                                content: Text('✅ 配置已保存到：\n$path'),
-                                                duration: const Duration(seconds: 3),
-                                              ),
-                                            );
+                                            if (!mounted) return;
+                                            _showMessage('✅ 配置已保存到：\n$path');
                                           },
                                   ),
                                 ],
