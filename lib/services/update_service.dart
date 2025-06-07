@@ -5,12 +5,16 @@ import 'package:url_launcher/url_launcher.dart';
 class UpdateInfo {
   final String version;
   final String url;
-  UpdateInfo({required this.version, required this.url});
+  final String notes;
+
+  UpdateInfo({required this.version, required this.url, this.notes = ''});
 }
 
 class UpdateService {
   static const String updateJsonUrl =
       'https://mirrors-oss.oss-cn-wulanchabu.aliyuncs.com/xstream/update.json';
+  static const String baseDownloadUrl =
+      'https://mirrors-oss.oss-cn-wulanchabu.aliyuncs.com/xstream';
 
   static Future<UpdateInfo?> checkUpdate({
     required String currentVersion,
@@ -19,17 +23,26 @@ class UpdateService {
     try {
       final resp = await http.get(Uri.parse(updateJsonUrl));
       if (resp.statusCode != 200) return null;
+
       final map = jsonDecode(resp.body) as Map<String, dynamic>;
-      final info = map[daily ? 'daily' : 'release'] as Map<String, dynamic>?;
-      if (info == null) return null;
-      final String url = info['url'] as String? ?? '';
-      final String versionRaw = info['version'] as String? ?? '';
-      final match = RegExp(r'v?(\d+\.\d+\.\d+)').firstMatch(versionRaw);
+
+      final latestRaw = map['latest'] as String? ?? '';
+      final match = RegExp(r'v?(\d+\.\d+\.\d+)').firstMatch(latestRaw);
       if (match == null) return null;
+
       final remoteVersion = match.group(1)!;
-      if (_isNewerVersion(currentVersion, remoteVersion)) {
-        return UpdateInfo(version: remoteVersion, url: url);
+      if (!_isNewerVersion(currentVersion, remoteVersion)) return null;
+
+      final String notes = map['release_notes'] as String? ?? '';
+      final String releaseUrl = map['download_url'] as String? ?? '';
+      final String dailyId = map['daily'] as String? ?? '';
+
+      String url = releaseUrl;
+      if (daily && dailyId.isNotEmpty) {
+        url = '$baseDownloadUrl/$dailyId/xstream-release-$remoteVersion.dmg';
       }
+
+      return UpdateInfo(version: remoteVersion, url: url, notes: notes);
     } catch (_) {
       // ignore errors and return null
     }

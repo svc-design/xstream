@@ -102,7 +102,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         context: context,
         builder: (context) => AlertDialog(
           title: Text('发现新版本 ${info.version}'),
-          content: const Text('是否前往下载?'),
+          content: Text(info.notes.isNotEmpty ? info.notes : '是否前往下载?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
