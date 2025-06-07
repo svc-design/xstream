@@ -73,15 +73,28 @@ do shell script "\(commandJoined.replacingOccurrences(of: "\"", with: "\\\""))" 
   }
 
   func runResetXray(bundleId: String, password: String, result: @escaping FlutterResult) {
-    guard let scriptPath = Bundle.main.path(forResource: "reset_xray", ofType: "sh") else {
-      result("❌ 找不到脚本文件")
-      return
-    }
+  let rawShell = """
+set -e
+launchctl remove com.xstream.xray-node-jp || true
+launchctl remove com.xstream.xray-node-ca || true
+launchctl remove com.xstream.xray-node-us || true
+rm -f /opt/homebrew/bin/xray
+rm -rf /opt/homebrew/etc/xray-vpn-node*
+rm -rf ~/Library/LaunchAgents/com.xstream.*
+rm -rf ~/Library/LaunchAgents/xstream*
+rm -rf ~/Library/Application\\ Support/xstream.svc.plus/*
+"""
 
-    let escapedPath = scriptPath.replacingOccurrences(of: "\"", with: "\\\"")
-    let appleScriptSource = "do shell script \"bash \\\"\(escapedPath)\\\"\" with administrator privileges"
+  // 转义双引号（\"）以便用于 AppleScript 中的 `do shell script`
+  let escaped = rawShell
+    .replacingOccurrences(of: "\\", with: "\\\\")  // 转义反斜杠
+    .replacingOccurrences(of: "\"", with: "\\\"")  // 转义双引号
+    .replacingOccurrences(of: "\n", with: " ; ")   // 保持每行执行
 
-    let appleScript = NSAppleScript(source: appleScriptSource)
+  let script = """
+do shell script "\(escaped)" with administrator privileges
+"""
+    let appleScript = NSAppleScript(source: script)
     var error: NSDictionary? = nil
     _ = appleScript?.executeAndReturnError(&error)
 
