@@ -9,20 +9,14 @@ ICON_DST := macos/Runner/Assets.xcassets/AppIcon.appiconset
 UNAME_S := $(shell uname -s)
 UNAME_M := $(shell uname -m)
 
-.PHONY: all macos-intel macos-arm64 windows-x64 linux-x64 linux-arm64 android-arm64 ios-arm64 clean
+BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+BUILD_ID := $(shell git rev-parse --short HEAD)
+BUILD_DATE := $(shell date "+%Y-%m-%d")
 
-# Aliases for CI
-macos-x64: macos-intel
-macos-arm64: macos-arm64
-windows-x64: windows-x64
-linux-x64: linux-x64
-linux-arm64: linux-arm64
-android-arm64: android-arm64
-ios-arm64: ios-arm64
+.PHONY: all macos-intel macos-arm64 windows-x64 linux-x64 linux-arm64 android-arm64 ios-arm64 clean
 
 all: macos-intel macos-arm64 windows-x64 linux-x64 linux-arm64 android-arm64 ios-arm64
 
-# 如果 sips 报错，使用 ImageMagick convert 替代
 define resize_image
 	@echo "🖼 生成 $(2) ($(1)x$(1))"
 	@if sips -z $(1) $(1) $(ICON_SRC) --out $(2) 2>/dev/null; then \
@@ -54,9 +48,12 @@ fix-macos-signing:
 macos-intel:
 	@if [ "$(UNAME_S)" = "Darwin" ] && [ "$(UNAME_M)" = "x86_64" ]; then \
 		echo "Building for macOS (Intel)..."; \
-		$(FLUTTER) build macos --release --dart-define=BRANCH_NAME=release/v0.1.1  --dart-define=BUILD_ID=8d7a5a8 --dart-define=BUILD_DATE=2025-06-06
+		$(FLUTTER) build macos --release \
+			--dart-define=BRANCH_NAME=$(BRANCH) \
+			--dart-define=BUILD_ID=$(BUILD_ID) \
+			--dart-define=BUILD_DATE=$(BUILD_DATE); \
 		brew install create-dmg || true; \
-		DMG_NAME=xstream-release-v0.1.1.dmg; \
+		DMG_NAME=xstream-release-$(BRANCH).dmg; \
 		create-dmg \
 			--volname "XStream Installer" \
 			--window-pos 200 120 \
@@ -72,9 +69,12 @@ macos-intel:
 macos-arm64:
 	@if [ "$(UNAME_S)" = "Darwin" ] && [ "$(UNAME_M)" = "arm64" ]; then \
 		echo "Building for macOS (ARM64)..."; \
-		$(FLUTTER) build macos --release; \
+		$(FLUTTER) build macos --release \
+			--dart-define=BRANCH_NAME=$(BRANCH) \
+			--dart-define=BUILD_ID=$(BUILD_ID) \
+			--dart-define=BUILD_DATE=$(BUILD_DATE); \
 		brew install create-dmg || true; \
-		DMG_NAME=xstream-release-v0.1.1.dmg; \
+		DMG_NAME=xstream-release-$(BRANCH).dmg; \
 		create-dmg \
 			--volname "XStream Installer" \
 			--window-pos 200 120 \

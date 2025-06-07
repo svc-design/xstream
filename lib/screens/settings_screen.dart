@@ -243,18 +243,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 leading: const Icon(Icons.info),
                 title: const Text('关于', style: _menuTextStyle),
                 onTap: () {
-                  showAboutDialog(
-                    context: context,
-                    applicationName: 'XStream',
-                    applicationVersion: _buildVersion(),
-                    applicationLegalese: '© 2025 svc.plus – Based on Xray-core 25.3.6\n\n'
-                        'This software includes unmodified components from the Xray-core project,\n'
-                        'licensed under the GNU General Public License v3.0.\n\n'
-                        'Xray-core (c) XTLS Authors – https://github.com/XTLS/Xray-core',
-                    children: const [
-                      Text('XStream 是一个多节点代理配置管理工具。\n'
-                          '本软件基于 Flutter 构建，支持 macOS/iOS 等平台。'),
-                    ],
+                    showAboutDialog(
+                      context: context,
+                      applicationName: 'XStream',
+                      applicationVersion: _buildVersion(), // v0.1.1-2025-06-06-8d7a5a8
+                      applicationLegalese: '''
+                    © 2025 svc.plus
+                    Based on Xray-core 25.3.6 – https://github.com/XTLS/Xray-core
+                    Licensed under GNU General Public License v3.0
+                    ''',
                   );
                 },
               ),

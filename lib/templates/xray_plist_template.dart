@@ -1,4 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
+// lib/templates/xray_plist_template.dart
+
+const String defaultXrayPlistTemplate = r'''<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
@@ -21,3 +23,15 @@
   <true/>
 </dict>
 </plist>
+''';
+
+String renderXrayPlist({
+  required String bundleId,
+  required String name,
+  required String configPath,
+}) {
+  return defaultXrayPlistTemplate
+      .replaceAll('<BUNDLE_ID>', bundleId)
+      .replaceAll('<NAME>', name)
+      .replaceAll('<CONFIG_PATH>', configPath);
+}

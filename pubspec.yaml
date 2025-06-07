@@ -35,5 +35,3 @@ flutter:
 
   assets:
     - assets/logo.png
-    - assets/xray-template.json
-    - assets/xray-template.plist
