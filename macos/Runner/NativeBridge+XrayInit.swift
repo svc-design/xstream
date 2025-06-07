@@ -73,26 +73,13 @@ do shell script "\(commandJoined.replacingOccurrences(of: "\"", with: "\\\""))" 
   }
 
   func runResetXray(bundleId: String, password: String, result: @escaping FlutterResult) {
-    // VPN 配置文件路径
-    let supportPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-    _ = supportPath.appendingPathComponent("\(bundleId)/vpn_nodes.json").path
+    guard let scriptPath = Bundle.main.path(forResource: "reset_xray", ofType: "sh") else {
+      result("❌ 找不到脚本文件")
+      return
+    }
 
-    // 构造脚本
-    let commands = [
-      "launchctl remove com.xstream.xray-node-jp || true",
-      "launchctl remove com.xstream.xray-node-ca || true",
-      "launchctl remove com.xstream.xray-node-us || true",
-      "rm -f /opt/homebrew/bin/xray",
-      "rm -rf /opt/homebrew/etc/xray-vpn-node*",
-      "rm -f ~/Library/LaunchAgents/com.xstream.*",
-      "rm -f ~/Library/LaunchAgents/xstream*",
-      "rm -f ~/Library/Application\\ Support/xstream.svc.plus/*"
-    ]
-    let script = commands.joined(separator: " ; ")
-
-    let appleScriptSource = """
-do shell script "\(script.replacingOccurrences(of: "\"", with: "\\\""))" with administrator privileges
-"""
+    let escapedPath = scriptPath.replacingOccurrences(of: "\"", with: "\\\"")
+    let appleScriptSource = "do shell script \"bash \\\"\(escapedPath)\\\"\" with administrator privileges"
 
     let appleScript = NSAppleScript(source: appleScriptSource)
     var error: NSDictionary? = nil
