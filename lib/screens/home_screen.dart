@@ -62,10 +62,23 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() => _activeNode = '');
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } else {
+      // ✅ 若有其它节点在运行，先停止
       if (_activeNode.isNotEmpty) {
         await NativeBridge.stopNodeService(_activeNode);
         if (!mounted) return;
       }
+
+      // ✅ 检查目标节点是否已在运行，避免重复启动
+      final isRunning = await NativeBridge.checkNodeStatus(nodeName);
+      if (isRunning) {
+        setState(() => _activeNode = nodeName);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('⚠️ 服务已在运行')),
+        );
+        setState(() => _isLoading = false);
+        return;
+      }
+
       final msg = await NativeBridge.startNodeService(nodeName);
       if (!mounted) return;
       setState(() => _activeNode = nodeName);

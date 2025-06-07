@@ -57,17 +57,38 @@ extension AppDelegate {
 
       let data = pipe.fileHandleForReading.readDataToEndOfFile()
       let output = String(data: data, encoding: .utf8) ?? ""
-      let found = output.contains("xray-node")
       let isSuccess = (task.terminationStatus == 0)
 
+      // ✅ 处理 checkNodeStatus
       if returnsBool {
-        result(found)
-      } else if isSuccess {
+        // 高版本: launchctl print
+        if command.contains("launchctl print") {
+          let isRunning = output.contains("state = running") || output.contains("PID =")
+          result(isRunning)
+          return
+        }
+        // 低版本: launchctl list | grep
+        if command.contains("launchctl list") {
+          let isListed = isSuccess && !output.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+          result(isListed)
+          return
+        }
+        // 默认 fallback
+        result(false)
+        return
+      }
+      // ✅ 非 checkNodeStatus 情况
+      if isSuccess {
         result("success")
         self.logToFlutter("info", "命令执行成功: \nCommand: \(command)\nOutput: \(output)")
       } else {
-        result(FlutterError(code: "EXEC_FAILED", message: "Command failed", details: output))
-        self.logToFlutter("error", "命令执行失败: \nCommand: \(command)\nOutput: \(output)")
+        if command.contains("bootstrap") && output.contains("Service is already loaded") {
+          result("服务已在运行")
+          self.logToFlutter("warn", "服务已在运行（重复启动）: \(command)")
+        } else {
+          result(FlutterError(code: "EXEC_FAILED", message: "Command failed", details: output))
+          self.logToFlutter("error", "命令执行失败: \nCommand: \(command)\nOutput: \(output)")
+        }
       }
     } catch {
       result(FlutterError(code: "EXEC_ERROR", message: "Process failed to run", details: error.localizedDescription))
