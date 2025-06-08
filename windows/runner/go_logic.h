@@ -5,6 +5,7 @@ extern "C" {
 #endif
 
 int WriteConfigFile(const char *path, const char *content);
+int UpdateVpnNodesConfig(const char *path, const char *content);
 int StartNodeService(const char *name);
 int StopNodeService(const char *name);
 int CheckNodeStatus(const char *name);

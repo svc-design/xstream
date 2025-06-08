@@ -80,8 +80,8 @@ void NativeBridgePlugin::HandleMethodCall(
       Log("error", "Failed to write: " + plist_path);
       ok = false;
     }
-    if (WriteConfigFile(vpn_path.c_str(), vpn_content.c_str()) != 0) {
-      Log("error", "Failed to write: " + vpn_path);
+    if (UpdateVpnNodesConfig(vpn_path.c_str(), vpn_content.c_str()) != 0) {
+      Log("error", "Failed to update: " + vpn_path);
       ok = false;
     }
 
