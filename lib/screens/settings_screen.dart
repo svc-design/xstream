@@ -212,15 +212,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 leading: const Icon(Icons.info),
                 title: const Text('关于', style: _menuTextStyle),
                 onTap: () {
-                    showAboutDialog(
-                      context: context,
-                      applicationName: 'XStream',
-                      applicationVersion: _buildVersion(),
-                      applicationLegalese: '''
-                    © 2025 svc.plus
-                    Based on Xray-core 25.3.6 – https://github.com/XTLS/Xray-core
-                    Licensed under GNU General Public License v3.0
-                    ''',
+                  showAboutDialog(
+                    context: context,
+                    applicationName: 'XStream',
+                    applicationVersion: _buildVersion(),
+                    applicationLegalese: '''
+© 2025 svc.plus
+
+XStream is licensed under the GNU General Public License v3.0.
+
+This application includes components from:
+• Xray-core v25.3.6 – https://github.com/XTLS/Xray-core
+  Licensed under the Mozilla Public License 2.0
+''',
                   );
                 },
               ),
