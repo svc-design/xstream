@@ -54,7 +54,11 @@ jobs:
         shell: bash
         run: |
           echo "Setting up Flutter for $PLATFORM ($ARCH)"
-          if [[ "$PLATFORM" == "android" ]]; then
+          if [[ "$PLATFORM" == "linux" ]]; then
+              sudo apt-get update
+              sudo snap install flutter --classic
+              export PATH="$PATH:/snap/bin"
+          elif [[ "$PLATFORM" == "android" ]]; then
               sudo apt-get update
               sudo snap install flutter --classic
               export PATH="$PATH:/snap/bin"
@@ -107,9 +111,6 @@ jobs:
       - name: Build Flutter App (Linux)
         if: ${{ matrix.platform == 'linux' }}
         run: |
-          sudo apt-get update
-          sudo snap install flutter --classic
-          export PATH="$PATH:/snap/bin"
           flutter clean
           flutter pub get
           flutter pub outdated --show-all
