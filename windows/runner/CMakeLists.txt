@@ -35,8 +35,20 @@ target_compile_definitions(${BINARY_NAME} PRIVATE "NOMINMAX")
 # dependencies here.
 target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app)
 target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib")
+
+# Build the Go logic into a static library on demand.
+add_custom_command(
+  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/libgo_logic.a
+  COMMAND ${CMAKE_COMMAND} -E env GOOS=windows GOARCH=amd64 \
+          go build -buildmode=c-archive -o libgo_logic.a ../go/nativebridge.go
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  DEPENDS ../go/nativebridge.go)
+
+add_custom_target(go_logic_build ALL DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/libgo_logic.a)
+
 add_library(go_logic STATIC IMPORTED)
 set_property(TARGET go_logic PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/libgo_logic.a")
+add_dependencies(${BINARY_NAME} go_logic_build)
 target_link_libraries(${BINARY_NAME} PRIVATE go_logic)
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
 
