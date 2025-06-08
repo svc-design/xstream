@@ -1,6 +1,8 @@
+---
 name: Build and Release Flutter Packages
+# yamllint disable rule:line-length
 
-on:
+"on":
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -69,7 +71,7 @@ jobs:
             export PATH="$PATH:/snap/bin"
             java -version
           elif [[ "$PLATFORM" == "macos" || "$PLATFORM" == "ios" ]]; then
-            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" # yamllint disable-line rule:line-length
             if [[ "$ARCH" == "arm64" ]]; then
               eval "$(/opt/homebrew/bin/brew shellenv)"
             else
@@ -149,9 +151,9 @@ jobs:
         run: |
           echo "🎯 Distributable output for $PLATFORM-$ARCH:"
           if [[ "$PLATFORM" == "linux" ]]; then
-            find build/linux -type f -executable -exec file {} \; | grep ELF | cut -d: -f1 | tee /tmp/${{ matrix.platform }}-${{ matrix.arch }}-release.log
+            find build/linux -type f -executable -exec file {} \; | grep ELF | cut -d: -f1 | tee /tmp/${{ matrix.platform }}-${{ matrix.arch }}-release.log # yamllint disable-line rule:line-length
           else
-            find build -type f \( -iname "*.apk" -o -iname "*.dmg" -o -iname "*.exe" -o -iname "*.aab" -o -iname "*.app" \) | tee /tmp/${{ matrix.platform }}-${{ matrix.arch }}-release.log
+            find build -type f \( -iname "*.apk" -o -iname "*.dmg" -o -iname "*.exe" -o -iname "*.aab" -o -iname "*.app" \) | tee /tmp/${{ matrix.platform }}-${{ matrix.arch }}-release.log # yamllint disable-line rule:line-length
           fi
 
       - name: Upload filtered artifacts
