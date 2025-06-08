@@ -1,8 +1,6 @@
----
 name: Build and Release Flutter Packages
-# yamllint disable rule:line-length
 
-"on":
+on:
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -56,22 +54,20 @@ jobs:
         shell: bash
         run: |
           echo "Setting up Flutter for $PLATFORM ($ARCH)"
-          if [[ "$PLATFORM" == "linux" ]]; then
+          if [[ "$PLATFORM" == "linux" || "$PLATFORM" == "android" ]]; then
             sudo apt-get update
             sudo snap install flutter --classic
             export PATH="$PATH:/snap/bin"
-          elif [[ "$PLATFORM" == "android" ]]; then
-            sudo apt-get update
-            sudo snap install flutter --classic
-            sudo apt-get install -y openjdk-17-jdk
-            JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
-            echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
-            sudo update-alternatives --set java $JAVA_HOME/bin/java
-            sudo update-alternatives --set javac $JAVA_HOME/bin/javac
-            export PATH="$PATH:/snap/bin"
-            java -version
+            if [[ "$PLATFORM" == "android" ]]; then
+              sudo apt-get install -y openjdk-17-jdk
+              JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
+              echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
+              sudo update-alternatives --set java $JAVA_HOME/bin/java
+              sudo update-alternatives --set javac $JAVA_HOME/bin/javac
+              java -version
+            fi
           elif [[ "$PLATFORM" == "macos" || "$PLATFORM" == "ios" ]]; then
-            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" # yamllint disable-line rule:line-length
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
             if [[ "$ARCH" == "arm64" ]]; then
               eval "$(/opt/homebrew/bin/brew shellenv)"
             else
@@ -94,10 +90,9 @@ jobs:
         shell: powershell
         run: flutter --version
 
-      - name: Run Flutter tests
+      - name: Run Flutter tests (Linux Only)
         if: ${{ matrix.platform == 'linux' && matrix.arch == 'x64' }}
-        run: |
-          flutter test --reporter expanded
+        run: flutter test --reporter expanded
 
       - name: Generate launcher icons
         if: ${{ matrix.platform == 'android' }}
@@ -105,25 +100,41 @@ jobs:
           flutter pub get
           dart run flutter_launcher_icons
 
-      - name: Build Flutter App (Unix-like)
-        if: ${{ matrix.platform != 'windows' }}
-        shell: bash
+      - name: Set up Go (Linux Only)
+        if: ${{ matrix.platform == 'linux' }}
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Build Flutter App (Linux)
+        if: ${{ matrix.platform == 'linux' }}
         run: |
-          case $PLATFORM in
-            linux) flutter build linux --release ;;
-            macos) flutter build macos --release ;;
-            ios) flutter build ios --release --no-codesign ;;
-            android)
-              export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-              export PATH=$JAVA_HOME/bin:$PATH
-              flutter build apk --release ;;
-          esac
+          flutter pub get
+          flutter pub outdated --show-all
+          flutter build linux --release
+
+      - name: Build Flutter App (macOS)
+        if: ${{ matrix.platform == 'macos' }}
+        run: flutter build macos --release
+
+      - name: Build Flutter App (iOS)
+        if: ${{ matrix.platform == 'ios' }}
+        run: flutter build ios --release --no-codesign
+
+      - name: Build Flutter App (Android)
+        if: ${{ matrix.platform == 'android' }}
+        run: flutter build apk --release
 
       - name: Build Flutter App (Windows)
         if: ${{ matrix.platform == 'windows' }}
         shell: powershell
         run: |
+          flutter pub get
           flutter build windows --release
+          if (-not (Test-Path "windows/flutter/generated_plugin_registrant.h")) {
+            Write-Host "❌ Plugin registrant header missing!"
+            exit 1
+          }
 
       - name: Create DMG package (macOS only)
         if: ${{ matrix.platform == 'macos' }}
@@ -151,9 +162,9 @@ jobs:
         run: |
           echo "🎯 Distributable output for $PLATFORM-$ARCH:"
           if [[ "$PLATFORM" == "linux" ]]; then
-            find build/linux -type f -executable -exec file {} \; | grep ELF | cut -d: -f1 | tee /tmp/${{ matrix.platform }}-${{ matrix.arch }}-release.log # yamllint disable-line rule:line-length
+            find build/linux -type f -executable -exec file {} \; | grep ELF | cut -d: -f1 | tee /tmp/${{ matrix.platform }}-${{ matrix.arch }}-release.log
           else
-            find build -type f \( -iname "*.apk" -o -iname "*.dmg" -o -iname "*.exe" -o -iname "*.aab" -o -iname "*.app" \) | tee /tmp/${{ matrix.platform }}-${{ matrix.arch }}-release.log # yamllint disable-line rule:line-length
+            find build -type f \( -iname "*.apk" -o -iname "*.dmg" -o -iname "*.exe" -o -iname "*.aab" -o -iname "*.app" \) | tee /tmp/${{ matrix.platform }}-${{ matrix.arch }}-release.log
           fi
 
       - name: Upload filtered artifacts
@@ -185,6 +196,7 @@ jobs:
           find release-artifacts -type f | tee /tmp/artifacts.list
           echo "📦 Artifact summary:"
           cat /tmp/artifacts.list
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v1
         with:
