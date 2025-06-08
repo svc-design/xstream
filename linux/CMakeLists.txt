@@ -75,8 +75,22 @@ apply_standard_settings(${BINARY_NAME})
 target_link_libraries(${BINARY_NAME} PRIVATE flutter)
 target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::GTK)
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/go")
+
+add_custom_command(
+  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/go/libnative_bridge.a ${CMAKE_CURRENT_SOURCE_DIR}/go/libnative_bridge.h
+  COMMAND go build -buildmode=c-archive -o libnative_bridge.a
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/go
+  COMMENT "Building Go native bridge library"
+)
+
+add_custom_target(go_native_bridge_build ALL
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/go/libnative_bridge.a)
+
 add_library(go_native_bridge STATIC IMPORTED)
-set_target_properties(go_native_bridge PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/go/libnative_bridge.a")
+set_target_properties(go_native_bridge PROPERTIES
+  IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/go/libnative_bridge.a"
+  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/go")
+add_dependencies(go_native_bridge go_native_bridge_build)
 target_link_libraries(${BINARY_NAME} PRIVATE go_native_bridge)
 
 # Run the Flutter tool portions of the build. This must not be removed.

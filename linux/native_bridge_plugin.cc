@@ -7,6 +7,7 @@
 #include <cstring>
 #include <string>
 #include <cstdio>
+#include <algorithm>
 
 #define NATIVE_BRIDGE_PLUGIN(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj), native_bridge_plugin_get_type(), NativeBridgePlugin))
@@ -31,10 +32,20 @@ static void native_bridge_plugin_class_init(NativeBridgePluginClass* klass) {
 static void native_bridge_plugin_init(NativeBridgePlugin* self) {}
 
 
+static std::string current_timestamp() {
+  g_autoptr(GDateTime) now = g_date_time_new_now_local();
+  gchar* ts = g_date_time_format(now, "%Y-%m-%d %H:%M:%S");
+  std::string out(ts);
+  g_free(ts);
+  return out;
+}
+
 static void log_to_flutter(NativeBridgePlugin* self, const std::string& level,
                            const std::string& message) {
   if (!self->logger_channel) return;
-  std::string full = "[" + level + "] " + message;
+  std::string lvl = level;
+  std::transform(lvl.begin(), lvl.end(), lvl.begin(), ::toupper);
+  std::string full = "[" + lvl + "] " + current_timestamp() + ": " + message;
   g_autoptr(FlValue) value = fl_value_new_string(full.c_str());
   fl_method_channel_invoke_method(self->logger_channel, "log", value, nullptr,
                                   nullptr, nullptr);
