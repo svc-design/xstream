@@ -78,7 +78,7 @@ target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/g
 
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/go/libnative_bridge.a ${CMAKE_CURRENT_SOURCE_DIR}/go/libnative_bridge.h
-  COMMAND env CGO_CFLAGS=-O2\ -gdwarf-4 go build -buildmode=c-archive -o libnative_bridge.a
+  COMMAND env CGO_CFLAGS="-O2" go build -buildmode=c-archive -o libnative_bridge.a
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/go
   COMMENT "Building Go native bridge library"
 )

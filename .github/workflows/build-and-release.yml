@@ -103,38 +103,37 @@ jobs:
           flutter pub get
           dart run flutter_launcher_icons
 
+
       - name: Set up Go (Linux only)
         if: ${{ matrix.platform == 'linux' }}
         uses: actions/setup-go@v5
         with:
           go-version: '1.23'
 
-      - name: Build Flutter app (Linux)
-        if: ${{ matrix.platform == 'linux' }}
+      - name: Build Flutter App (Unix-like)
+        if: ${{ matrix.platform != 'windows' }}
         shell: bash
         run: |
-          flutter clean
-          flutter pub get
-          flutter pub outdated --show-all
-          flutter build linux --release -v
+          case $PLATFORM in
+            linux)
+              flutter pub get
+              flutter pub outdated
+              flutter build linux --release ;;
+            macos) flutter build macos --release ;;
+            ios) flutter build ios --release --no-codesign ;;
+            android)
+              export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+              export PATH=$JAVA_HOME/bin:$PATH
+              flutter build apk --release ;;
+          esac
 
-      - name: Build Flutter app (macOS)
-        if: ${{ matrix.platform == 'macos' }}
-        run: flutter build macos --release
+      - name: Build Flutter App (Windows)
 
-      - name: Build Flutter app (iOS)
-        if: ${{ matrix.platform == 'ios' }}
-        run: flutter build ios --release --no-codesign
-
-      - name: Build Flutter app (Android)
-        if: ${{ matrix.platform == 'android' }}
-        run: flutter build apk --release
-
-      - name: Build Flutter app (Windows)
         if: ${{ matrix.platform == 'windows' }}
         shell: powershell
         run: |
           flutter pub get
+          flutter pub outdated
           flutter build windows --release
           if (-not (Test-Path "windows/flutter/generated_plugin_registrant.h")) {
             Write-Host "❌ Plugin registrant header missing!"
