@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../utils/native_bridge.dart';
 import '../../utils/global_config.dart';
 import '../../services/vpn_config_service.dart';
+import '../../services/cloud_sync_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,6 +18,29 @@ class _HomeScreenState extends State<HomeScreen> {
   List<VpnNode> vpnNodes = [];
   final Set<String> _selectedNodeNames = {};
   bool _isLoading = false;
+
+  Future<void> _uploadToCloud() async {
+    setState(() => _isLoading = true);
+    try {
+      await CloudSyncService.uploadConfig();
+      _showMessage('☁️ 已上传到云端');
+    } catch (e) {
+      _showMessage('❌ 上传失败: $e', bgColor: Colors.red);
+    }
+    setState(() => _isLoading = false);
+  }
+
+  Future<void> _downloadFromCloud() async {
+    setState(() => _isLoading = true);
+    try {
+      await CloudSyncService.downloadConfig();
+      await _reloadNodes();
+      _showMessage('✅ 已从云端同步');
+    } catch (e) {
+      _showMessage('❌ 下载失败: $e', bgColor: Colors.red);
+    }
+    setState(() => _isLoading = false);
+  }
 
   void _showMessage(String msg, {Color? bgColor}) {
     if (!mounted) return;
@@ -212,6 +236,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                             if (!mounted) return;
                                             _showMessage('✅ 配置已保存到：\n$path');
                                           },
+                                  ),
+                                  const SizedBox(height: 4),
+                                  ElevatedButton.icon(
+                                    icon: const Icon(Icons.cloud_upload),
+                                    label: const Text('上传云端'),
+                                    onPressed: _isLoading ? null : _uploadToCloud,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  ElevatedButton.icon(
+                                    icon: const Icon(Icons.cloud_download),
+                                    label: const Text('下载云端'),
+                                    onPressed: _isLoading ? null : _downloadFromCloud,
                                   ),
                                 ],
                               ),
