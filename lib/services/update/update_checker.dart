@@ -35,21 +35,21 @@ class UpdateChecker {
     required UpdateChannel channel,
     bool manual = false,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
     if (!context.mounted) return;
+
+    final prefs = await SharedPreferences.getInstance();
     final lastVersion = prefs.getString(_lastVersionKey) ?? '0.0.0';
 
     final repoName = UpdatePlatform.getRepoName(channel);
-    final pulpBaseUrl = UpdateService.pulpBaseUrl;
-    final versionUrl = '$pulpBaseUrl/pulp/api/v3/repositories/file/file/$repoName/versions/latest/';
+    final baseUrl = UpdateService.baseUrl; // ✅ 不再是 pulpBaseUrl
+    final repoUrl = '$baseUrl/$repoName/';
 
     logConsoleKey.currentState?.addLog('[INFO] 开始检查更新...');
     logConsoleKey.currentState?.addLog('[DEBUG] 当前版本: $currentVersion');
-    logConsoleKey.currentState?.addLog('[DEBUG] 使用仓库: $repoName');
-    logConsoleKey.currentState?.addLog('[DEBUG] 请求版本地址: $versionUrl');
+    logConsoleKey.currentState?.addLog('[DEBUG] 检查地址: $repoUrl');
 
     final info = await UpdateService.checkUpdate(
-      repoName: repoName,
+      repoUrl: repoUrl,
       currentVersion: currentVersion,
     );
 
@@ -81,7 +81,7 @@ class UpdateChecker {
         ),
       );
     } else {
-      logConsoleKey.currentState?.addLog('[INFO] 没有检测到新版本（可能是版本相同或服务不可用）');
+      logConsoleKey.currentState?.addLog('[INFO] 没有检测到新版本');
       if (manual) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('已是最新版本')),
