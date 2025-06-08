@@ -25,9 +25,7 @@ class NativeBridgePlugin : public flutter::Plugin {
       const flutter::MethodCall<flutter::EncodableValue> &call,
       std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
 
-  void Log(const std::string &level, const std::string &message);
 
-  std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> logger_channel_;
 };
 
 #endif  // RUNNER_NATIVE_BRIDGE_PLUGIN_H_

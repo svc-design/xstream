@@ -9,6 +9,11 @@ int UpdateVpnNodesConfig(const char *path, const char *content);
 int StartNodeService(const char *name);
 int StopNodeService(const char *name);
 int CheckNodeStatus(const char *name);
+int WriteConfigFiles(const char *xray_path, const char *xray_content,
+                     const char *plist_path, const char *plist_content,
+                     const char *vpn_path, const char *vpn_content);
+int ControlNodeService(const char *action, const char *name);
+int PerformAction(const char *action, const char *password);
 int InitXray();
 int ResetXrayAndConfig(const char *password);
 

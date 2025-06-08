@@ -73,6 +73,46 @@ func CheckNodeStatus(name *C.char) C.int {
 	return 0
 }
 
+//export WriteConfigFiles
+func WriteConfigFiles(xrayPath, xrayContent, plistPath, plistContent, vpnPath, vpnContent *C.char) C.int {
+	if WriteConfigFile(xrayPath, xrayContent) != 0 {
+		return 1
+	}
+	if WriteConfigFile(plistPath, plistContent) != 0 {
+		return 1
+	}
+	if UpdateVpnNodesConfig(vpnPath, vpnContent) != 0 {
+		return 1
+	}
+	return 0
+}
+
+//export ControlNodeService
+func ControlNodeService(action, name *C.char) C.int {
+	switch C.GoString(action) {
+	case "startNodeService":
+		return StartNodeService(name)
+	case "stopNodeService":
+		return StopNodeService(name)
+	case "checkNodeStatus":
+		return CheckNodeStatus(name)
+	default:
+		return -1
+	}
+}
+
+//export PerformAction
+func PerformAction(action, password *C.char) C.int {
+	switch C.GoString(action) {
+	case "initXray":
+		return InitXray()
+	case "resetXrayAndConfig":
+		return ResetXrayAndConfig(password)
+	default:
+		return 1
+	}
+}
+
 //export InitXray
 func InitXray() C.int {
 	exe, err := os.Executable()
