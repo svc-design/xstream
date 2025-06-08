@@ -54,18 +54,16 @@ jobs:
         shell: bash
         run: |
           echo "Setting up Flutter for $PLATFORM ($ARCH)"
-          if [[ "$PLATFORM" == "linux" || "$PLATFORM" == "android" ]]; then
-            sudo apt-get update
-            sudo snap install flutter --classic
-            export PATH="$PATH:/snap/bin"
-            if [[ "$PLATFORM" == "android" ]]; then
+          if [[ "$PLATFORM" == "android" ]]; then
+              sudo apt-get update
+              sudo snap install flutter --classic
+              export PATH="$PATH:/snap/bin"
               sudo apt-get install -y openjdk-17-jdk
               JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
               echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
               sudo update-alternatives --set java $JAVA_HOME/bin/java
               sudo update-alternatives --set javac $JAVA_HOME/bin/javac
               java -version
-            fi
           elif [[ "$PLATFORM" == "macos" || "$PLATFORM" == "ios" ]]; then
             /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
             if [[ "$ARCH" == "arm64" ]]; then
@@ -111,9 +109,13 @@ jobs:
           flutter pub outdated --mode=solve
         if: ${{ matrix.platform == 'linux' }}
         run: |
+          sudo apt-get update
+          sudo snap install flutter --classic
+          export PATH="$PATH:/snap/bin"
+          flutter clean
           flutter pub get
           flutter pub outdated --show-all
-          flutter build linux --release
+          flutter build linux --release -v
 
       - name: Build Flutter App (macOS)
         if: ${{ matrix.platform == 'macos' }}
