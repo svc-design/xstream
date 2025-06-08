@@ -90,9 +90,6 @@ extension AppDelegate {
           self.logToFlutter("error", "命令执行失败: \nCommand: \(command)\nOutput: \(output)")
         }
       }
-    } catch {
-      result(FlutterError(code: "EXEC_ERROR", message: "Process failed to run", details: error.localizedDescription))
-      self.logToFlutter("error", "Process failed to run: \(error.localizedDescription)")
     }
   }
 }
