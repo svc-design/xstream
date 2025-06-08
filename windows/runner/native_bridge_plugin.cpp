@@ -9,7 +9,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
-#include <variant>
+#include <variant>  // for std::holds_alternative
 #include "go_logic.h"
 
 NativeBridgePlugin::NativeBridgePlugin() {}
