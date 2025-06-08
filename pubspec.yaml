@@ -17,6 +17,9 @@ dependencies:
   url_launcher: ^6.3.1
   shared_preferences: ^2.2.2
   json_annotation: ^4.4.0
+  google_sign_in: ^6.3.0
+  googleapis: ^14.0.0
+  azblob: ^4.1.0
   flutter_launcher_icons: ^0.14.3  # ✅ 升级：解决唯一一个受限 direct dependency
 
 dev_dependencies:
