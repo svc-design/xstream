@@ -17,39 +17,39 @@ add_executable(${BINARY_NAME} WIN32
 apply_standard_settings(${BINARY_NAME})
 
 # Flutter version macros
-target_compile_definitions(${BINARY_NAME} PRIVATE FLUTTER_VERSION="${FLUTTER_VERSION}")
-target_compile_definitions(${BINARY_NAME} PRIVATE FLUTTER_VERSION_MAJOR=${FLUTTER_VERSION_MAJOR})
-target_compile_definitions(${BINARY_NAME} PRIVATE FLUTTER_VERSION_MINOR=${FLUTTER_VERSION_MINOR})
-target_compile_definitions(${BINARY_NAME} PRIVATE FLUTTER_VERSION_PATCH=${FLUTTER_VERSION_PATCH})
-target_compile_definitions(${BINARY_NAME} PRIVATE FLUTTER_VERSION_BUILD=${FLUTTER_VERSION_BUILD})
-
-# Prevent Windows macros from interfering with C++ STL
-target_compile_definitions(${BINARY_NAME} PRIVATE NOMINMAX)
+target_compile_definitions(${BINARY_NAME} PRIVATE
+  FLUTTER_VERSION="${FLUTTER_VERSION}"
+  FLUTTER_VERSION_MAJOR=${FLUTTER_VERSION_MAJOR}
+  FLUTTER_VERSION_MINOR=${FLUTTER_VERSION_MINOR}
+  FLUTTER_VERSION_PATCH=${FLUTTER_VERSION_PATCH}
+  FLUTTER_VERSION_BUILD=${FLUTTER_VERSION_BUILD}
+  NOMINMAX
+  USE_GO_LOGIC
+)
 
 # Link required libraries
 target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app dwmapi.lib)
 
 # ---- Build and link Go static library ----
 
-# Generate libgo_logic.a from Go code
 add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/libgo_logic.a
+  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/libgo_logic.a ${CMAKE_CURRENT_SOURCE_DIR}/libgo_logic.h
   COMMAND ${CMAKE_COMMAND} -E env GOOS=windows GOARCH=amd64
           go build -buildmode=c-archive -o libgo_logic.a ../go/nativebridge.go
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   DEPENDS ../go/nativebridge.go
+  BYPRODUCTS ${CMAKE_CURRENT_SOURCE_DIR}/libgo_logic.h
 )
 
-# Build target for the Go library
 add_custom_target(go_logic_build ALL DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/libgo_logic.a)
 
-# Import and link Go static library
 add_library(go_logic STATIC IMPORTED)
 set_property(TARGET go_logic PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/libgo_logic.a")
+set_target_properties(go_logic PROPERTIES LINKER_LANGUAGE C)
 add_dependencies(${BINARY_NAME} go_logic_build)
 target_link_libraries(${BINARY_NAME} PRIVATE go_logic)
 
-# Add include dir for generated libgo_logic.h (optional)
+# Include dir for generated header
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 
 # Flutter build dependency
