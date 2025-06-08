@@ -5,23 +5,17 @@
 #include <gtk/gtk.h>
 
 #include <cstring>
-#include <string>
-#include <cstdio>
-#include <algorithm>
 
 #define NATIVE_BRIDGE_PLUGIN(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj), native_bridge_plugin_get_type(), NativeBridgePlugin))
 
 struct _NativeBridgePlugin {
   GObject parent_instance;
-  FlMethodChannel* logger_channel;
 };
 
 G_DEFINE_TYPE(NativeBridgePlugin, native_bridge_plugin, g_object_get_type())
 
 static void native_bridge_plugin_dispose(GObject* object) {
-  NativeBridgePlugin* self = NATIVE_BRIDGE_PLUGIN(object);
-  g_clear_object(&self->logger_channel);
   G_OBJECT_CLASS(native_bridge_plugin_parent_class)->dispose(object);
 }
 
@@ -32,24 +26,6 @@ static void native_bridge_plugin_class_init(NativeBridgePluginClass* klass) {
 static void native_bridge_plugin_init(NativeBridgePlugin* self) {}
 
 
-static std::string current_timestamp() {
-  g_autoptr(GDateTime) now = g_date_time_new_now_local();
-  gchar* ts = g_date_time_format(now, "%Y-%m-%d %H:%M:%S");
-  std::string out(ts);
-  g_free(ts);
-  return out;
-}
-
-static void log_to_flutter(NativeBridgePlugin* self, const std::string& level,
-                           const std::string& message) {
-  if (!self->logger_channel) return;
-  std::string lvl = level;
-  std::transform(lvl.begin(), lvl.end(), lvl.begin(), ::toupper);
-  std::string full = "[" + lvl + "] " + current_timestamp() + ": " + message;
-  g_autoptr(FlValue) value = fl_value_new_string(full.c_str());
-  fl_method_channel_invoke_method(self->logger_channel, "log", value, nullptr,
-                                  nullptr, nullptr);
-}
 
 static void handle_method_call(NativeBridgePlugin* self, FlMethodCall* method_call) {
   const gchar* method = fl_method_call_get_name(method_call);
@@ -70,10 +46,8 @@ static void handle_method_call(NativeBridgePlugin* self, FlMethodCall* method_ca
       const char* res = WriteConfigFiles(xray_path, xray_content, plist_path, plist_content, vpn_path, vpn_content, password);
       if (g_str_has_prefix(res, "error:")) {
         response = FL_METHOD_RESPONSE(fl_method_error_response_new("WRITE_ERROR", res + 6, nullptr));
-        log_to_flutter(self, "error", res + 6);
       } else {
         response = FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_string(res)));
-        log_to_flutter(self, "info", "Wrote configuration");
       }
       FreeCString(res);
     } else {
@@ -90,20 +64,16 @@ static void handle_method_call(NativeBridgePlugin* self, FlMethodCall* method_ca
         const char* res = StartNodeService(service);
         if (g_str_has_prefix(res, "error:")) {
           response = FL_METHOD_RESPONSE(fl_method_error_response_new("EXEC_FAILED", res + 6, nullptr));
-          log_to_flutter(self, "error", res + 6);
         } else {
           response = FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_string(res)));
-          log_to_flutter(self, "info", "Service started");
         }
         FreeCString(res);
       } else if (strcmp(method, "stopNodeService") == 0) {
         const char* res = StopNodeService(service);
         if (g_str_has_prefix(res, "error:")) {
           response = FL_METHOD_RESPONSE(fl_method_error_response_new("EXEC_FAILED", res + 6, nullptr));
-          log_to_flutter(self, "error", res + 6);
         } else {
           response = FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_string(res)));
-          log_to_flutter(self, "info", "Service stopped");
         }
         FreeCString(res);
       } else {
@@ -123,10 +93,8 @@ static void handle_method_call(NativeBridgePlugin* self, FlMethodCall* method_ca
       const char* res = InitXray();
       if (g_str_has_prefix(res, "error:")) {
         response = FL_METHOD_RESPONSE(fl_method_error_response_new("EXEC_FAILED", res + 6, nullptr));
-        log_to_flutter(self, "error", res + 6);
       } else {
         response = FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_string(res)));
-        log_to_flutter(self, "info", "Xray initialized");
       }
       FreeCString(res);
     } else if (strcmp(action, "resetXrayAndConfig") == 0) {
@@ -137,17 +105,15 @@ static void handle_method_call(NativeBridgePlugin* self, FlMethodCall* method_ca
         const char* res = ResetXrayAndConfig(password);
         if (g_str_has_prefix(res, "error:")) {
           response = FL_METHOD_RESPONSE(fl_method_error_response_new("EXEC_FAILED", res + 6, nullptr));
-          log_to_flutter(self, "error", res + 6);
         } else {
           response = FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_string(res)));
-          log_to_flutter(self, "info", "Reset complete");
         }
         FreeCString(res);
       }
     } else {
-      std::string msg = "Unknown action: ";
-      msg += action;
-      response = FL_METHOD_RESPONSE(fl_method_error_response_new("UNKNOWN_ACTION", msg.c_str(), nullptr));
+      gchar* msg = g_strdup_printf("Unknown action: %s", action);
+      response = FL_METHOD_RESPONSE(fl_method_error_response_new("UNKNOWN_ACTION", msg, nullptr));
+      g_free(msg);
     }
   } else {
     response = FL_METHOD_RESPONSE(fl_method_not_implemented_response_new());
@@ -164,9 +130,6 @@ void native_bridge_plugin_register_with_registrar(FlPluginRegistrar* registrar) 
   NativeBridgePlugin* plugin = NATIVE_BRIDGE_PLUGIN(g_object_new(native_bridge_plugin_get_type(), nullptr));
 
   g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
-
-  plugin->logger_channel = fl_method_channel_new(fl_plugin_registrar_get_messenger(registrar), "com.xstream/logger", FL_METHOD_CODEC(codec));
-  g_object_ref(plugin->logger_channel);
 
   g_autoptr(FlMethodChannel) channel = fl_method_channel_new(fl_plugin_registrar_get_messenger(registrar), "com.xstream/native", FL_METHOD_CODEC(codec));
 
