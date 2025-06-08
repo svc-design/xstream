@@ -35,6 +35,9 @@ target_compile_definitions(${BINARY_NAME} PRIVATE "NOMINMAX")
 # dependencies here.
 target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app)
 target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib")
+add_library(go_logic STATIC IMPORTED)
+set_property(TARGET go_logic PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/libgo_logic.a")
+target_link_libraries(${BINARY_NAME} PRIVATE go_logic)
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
 
 # Run the Flutter tool portions of the build. This must not be removed.

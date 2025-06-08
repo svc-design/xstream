@@ -9,6 +9,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include "go_logic.h"
 
 NativeBridgePlugin::NativeBridgePlugin() {}
 
@@ -62,18 +63,33 @@ void NativeBridgePlugin::HandleMethodCall(
         return std::get<std::string>(it->second);
       return "";
     };
-    std::string path = get_string("xrayConfigPath");
-    std::string content = get_string("xrayConfigContent");
-    std::ofstream file(path, std::ios::out | std::ios::trunc);
-    if (!file) {
-      result->Error("WRITE_ERROR", "Failed to open file");
-      Log("error", "Failed to open file: " + path);
-      return;
+
+    std::string xray_path = get_string("xrayConfigPath");
+    std::string xray_content = get_string("xrayConfigContent");
+    std::string plist_path = get_string("plistPath");
+    std::string plist_content = get_string("plistContent");
+    std::string vpn_path = get_string("vpnNodesConfigPath");
+    std::string vpn_content = get_string("vpnNodesConfigContent");
+
+    bool ok = true;
+    if (WriteConfigFile(xray_path.c_str(), xray_content.c_str()) != 0) {
+      Log("error", "Failed to write: " + xray_path);
+      ok = false;
     }
-    file << content;
-    file.close();
-    Log("info", "Wrote config file: " + path);
-    result->Success(flutter::EncodableValue(true));
+    if (WriteConfigFile(plist_path.c_str(), plist_content.c_str()) != 0) {
+      Log("error", "Failed to write: " + plist_path);
+      ok = false;
+    }
+    if (WriteConfigFile(vpn_path.c_str(), vpn_content.c_str()) != 0) {
+      Log("error", "Failed to write: " + vpn_path);
+      ok = false;
+    }
+
+    if (ok) {
+      result->Success(flutter::EncodableValue("Configuration files written successfully"));
+    } else {
+      result->Error("WRITE_ERROR", "Failed to write one or more files");
+    }
     return;
   } else if (method == "startNodeService" || method == "stopNodeService" ||
              method == "checkNodeStatus") {
@@ -87,22 +103,21 @@ void NativeBridgePlugin::HandleMethodCall(
     if (it != args->end() && it->second.IsString()) {
       service = std::get<std::string>(it->second);
     }
-    std::string cmd;
+
+    int ret = -1;
     if (method == "startNodeService") {
-      cmd = "sc start " + service;
+      ret = StartNodeService(service.c_str());
     } else if (method == "stopNodeService") {
-      cmd = "sc stop " + service;
+      ret = StopNodeService(service.c_str());
     } else {
-      cmd = "sc query " + service + " | find \"RUNNING\"";
+      ret = CheckNodeStatus(service.c_str());
     }
-    int ret = system(cmd.c_str());
-    bool success = (ret == 0);
+
     if (method == "checkNodeStatus") {
-      result->Success(flutter::EncodableValue(success));
+      result->Success(flutter::EncodableValue(ret == 1));
     } else {
-      result->Success(flutter::EncodableValue(success ? "success" : "failed"));
+      result->Success(flutter::EncodableValue(ret == 0 ? "success" : "failed"));
     }
-    Log("info", "Executed: " + cmd);
     return;
   } else if (method == "performAction") {
     const auto *args = std::get_if<flutter::EncodableMap>(call.arguments());
@@ -113,9 +128,26 @@ void NativeBridgePlugin::HandleMethodCall(
         action = std::get<std::string>(it->second);
     }
     if (action == "initXray") {
-      result->Success(flutter::EncodableValue("\xE2\x9C\x85 Xray \xE5\x88\x9D\xE5\xA7\x8B\xE5\x8C\x96\xE5\xAE\x8C\xE6\x88\x90"));
+      int ret = InitXray();
+      if (ret == 0) {
+        result->Success(flutter::EncodableValue("\xE2\x9C\x85 Xray \xE5\x88\x9D\xE5\xA7\x8B\xE5\x8C\x96\xE5\xAE\x8C\xE6\x88\x90"));
+      } else {
+        result->Error("EXEC_FAILED", "InitXray failed");
+      }
     } else if (action == "resetXrayAndConfig") {
-      result->Success(flutter::EncodableValue("\xE2\x9C\x85 \xE5\xB7\xB2\xE6\xB8\x85\xE9\x99\xA4\xE9\x85\x8D\xE7\xBD\xAE\xE4\xB8\x8E\xE5\xAE\x89\xE8\xA3\x85\xE6\x96\x87\xE4\xBB\xB6"));
+      std::string password;
+      if (args) {
+        auto pit = args->find(flutter::EncodableValue("password"));
+        if (pit != args->end() && pit->second.IsString()) {
+          password = std::get<std::string>(pit->second);
+        }
+      }
+      int ret = ResetXrayAndConfig(password.c_str());
+      if (ret == 0) {
+        result->Success(flutter::EncodableValue("\xE2\x9C\x85 \xE5\xB7\xB2\xE6\xB8\x85\xE9\x99\xA4\xE9\x85\x8D\xE7\xBD\xAE\xE4\xB8\x8E\xE5\xAE\x89\xE8\xA3\x85\xE6\x96\x87\xE4\xBB\xB6"));
+      } else {
+        result->Error("EXEC_FAILED", "Reset failed");
+      }
     } else {
       result->Error("UNKNOWN_ACTION", "Unsupported action");
     }
