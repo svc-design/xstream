@@ -107,6 +107,8 @@ jobs:
           go-version: '1.23'
 
       - name: Build Flutter App (Linux)
+          flutter pub get
+          flutter pub outdated --mode=solve
         if: ${{ matrix.platform == 'linux' }}
         run: |
           flutter pub get
