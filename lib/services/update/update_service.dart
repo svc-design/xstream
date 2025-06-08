@@ -3,43 +3,32 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'models/update_info.dart';
+import '../../utils/global_config.dart';
 
 class UpdateService {
-  static const String pulpBaseUrl = 'https://artifact.svc.plus';
+  static const String baseUrl = kUpdateBaseUrl; // ⚙️ 配置在 global_config.dart 中
 
   static Future<UpdateInfo?> checkUpdate({
-    required String repoName,
+    required String repoUrl,
     required String currentVersion,
   }) async {
     try {
-      final versionResp = await http.get(Uri.parse(
-          '$pulpBaseUrl/pulp/api/v3/repositories/file/file/$repoName/versions/latest/'));
-      if (versionResp.statusCode != 200) return null;
+      final indexUrl = '$repoUrl/index.json'; // ⬅️ 建议服务器提供这个 JSON 索引
+      final response = await http.get(Uri.parse(indexUrl));
+      if (response.statusCode != 200) return null;
 
-      final versionHref = jsonDecode(versionResp.body)['pulp_href'];
-
-      final contentResp = await http.get(Uri.parse(
-          '$pulpBaseUrl/pulp/api/v3/content/file/files/?repository_version=$versionHref&ordering=-pulp_created'));
-      if (contentResp.statusCode != 200) return null;
-
-      final results = jsonDecode(contentResp.body)['results'] as List;
-      final file = results.firstWhere(
-        (e) => e['relative_path'].toString().contains(RegExp(r'\.dmg|\.exe|\.apk')),
+      final list = jsonDecode(response.body) as List;
+      final fileEntry = list.firstWhere(
+        (e) => _isNewerVersion(currentVersion, e['version']),
         orElse: () => null,
       );
-      if (file == null) return null;
 
-      final fileName = file['relative_path'];
-      final match = RegExp(r'(\d+\.\d+\.\d+)').firstMatch(fileName);
-      if (match == null) return null;
-
-      final remoteVersion = match.group(1)!;
-      if (!_isNewerVersion(currentVersion, remoteVersion)) return null;
+      if (fileEntry == null) return null;
 
       return UpdateInfo(
-        version: remoteVersion,
-        url: '$pulpBaseUrl/pulp/content/$repoName/$fileName',
-        notes: 'Version $remoteVersion available.',
+        version: fileEntry['version'],
+        url: '$repoUrl${fileEntry['filename']}',
+        notes: fileEntry['notes'] ?? '发现新版本 ${fileEntry['version']}',
       );
     } catch (_) {
       return null;
