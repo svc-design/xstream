@@ -128,7 +128,13 @@ jobs:
       - name: Build Flutter App (Windows)
         if: ${{ matrix.platform == 'windows' }}
         shell: powershell
-        run: flutter build windows --release
+        run: |
+          flutter pub get
+          flutter build windows --release
+          if (-not (Test-Path "windows/flutter/generated_plugin_registrant.h")) {
+            Write-Host "❌ Plugin registrant header missing!"
+            exit 1
+          }
 
       - name: Create DMG package (macOS only)
         if: ${{ matrix.platform == 'macos' }}
