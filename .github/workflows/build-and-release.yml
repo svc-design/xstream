@@ -118,6 +118,7 @@ jobs:
           case $PLATFORM in
             linux)
               flutter pub get
+              flutter pub outdated --mode=solve
               flutter build linux --release ;;
             macos) flutter build macos --release ;;
             ios) flutter build ios --release --no-codesign ;;
