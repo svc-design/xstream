@@ -1,3 +1,34 @@
+# XStream v0.1.2 - Beta Update
+
+_Release Date: 2025-06-08_
+
+## ✨ Features
+- Static `index.json` based update check
+- Modular update system with persistent settings
+- Injects build metadata into About dialog
+- Xray config generation via Dart templates
+- Inlined reset script for macOS reliability
+- Revised license attributions
+
+## ✅ Changes
+- Fixed duplicate VPN service start
+- Resolved logConsoleKey import
+- Improved CI and BuildContext usage
+
+# XStream v0.1.1 - Minor Improvements
+
+_Release Date: 2025-06-07_
+
+## ✨ Features
+- "Reset All Configuration" option in settings
+- Updated icons and asset handling without Git LFS
+
+## ✅ Changes
+- Fixed macOS reset script quoting issues
+- Updated Windows app icon generation
+
+
+
 # XStream v0.1.0 - First Public Preview
 
 _Release Date: 2025-06-06_
