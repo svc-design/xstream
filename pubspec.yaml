@@ -18,6 +18,9 @@ dependencies:
   shared_preferences: ^2.2.2
   json_annotation: ^4.4.0
   flutter_launcher_icons: ^0.13.1  # This is for managing app icons
+  google_sign_in: ^6.3.0
+  googleapis: ^14.0.0
+  azblob: ^4.1.0
 
 dev_dependencies:
   flutter_test:
