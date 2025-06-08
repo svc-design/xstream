@@ -131,9 +131,17 @@ void native_bridge_plugin_register_with_registrar(FlPluginRegistrar* registrar) 
 
   g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
 
-  g_autoptr(FlMethodChannel) channel = fl_method_channel_new(fl_plugin_registrar_get_messenger(registrar), "com.xstream/native", FL_METHOD_CODEC(codec));
+  g_autoptr(FlMethodChannel) native_channel =
+      fl_method_channel_new(fl_plugin_registrar_get_messenger(registrar),
+                            "com.xstream/native", FL_METHOD_CODEC(codec));
+  g_autoptr(FlMethodChannel) systemd_channel =
+      fl_method_channel_new(fl_plugin_registrar_get_messenger(registrar),
+                            "com.xstream/systemd", FL_METHOD_CODEC(codec));
 
-  fl_method_channel_set_method_call_handler(channel, method_call_cb, g_object_ref(plugin), g_object_unref);
+  fl_method_channel_set_method_call_handler(native_channel, method_call_cb,
+                                            g_object_ref(plugin), g_object_unref);
+  fl_method_channel_set_method_call_handler(systemd_channel, method_call_cb,
+                                            g_object_ref(plugin), g_object_unref);
 
   g_object_unref(plugin);
 }
