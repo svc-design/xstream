@@ -22,7 +22,6 @@ dependencies:
   azblob: ^4.1.0
   flutter_launcher_icons: ^0.14.3  # ✅ 升级：解决唯一一个受限 direct dependency
 
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
