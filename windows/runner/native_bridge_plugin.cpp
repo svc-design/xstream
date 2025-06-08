@@ -9,6 +9,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <variant>
 #include "go_logic.h"
 
 NativeBridgePlugin::NativeBridgePlugin() {}
@@ -59,8 +60,9 @@ void NativeBridgePlugin::HandleMethodCall(
     }
     auto get_string = [&](const std::string &key) -> std::string {
       auto it = args->find(flutter::EncodableValue(key));
-      if (it != args->end() && it->second.IsString())
+      if (it != args->end() && std::holds_alternative<std::string>(it->second)) {
         return std::get<std::string>(it->second);
+      }
       return "";
     };
 
@@ -100,7 +102,7 @@ void NativeBridgePlugin::HandleMethodCall(
     }
     std::string service;
     auto it = args->find(flutter::EncodableValue("plistName"));
-    if (it != args->end() && it->second.IsString()) {
+    if (it != args->end() && std::holds_alternative<std::string>(it->second)) {
       service = std::get<std::string>(it->second);
     }
 
@@ -124,7 +126,7 @@ void NativeBridgePlugin::HandleMethodCall(
     std::string action;
     if (args) {
       auto it = args->find(flutter::EncodableValue("action"));
-      if (it != args->end() && it->second.IsString())
+      if (it != args->end() && std::holds_alternative<std::string>(it->second))
         action = std::get<std::string>(it->second);
     }
     if (action == "initXray") {
@@ -138,7 +140,7 @@ void NativeBridgePlugin::HandleMethodCall(
       std::string password;
       if (args) {
         auto pit = args->find(flutter::EncodableValue("password"));
-        if (pit != args->end() && pit->second.IsString()) {
+        if (pit != args->end() && std::holds_alternative<std::string>(pit->second)) {
           password = std::get<std::string>(pit->second);
         }
       }
