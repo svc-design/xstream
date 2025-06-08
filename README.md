@@ -38,6 +38,7 @@
 
 - 📘 [用户使用手册](docs/user-manual.md)
 - 🛠️ [开发者文档（macOS 开发环境搭建）](docs/dev-guide.md)
+- 🐧 [Linux systemd 运行指南](docs/linux-xray-systemd.md)
 
 ## 🛡 App Store 策略
 

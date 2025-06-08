@@ -1,8 +1,12 @@
+// lib/services/vpn_config_service.dart
+
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import '../utils/global_config.dart';
+import '../templates/xray_config_template.dart';
+import '../templates/xray_plist_template.dart';
 
 class VpnNode {
   String name;
@@ -43,12 +47,10 @@ class VpnNode {
 class VpnConfig {
   static List<VpnNode> _nodes = [];
 
-  // 添加 getConfigPath 方法
   static Future<String> getConfigPath() async {
-    return await GlobalApplicationConfig.getLocalConfigPath();  // 获取配置路径
+    return await GlobalApplicationConfig.getLocalConfigPath();
   }
 
-  /// 加载 VPN 节点配置（仅本地文件）
   static Future<void> load() async {
     List<VpnNode> fromLocal = [];
 
@@ -110,7 +112,6 @@ class VpnConfig {
     await saveToFile();
   }
 
-  /// 删除节点相关文件
   static Future<void> deleteNodeFiles(VpnNode node) async {
     try {
       final jsonFile = File(node.configPath);
@@ -132,7 +133,6 @@ class VpnConfig {
     }
   }
 
-  /// 生成默认的三个 VPN 节点配置并写入系统路径
   static Future<void> generateDefaultNodes({
     required String password,
     required MethodChannel platform,
@@ -151,8 +151,8 @@ class VpnConfig {
 
     for (final node in nodes) {
       await generateContent(
-        nodeName: node['name'] as String,
-        domain: node['domain'] as String,
+        nodeName: node['name']!,
+        domain: node['domain']!,
         port: port,
         uuid: uuid,
         password: password,
@@ -175,35 +175,20 @@ class VpnConfig {
     required Function(String) setMessage,
     required Function(String) logMessage,
   }) async {
-    if (nodeName.isEmpty || domain.isEmpty || port.isEmpty || uuid.isEmpty) {
-      setMessage('所有字段均不能为空');
-      logMessage('所有字段均不能为空');
-      return;
-    }
-
-
-    // HOME 路径
     final homeDir = Platform.environment['HOME'] ?? '/Users/unknown';
-
-    // 根据节点名称提取国家/地区缩写，如 US-VPN -> us
     final code = nodeName.split('-').first.toLowerCase();
-
-    // Xray 配置文件路径
     final xrayConfigPath = '/opt/homebrew/etc/xray-vpn-node-$code.json';
-    // 生成 Xray 配置
+
     final xrayConfigContent = await _generateXrayJsonConfig(domain, port, uuid, setMessage, logMessage);
     if (xrayConfigContent.isEmpty) return;
 
-    // Plist 文件路径
     final plistName = '$bundleId.xray-node-$code.plist';
     final plistPath = '$homeDir/Library/LaunchAgents/$plistName';
-    // 生成 Plist 配置
-    final plistContent = await _generatePlistFile(code, bundleId, xrayConfigPath, setMessage, logMessage);
+
+    final plistContent = _generatePlistFile(code, bundleId, xrayConfigPath);
     if (plistContent.isEmpty) return;
 
-    // 获取不同路径
-    final vpnNodesConfigPath = await GlobalApplicationConfig.getLocalConfigPath(); // vpn_nodes.json 路径
-    // 生成 vpn_nodes.json 内容
+    final vpnNodesConfigPath = await GlobalApplicationConfig.getLocalConfigPath();
     final vpnNodesConfigContent = await _generateVpnNodesJsonContent(
       nodeName,
       code,
@@ -213,7 +198,6 @@ class VpnConfig {
       logMessage,
     );
 
-    // 通过原生代码写入文件
     try {
       await platform.invokeMethod('writeConfigFiles', {
         'xrayConfigPath': xrayConfigPath,
@@ -235,74 +219,36 @@ class VpnConfig {
     }
   }
 
-
-  /// Helper function to handle Xray JSON file generation
   static Future<String> _generateXrayJsonConfig(String domain, String port, String uuid, Function(String) setMessage, Function(String) logMessage) async {
-    String configTemplate;
     try {
-      configTemplate = await rootBundle.loadString('assets/xray-template.json');
-      logMessage('xrayJson 模板加载成功');
-    } catch (e) {
-      setMessage('xrayJson 加载模板失败: $e');
-      logMessage('xrayJson 加载模板失败: $e');
-      return ''; // Return empty string to indicate failure
-    }
+      final replaced = defaultXrayJsonTemplate
+          .replaceAll('<SERVER_DOMAIN>', domain)
+          .replaceAll('<PORT>', port)
+          .replaceAll('<UUID>', uuid);
 
-    String rawJson = configTemplate
-        .replaceAll('<SERVER_DOMAIN>', domain)
-        .replaceAll('<PORT>', port)
-        .replaceAll('<UUID>', uuid);
-
-    late String xrayJsonContent;
-    try {
-      final jsonObj = jsonDecode(rawJson);
-      xrayJsonContent = JsonEncoder.withIndent('  ').convert(jsonObj);
-      logMessage('xrayJson 配置文件创建成功');
-    } catch (e) {
-      setMessage('✅ XrayJson 配置内容生成完成');
+      final jsonObj = jsonDecode(replaced);
+      final formatted = JsonEncoder.withIndent('  ').convert(jsonObj);
       logMessage('✅ XrayJson 配置内容生成完成');
-      return ''; // Return empty string to indicate failure
-    }
-
-    return xrayJsonContent;
-  }
-
-  /// Helper function to handle Plist file generation
-  static Future<String> _generatePlistFile(
-    String nodeCode,
-    String bundleId,
-    String configPath,
-    Function(String) setMessage,
-    Function(String) logMessage,
-  ) async {
-    if (nodeCode.length < 2) {
-      final err = '节点名长度不足，无法提取国家码';
-      setMessage('❌ $err');
-      logMessage(err);
-      return '';
-    }
-
-    String plistTemplate;
-    try {
-      plistTemplate = await rootBundle.loadString('assets/xray-template.plist');
-      logMessage('✅ Plist 模板加载成功');
+      return formatted;
     } catch (e) {
-      final err = '加载 Plist 模板失败: $e';
-      setMessage('❌ $err');
-      logMessage(err);
+      setMessage('❌ XrayJson 生成失败: $e');
+      logMessage('XrayJson 错误: $e');
       return '';
     }
-
-    final plistContent = plistTemplate
-        .replaceAll('<BUNDLE_ID>', bundleId)
-        .replaceAll('<NAME>', nodeCode.toLowerCase())
-        .replaceAll('<CONFIG_PATH>', configPath);
-
-    logMessage('✅ Plist 内容生成完成');
-    return plistContent;
   }
 
-  /// Helper function to generate vpn_nodes.json content
+  static String _generatePlistFile(String nodeCode, String bundleId, String configPath) {
+    try {
+      return renderXrayPlist(
+        bundleId: bundleId,
+        name: nodeCode.toLowerCase(),
+        configPath: configPath,
+      );
+    } catch (e) {
+      return '';
+    }
+  }
+
   static Future<String> _generateVpnNodesJsonContent(
     String nodeName,
     String nodeCode,

@@ -46,27 +46,29 @@ jobs:
       ARCH: ${{ matrix.arch }}
 
     steps:
-      - name: Checkout
+      - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: Set up Flutter for Unix-like Platforms
+      - name: Set up Flutter (Unix)
         if: ${{ matrix.platform != 'windows' }}
         shell: bash
         run: |
-          echo "Setting up Flutter for $PLATFORM ($ARCH)"
+          echo "🔧 Setting up Flutter for $PLATFORM ($ARCH)"
           if [[ "$PLATFORM" == "linux" ]]; then
             sudo apt-get update
             sudo snap install flutter --classic
+            sudo apt-get install -y clang cmake ninja-build libgtk-3-dev pkg-config libx11-dev binutils
             export PATH="$PATH:/snap/bin"
+            as --version
           elif [[ "$PLATFORM" == "android" ]]; then
             sudo apt-get update
             sudo snap install flutter --classic
+            export PATH="$PATH:/snap/bin"
             sudo apt-get install -y openjdk-17-jdk
             JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
             echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
             sudo update-alternatives --set java $JAVA_HOME/bin/java
             sudo update-alternatives --set javac $JAVA_HOME/bin/javac
-            export PATH="$PATH:/snap/bin"
             java -version
           elif [[ "$PLATFORM" == "macos" || "$PLATFORM" == "ios" ]]; then
             /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -80,35 +82,43 @@ jobs:
           fi
           flutter doctor
 
-      - name: Set up Flutter for Windows
+      - name: Set up Flutter (Windows)
         if: ${{ matrix.platform == 'windows' }}
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           flutter-version: '3.32.2'
 
-      - name: Display Flutter version (Windows)
-        if: ${{ matrix.platform == 'windows' }}
-        shell: powershell
+      - name: Show Flutter version
+        shell: bash
         run: flutter --version
 
-      - name: Run Flutter tests
+      - name: Run Flutter tests (Linux only)
         if: ${{ matrix.platform == 'linux' && matrix.arch == 'x64' }}
-        run: |
-          flutter test --reporter expanded
+        run: flutter test --reporter expanded
 
-      - name: Generate launcher icons
+      - name: Generate launcher icons (Android)
         if: ${{ matrix.platform == 'android' }}
         run: |
           flutter pub get
           dart run flutter_launcher_icons
+
+
+      - name: Set up Go (Linux only)
+        if: ${{ matrix.platform == 'linux' }}
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
 
       - name: Build Flutter App (Unix-like)
         if: ${{ matrix.platform != 'windows' }}
         shell: bash
         run: |
           case $PLATFORM in
-            linux) flutter build linux --release ;;
+            linux)
+              flutter pub get
+              flutter pub outdated
+              flutter build linux --release ;;
             macos) flutter build macos --release ;;
             ios) flutter build ios --release --no-codesign ;;
             android)
@@ -118,12 +128,19 @@ jobs:
           esac
 
       - name: Build Flutter App (Windows)
+
         if: ${{ matrix.platform == 'windows' }}
         shell: powershell
         run: |
+          flutter pub get
+          flutter pub outdated
           flutter build windows --release
+          if (-not (Test-Path "windows/flutter/generated_plugin_registrant.h")) {
+            Write-Host "❌ Plugin registrant header missing!"
+            exit 1
+          }
 
-      - name: Create DMG package (macOS only)
+      - name: Create DMG package (macOS)
         if: ${{ matrix.platform == 'macos' }}
         run: |
           brew install create-dmg
@@ -144,17 +161,17 @@ jobs:
           cd build/ios/iphoneos
           zip -r XStream.app.zip Runner.app
 
-      - name: Show filtered build output
+      - name: Show distributable build output
         shell: bash
         run: |
           echo "🎯 Distributable output for $PLATFORM-$ARCH:"
           if [[ "$PLATFORM" == "linux" ]]; then
-            find build/linux -type f -executable -exec file {} \; | grep ELF | cut -d: -f1 | tee /tmp/${{ matrix.platform }}-${{ matrix.arch }}-release.log
+            find build/linux -type f -executable -exec file {} \; | grep ELF | cut -d: -f1 | tee /tmp/${PLATFORM}-${ARCH}-release.log
           else
-            find build -type f \( -iname "*.apk" -o -iname "*.dmg" -o -iname "*.exe" -o -iname "*.aab" -o -iname "*.app" \) | tee /tmp/${{ matrix.platform }}-${{ matrix.arch }}-release.log
+            find build -type f \( -iname "*.apk" -o -iname "*.dmg" -o -iname "*.exe" -o -iname "*.aab" -o -iname "*.app" \) | tee /tmp/${PLATFORM}-${ARCH}-release.log
           fi
 
-      - name: Upload filtered artifacts
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-${{ matrix.platform }}-${{ matrix.arch }}
@@ -169,7 +186,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Checkout
+      - name: Checkout source
         uses: actions/checkout@v4
 
       - name: Download all artifacts
@@ -183,6 +200,7 @@ jobs:
           find release-artifacts -type f | tee /tmp/artifacts.list
           echo "📦 Artifact summary:"
           cat /tmp/artifacts.list
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v1
         with:

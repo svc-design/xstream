@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../utils/global_config.dart';
 import '../../utils/native_bridge.dart';
-import '../widgets/log_console.dart';
-import 'package:flutter/services.dart';
 import '../../services/vpn_config_service.dart';
+import '../../services/update/update_checker.dart';
+import '../../services/update/update_platform.dart';
+import '../widgets/log_console.dart';
 import 'help_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -17,16 +19,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _selectedTab = 'log';
   static const platform = MethodChannel('com.xstream/native');
 
+  static const TextStyle _menuTextStyle = TextStyle(fontSize: 14);
+  static final ButtonStyle _menuButtonStyle = ElevatedButton.styleFrom(
+    minimumSize: const Size.fromHeight(36),
+    textStyle: _menuTextStyle,
+  );
+
   String _buildVersion() {
     const branch = String.fromEnvironment('BRANCH_NAME', defaultValue: '');
-    const prId = String.fromEnvironment('PR_ID', defaultValue: '0');
+    const buildId = String.fromEnvironment('BUILD_ID', defaultValue: 'local');
+    const buildDate = String.fromEnvironment('BUILD_DATE', defaultValue: 'unknown');
+
     if (branch.startsWith('release/')) {
-      return branch;
+      final version = branch.replaceFirst('release/', '');
+      return 'v$version-$buildDate-$buildId';
     }
     if (branch == 'main') {
-      return 'latest+$prId';
+      return 'latest-$buildDate-$buildId';
     }
-    return 'dev';
+    return 'dev-$buildDate-$buildId';
+  }
+
+  String _currentVersion() {
+    final match = RegExp(r'v(\d+\.\d+\.\d+)').firstMatch(_buildVersion());
+    return match?.group(1) ?? '0.0.0';
   }
 
   void _onGenerateDefaultNodes() async {
@@ -44,6 +60,50 @@ class _SettingsScreenState extends State<SettingsScreen> {
       platform: platform,
       setMessage: (msg) => logConsoleKey.currentState?.addLog(msg),
       logMessage: (msg) => logConsoleKey.currentState?.addLog(msg),
+    );
+  }
+
+  void _onInitXray() async {
+    final isUnlocked = GlobalState.isUnlocked.value;
+
+    if (!isUnlocked) {
+      logConsoleKey.currentState?.addLog('请先解锁以初始化 Xray', level: LogLevel.warning);
+      return;
+    }
+
+    logConsoleKey.currentState?.addLog('开始初始化 Xray...');
+    try {
+      final output = await NativeBridge.initXray();
+      logConsoleKey.currentState?.addLog(output);
+    } catch (e) {
+      logConsoleKey.currentState?.addLog('[错误] $e', level: LogLevel.error);
+    }
+  }
+
+  void _onResetAll() async {
+    final isUnlocked = GlobalState.isUnlocked.value;
+    final password = GlobalState.sudoPassword.value;
+
+    if (!isUnlocked) {
+      logConsoleKey.currentState?.addLog('请先解锁以执行重置操作', level: LogLevel.warning);
+      return;
+    }
+
+    logConsoleKey.currentState?.addLog('开始重置配置与文件...');
+    try {
+      final result = await NativeBridge.resetXrayAndConfig(password);
+      logConsoleKey.currentState?.addLog(result);
+    } catch (e) {
+      logConsoleKey.currentState?.addLog('[错误] 重置失败: $e', level: LogLevel.error);
+    }
+  }
+
+  void _onCheckUpdate() {
+    logConsoleKey.currentState?.addLog('开始检查更新...');
+    UpdateChecker.manualCheck(
+      context,
+      currentVersion: _currentVersion(),
+      channel: GlobalState.useDailyBuild.value ? UpdateChannel.beta : UpdateChannel.stable,
     );
   }
 
@@ -73,26 +133,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        ElevatedButton.icon(
-                          icon: const Icon(Icons.build),
-                          label: const Text('初始化 Xray'),
-                          onPressed: isUnlocked
-                              ? () async {
-                                  logConsoleKey.currentState?.addLog('开始初始化 Xray...');
-                                  try {
-                                    final output = await NativeBridge.initXray();
-                                    logConsoleKey.currentState?.addLog(output);
-                                  } catch (e) {
-                                    logConsoleKey.currentState?.addLog('[错误] $e', level: LogLevel.error);
-                                  }
-                                }
-                              : null,
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            style: _menuButtonStyle,
+                            icon: const Icon(Icons.build),
+                            label: const Text('初始化 Xray', style: _menuTextStyle),
+                            onPressed: isUnlocked ? _onInitXray : null,
+                          ),
                         ),
                         const SizedBox(height: 8),
-                        ElevatedButton.icon(
-                          icon: const Icon(Icons.settings),
-                          label: const Text('生成默认节点'),
-                          onPressed: isUnlocked ? _onGenerateDefaultNodes : null,
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            style: _menuButtonStyle,
+                            icon: const Icon(Icons.settings),
+                            label: const Text('生成默认节点', style: _menuTextStyle),
+                            onPressed: isUnlocked ? _onGenerateDefaultNodes : null,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            style: _menuButtonStyle.copyWith(
+                              backgroundColor: WidgetStateProperty.all(Colors.red[400]),
+                            ),
+                            icon: const Icon(Icons.restore),
+                            label: const Text('重置所有配置', style: _menuTextStyle),
+                            onPressed: isUnlocked ? _onResetAll : null,
+                          ),
                         ),
                         if (!isUnlocked)
                           const Padding(
@@ -110,7 +180,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const Divider(height: 32),
               ListTile(
                 leading: const Icon(Icons.article),
-                title: const Text('📜 查看日志'),
+                title: const Text('📜 查看日志', style: _menuTextStyle),
                 selected: _selectedTab == 'log',
                 onTap: () {
                   setState(() {
@@ -118,9 +188,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   });
                 },
               ),
+              SwitchListTile(
+                secondary: const Icon(Icons.bolt),
+                title: const Text('升级 DailyBuild', style: _menuTextStyle),
+                value: GlobalState.useDailyBuild.value,
+                onChanged: (v) => setState(() => GlobalState.useDailyBuild.value = v),
+              ),
+              ListTile(
+                leading: const Icon(Icons.system_update),
+                title: const Text('检查更新', style: _menuTextStyle),
+                onTap: _onCheckUpdate,
+              ),
               ListTile(
                 leading: const Icon(Icons.help),
-                title: const Text('帮助'),
+                title: const Text('帮助', style: _menuTextStyle),
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(builder: (context) => const HelpScreen()),
@@ -129,16 +210,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.info),
-                title: const Text('关于'),
+                title: const Text('关于', style: _menuTextStyle),
                 onTap: () {
                   showAboutDialog(
                     context: context,
                     applicationName: 'XStream',
                     applicationVersion: _buildVersion(),
-                    applicationLegalese: '© svc.plus GPLv3',
-                    children: const [
-                      Text('由 XStream 驱动的多节点代理 UI'),
-                    ],
+                    applicationLegalese: '''
+© 2025 svc.plus
+
+XStream is licensed under the GNU General Public License v3.0.
+
+This application includes components from:
+• Xray-core v25.3.6 – https://github.com/XTLS/Xray-core
+  Licensed under the Mozilla Public License 2.0
+''',
                   );
                 },
               ),
@@ -146,12 +232,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
         const VerticalDivider(width: 1),
-        // 右侧日志输出面板
         Expanded(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: _selectedTab == 'log'
-                ? LogConsole(key: logConsoleKey) // ✅ 使用全局 logConsoleKey
+                ? LogConsole(key: logConsoleKey)
                 : const Center(child: Text('请选择左侧菜单')),
           ),
         ),
@@ -159,4 +244,3 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 }
-

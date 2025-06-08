@@ -4,6 +4,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import '../widgets/log_console.dart';
 
+const String kUpdateBaseUrl = 'https://artifact.onwalk.net/';
+
 // LogConsole Global Key
 final GlobalKey<LogConsoleState> logConsoleKey = GlobalKey<LogConsoleState>();
 
@@ -14,6 +16,9 @@ class GlobalState {
 
   /// 当前解锁使用的 sudo 密码（可供原生调用或配置操作使用）
   static final ValueNotifier<String> sudoPassword = ValueNotifier<String>('');
+
+  /// 升级渠道：true 表示检查 DailyBuild，false 只检查 release
+  static final ValueNotifier<bool> useDailyBuild = ValueNotifier<bool>(false);
 }
 
 /// 用于获取应用相关的配置信息

@@ -1,3 +1,6 @@
+// lib/templates/xray_config_template.dart
+
+const String defaultXrayJsonTemplate = r'''
 {
   "log": {
     "loglevel": "info"
@@ -68,3 +71,4 @@
     }
   ]
 }
+''';
