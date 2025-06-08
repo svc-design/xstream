@@ -105,12 +105,20 @@ jobs:
           flutter pub get
           dart run flutter_launcher_icons
 
+      - name: Set up Go
+        if: ${{ matrix.platform == 'linux' }}
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
       - name: Build Flutter App (Unix-like)
         if: ${{ matrix.platform != 'windows' }}
         shell: bash
         run: |
           case $PLATFORM in
-            linux) flutter build linux --release ;;
+            linux)
+              flutter pub get
+              flutter build linux --release ;;
             macos) flutter build macos --release ;;
             ios) flutter build ios --release --no-codesign ;;
             android)
