@@ -12,9 +12,58 @@
    ```
    安装完成后，确认 `gcc --version` 能正确输出版本信息。
 
-## 2. 生成 Go 静态库
+## 2. 插件目录结构
 
-进入项目的 `windows/go` 目录，执行：
+项目在 `windows/` 下集成了一套 Go+C++ 桥接代码，主要文件如下：
+
+```text
+windows/
+├── go/
+│   └── nativebridge.go        # Go 导出的逻辑实现
+└── runner/
+    ├── native_bridge_plugin.cpp
+    ├── native_bridge_plugin.h
+    └── CMakeLists.txt         # 构建规则，自动生成 libgo_logic.a
+```
+
+`nativebridge.go` 使用 `//export` 暴露函数供 C 调用，CMake 会在构建时执行
+`go build -buildmode=c-archive` 生成 `libgo_logic.a` 和对应头文件，随后由
+`NativeBridgePlugin` 链接并通过 `MethodChannel` 与 Dart 层通信。
+
+插件的注册逻辑节选自 `native_bridge_plugin.cpp`：
+
+```cpp
+void NativeBridgePlugin::RegisterWithRegistrar(
+    flutter::PluginRegistrarWindows* registrar) {
+  auto channel = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+      registrar->messenger(), "com.xstream/native",
+      &flutter::StandardMethodCodec::GetInstance());
+
+  auto plugin = std::make_unique<NativeBridgePlugin>();
+  channel->SetMethodCallHandler(
+      [plugin_pointer = plugin.get()](const auto& call, auto result) {
+        plugin_pointer->HandleMethodCall(call, std::move(result));
+      });
+  registrar->AddPlugin(std::move(plugin));
+}
+```
+
+对应的 CMake 片段会在 `windows/runner/CMakeLists.txt` 中调用 Go 构建：
+
+```cmake
+add_custom_command(
+  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/libgo_logic.a ${CMAKE_CURRENT_SOURCE_DIR}/libgo_logic.h
+  COMMAND ${CMAKE_COMMAND} -E env GOOS=windows GOARCH=amd64 CGO_ENABLED=1
+          ${GO_EXECUTABLE} build -buildmode=c-archive -o libgo_logic.a ./go/nativebridge.go
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  DEPENDS ../go/nativebridge.go
+  BYPRODUCTS ${CMAKE_CURRENT_SOURCE_DIR}/libgo_logic.h
+)
+```
+
+## 3. 手动生成 Go 静态库
+
+若需要单独编译 Go 库，可进入 `windows/go` 目录执行：
 
 ```powershell
 cd windows/go
@@ -36,7 +85,7 @@ go build -buildmode=c-archive -o libgo_logic.a
 
 成功后会在该目录生成 `libgo_logic.a` 与 `libgo_logic.h`，供 CMake 链接。
 
-## 3. 构建 Flutter 桌面应用
+## 4. 构建 Flutter 桌面应用
 
 ```
 flutter clean
