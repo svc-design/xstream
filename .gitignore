@@ -51,3 +51,5 @@ windows/runner/resources/iconset/
 
 linux/go/libnative_bridge.a
 linux/go/libnative_bridge.h
+windows/go/libgo_logic.a
+windows/go/libgo_logic.h
