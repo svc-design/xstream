@@ -1,0 +1,10 @@
+[Unit]
+Description=Xray Service
+After=network.target
+
+[Service]
+ExecStart=%h/.local/bin/xray run -c %h/.config/xray/xray-config.json
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
