@@ -31,12 +31,11 @@ class AppDelegate: FlutterAppDelegate {
       }
     }
 
-    // Create status bar item with custom icon
+    // Create status bar item with app icon
     statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     if let button = statusItem?.button {
-      // Load the "StatusIcon" image from asset catalog
-      button.image = NSImage(named: "StatusIcon") ?? NSApp.applicationIconImage
-      button.action = #selector(toggleMainWindow)
+      button.image = NSApp.applicationIconImage
+      button.action = #selector(showMainWindow)
       button.target = self
     }
     let menu = NSMenu()
@@ -54,17 +53,6 @@ class AppDelegate: FlutterAppDelegate {
 
   override func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
     return true
-  }
-
-  // Toggle visibility of the main Flutter window when clicking the status icon
-  @objc func toggleMainWindow() {
-    if let window = mainFlutterWindow {
-      if window.isVisible {
-        window.orderOut(nil)
-      } else {
-        showMainWindow()
-      }
-    }
   }
 
   @objc func showMainWindow() {
