@@ -30,12 +30,18 @@ target_compile_definitions(${BINARY_NAME} PRIVATE
 # Link required libraries
 target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app dwmapi.lib)
 
+# Locate Go executable
+find_program(GO_EXECUTABLE NAMES go)
+if(NOT GO_EXECUTABLE)
+  message(FATAL_ERROR "Go executable not found. Please install Go and ensure it is available in PATH.")
+endif()
+
 # ---- Build and link Go static library ----
 
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/libgo_logic.a ${CMAKE_CURRENT_SOURCE_DIR}/libgo_logic.h
-  COMMAND ${CMAKE_COMMAND} -E env GOOS=windows GOARCH=amd64
-          go build -buildmode=c-archive -o libgo_logic.a ../go/nativebridge.go
+  COMMAND ${CMAKE_COMMAND} -E env GOOS=windows GOARCH=amd64 CGO_ENABLED=1
+          ${GO_EXECUTABLE} build -buildmode=c-archive -o libgo_logic.a ../go/nativebridge.go
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   DEPENDS ../go/nativebridge.go
   BYPRODUCTS ${CMAKE_CURRENT_SOURCE_DIR}/libgo_logic.h

@@ -102,6 +102,12 @@ jobs:
           channel: stable
           flutter-version: '3.32.2'
 
+      - name: Set up Go (Windows)
+        if: ${{ matrix.platform == 'windows' }}
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
       - name: Show Flutter version
         shell: bash
         run: flutter --version
