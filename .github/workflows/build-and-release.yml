@@ -1,9 +1,22 @@
 name: Build and Release Flutter Packages
 
 on:
+  push:
+    tags:
+      - 'v*'  # ✅ 仅推送版本 tag（如 v0.1.4）触发
   pull_request:
-    branches: [main]
-  workflow_dispatch:
+    branches:
+      - main
+    paths:
+      - 'lib/**'
+      - 'assets/**'
+      - 'pubspec.*'
+      - 'macos/**'
+      - 'linux/**'
+      - 'windows/**'
+      - '.github/workflows/build-and-release.yml'
+
+  workflow_dispatch:  # ✅ 支持手动触发
 
 jobs:
   build:
