@@ -50,7 +50,10 @@ add_dependencies(${BINARY_NAME} go_logic_build)
 target_link_libraries(${BINARY_NAME} PRIVATE go_logic)
 
 # Include dir for generated header
-target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+target_include_directories(${BINARY_NAME} PRIVATE
+  "${CMAKE_CURRENT_SOURCE_DIR}"
+  "${FLUTTER_MANAGED_DIR}"
+)
 
 # Flutter build dependency
 add_dependencies(${BINARY_NAME} flutter_assemble)
