@@ -58,6 +58,7 @@ target_link_libraries(${BINARY_NAME} PRIVATE go_logic)
 # Include dir for generated header
 target_include_directories(${BINARY_NAME} PRIVATE
   "${CMAKE_CURRENT_SOURCE_DIR}"
+  "${CMAKE_CURRENT_SOURCE_DIR}/.."
   "${FLUTTER_MANAGED_DIR}"
 )
 
