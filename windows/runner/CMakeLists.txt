@@ -28,7 +28,13 @@ target_compile_definitions(${BINARY_NAME} PRIVATE
 )
 
 # Link required libraries
-target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app dwmapi.lib)
+target_link_libraries(${BINARY_NAME} PRIVATE
+  flutter
+  flutter_wrapper_app
+  flutter_wrapper_plugin
+  dwmapi.lib
+  legacy_stdio_definitions.lib
+)
 
 # Locate Go executable
 find_program(GO_EXECUTABLE NAMES go)
