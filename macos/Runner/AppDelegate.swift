@@ -4,6 +4,8 @@ import FlutterMacOS
 
 @main
 class AppDelegate: FlutterAppDelegate {
+  var statusItem: NSStatusItem?
+
   override func applicationDidFinishLaunching(_ notification: Notification) {
     if let window = mainFlutterWindow,
        let controller = window.contentViewController as? FlutterViewController {
@@ -29,14 +31,34 @@ class AppDelegate: FlutterAppDelegate {
       }
     }
 
+    // Create status bar item with app icon
+    statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+    if let button = statusItem?.button {
+      button.image = NSApp.applicationIconImage
+      button.action = #selector(showMainWindow)
+      button.target = self
+    }
+    let menu = NSMenu()
+    menu.addItem(NSMenuItem(title: "Show XStream", action: #selector(showMainWindow), keyEquivalent: ""))
+    menu.addItem(NSMenuItem.separator())
+    menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+    statusItem?.menu = menu
+
     super.applicationDidFinishLaunching(notification)
   }
 
   override func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-    return true
+    return false
   }
 
   override func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
     return true
+  }
+
+  @objc func showMainWindow() {
+    if let window = mainFlutterWindow {
+      window.makeKeyAndOrderFront(nil)
+      NSApp.activate(ignoringOtherApps: true)
+    }
   }
 }
