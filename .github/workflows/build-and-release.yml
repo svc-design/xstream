@@ -30,13 +30,13 @@ jobs:
             arch: arm64
           - platform: windows
             arch: arm64
+          - platform: macos
+            arch: x64
           - platform: ios
             arch: x64
           - platform: android
             arch: x64
         include:
-          - platform: macos
-            arch: x64
           - platform: macos
             arch: arm64
           - platform: linux
