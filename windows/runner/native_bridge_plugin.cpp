@@ -7,6 +7,8 @@
 #include <memory>
 #include <string>
 #include <variant>
+#include <iostream>
+#include "utils.h"
 
 #ifdef USE_GO_LOGIC
 #include "go_logic.h"
@@ -61,6 +63,9 @@ void NativeBridgePlugin::HandleMethodCall(
         get_string("plistContent").c_str(),
         get_string("vpnNodesConfigPath").c_str(),
         get_string("vpnNodesConfigContent").c_str());
+    if (g_debugMode) {
+      std::cout << "writeConfigFiles -> " << ret << std::endl;
+    }
 
     if (ret == 0) {
       result->Success(flutter::EncodableValue("Configuration files written successfully"));
@@ -85,7 +90,9 @@ void NativeBridgePlugin::HandleMethodCall(
     };
 
     int ret = ControlNodeService(method.c_str(), get_string("plistName").c_str());
-
+    if (g_debugMode) {
+      std::cout << method << " -> " << ret << std::endl;
+    }
     if (method == "checkNodeStatus") {
       result->Success(flutter::EncodableValue(ret == 1));
     } else {
@@ -109,6 +116,9 @@ void NativeBridgePlugin::HandleMethodCall(
     };
 
     int ret = PerformAction(get_string("action").c_str(), get_string("password").c_str());
+    if (g_debugMode) {
+      std::cout << "performAction -> " << ret << std::endl;
+    }
 
     if (ret == 0) {
       result->Success(flutter::EncodableValue("success"));

@@ -94,3 +94,13 @@ flutter build windows
 ```
 
 若环境配置正确，CMake 会在构建过程中自动调用以上 Go 命令生成桥接库。
+
+## 5. 调试模式
+
+构建完成后，可在 `build/windows/x64/runner/Release` 目录下通过命令行运行
+
+```powershell
+./xstream.exe --debug
+```
+
+加入 `--debug` 参数会在控制台输出启动日志，便于排查依赖路径或权限问题。

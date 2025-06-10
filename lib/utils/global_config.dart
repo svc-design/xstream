@@ -19,6 +19,9 @@ class GlobalState {
 
   /// 升级渠道：true 表示检查 DailyBuild，false 只检查 release
   static final ValueNotifier<bool> useDailyBuild = ValueNotifier<bool>(false);
+
+  /// 调试模式开关，由 `--debug` 参数控制
+  static final ValueNotifier<bool> debugMode = ValueNotifier<bool>(false);
 }
 
 /// 用于获取应用相关的配置信息
