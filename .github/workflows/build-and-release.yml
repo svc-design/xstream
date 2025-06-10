@@ -180,18 +180,10 @@ jobs:
 
       - name: Create DMG package (macOS)
         if: ${{ matrix.platform == 'macos' }}
+        shell: bash
         run: |
-          brew install create-dmg
-          DMG_NAME="XStream-${ARCH}.dmg"
-          echo "馃捊 Creating macOS DMG: $DMG_NAME"
-          create-dmg \
-            --volname "XStream Installer" \
-            --window-pos 200 120 \
-            --window-size 800 400 \
-            --icon-size 100 \
-            --app-drop-link 600 185 \
-            build/macos/$DMG_NAME \
-            build/macos/Build/Products/Release/xstream.app
+          echo "📦 Creating macOS DMG for $ARCH using Makefile"
+          make macos-${ARCH}
 
       - name: Zip iOS Runner.app
         if: ${{ matrix.platform == 'ios' }}
