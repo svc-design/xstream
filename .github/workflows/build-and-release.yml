@@ -207,7 +207,7 @@ jobs:
           name: build-${{ matrix.platform }}-${{ matrix.arch }}
           path: |
             build/macos/*.dmg
-            build/linux/x64/release/bundle/xstream
+            build/linux/x64/release/bundle/**
             build/windows/x64/runner/Release/xstream.exe
             build/app/outputs/flutter-apk/app-release.apk
             build/ios/iphoneos/XStream.app.zip
@@ -241,6 +241,6 @@ jobs:
             release-artifacts/**/xstream.exe
             release-artifacts/**/app-release.apk
             release-artifacts/**/XStream.app.zip
-            release-artifacts/build-linux-x64/linux/x64/release/bundle/xstream
+            release-artifacts/build-linux-x64/build/linux/x64/release/bundle/**
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
