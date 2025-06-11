@@ -104,3 +104,10 @@ flutter build windows
 ```
 
 加入 `--debug` 参数会在控制台输出启动日志，便于排查依赖路径或权限问题。
+
+## 6. Release Packaging
+
+GitHub Actions will compress the entire `build/windows/x64/runner/Release`
+directory into `xstream-windows.zip` for distribution. The archive includes
+`flutter_windows.dll` so the application can run on systems without Flutter
+installed.
