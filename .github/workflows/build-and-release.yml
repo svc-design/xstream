@@ -178,6 +178,14 @@ jobs:
             exit 1
           }
 
+      - name: Zip Windows Release
+        if: ${{ matrix.platform == 'windows' }}
+        shell: powershell
+        run: |
+          $releaseDir = "build/windows/x64/runner/Release"
+          $zipPath = "$releaseDir/xstream-windows.zip"
+          Compress-Archive -Path "$releaseDir/*" -DestinationPath $zipPath
+
       - name: Create DMG package (macOS)
         if: ${{ matrix.platform == 'macos' }}
         shell: bash
@@ -208,7 +216,7 @@ jobs:
           path: |
             build/macos/*.dmg
             build/linux/x64/release/bundle/xstream
-            build/windows/x64/runner/Release/xstream.exe
+            build/windows/x64/runner/Release/xstream-windows.zip
             build/app/outputs/flutter-apk/app-release.apk
             build/ios/iphoneos/XStream.app.zip
 
@@ -238,7 +246,7 @@ jobs:
           name: Daily Build ${{ github.run_number }}
           files: |
             release-artifacts/**/*.dmg
-            release-artifacts/**/xstream.exe
+            release-artifacts/**/xstream-windows.zip
             release-artifacts/**/app-release.apk
             release-artifacts/**/XStream.app.zip
             release-artifacts/build-linux-x64/linux/x64/release/bundle/xstream
