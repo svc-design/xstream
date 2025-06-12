@@ -186,6 +186,9 @@ jobs:
 
             build/linux/x64/release/bundle/xstream-linux.zip
             release-artifacts/build-linux-x64/build/linux/x64/release/bundle/xstream-linux.zip
+            
+      - name: Zip Windows bundle
+        if: ${{ matrix.platform == 'windows' }}
         shell: powershell
         run: |
           $releaseDir = "build/windows/x64/runner/Release"
