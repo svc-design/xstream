@@ -183,9 +183,6 @@ jobs:
         run: |
           cd build/linux/x64/release/bundle
           zip -r xstream-linux.zip . -x xstream-linux.zip
-
-            build/linux/x64/release/bundle/xstream-linux.zip
-            release-artifacts/build-linux-x64/build/linux/x64/release/bundle/xstream-linux.zip
             
       - name: Zip Windows bundle
         if: ${{ matrix.platform == 'windows' }}
@@ -255,9 +252,9 @@ jobs:
           name: Daily Build ${{ github.run_number }}
           files: |
             release-artifacts/**/*.dmg
+            release-artifacts/**/xstream-linux.zip
             release-artifacts/**/xstream-windows.zip
             release-artifacts/**/app-release.apk
             release-artifacts/**/XStream.app.zip
-            release-artifacts/build-linux-x64/build/linux/x64/release/bundle/**
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
