@@ -178,8 +178,14 @@ jobs:
             exit 1
           }
 
-      - name: Zip Windows Release
-        if: ${{ matrix.platform == 'windows' }}
+      - name: Zip Linux bundle
+        if: ${{ matrix.platform == 'linux' }}
+        run: |
+          cd build/linux/x64/release/bundle
+          zip -r xstream-linux.zip . -x xstream-linux.zip
+
+            build/linux/x64/release/bundle/xstream-linux.zip
+            release-artifacts/build-linux-x64/build/linux/x64/release/bundle/xstream-linux.zip
         shell: powershell
         run: |
           $releaseDir = "build/windows/x64/runner/Release"
