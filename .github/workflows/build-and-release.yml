@@ -178,7 +178,13 @@ jobs:
             exit 1
           }
 
-      - name: Zip Windows Release
+      - name: Zip Linux bundle
+        if: ${{ matrix.platform == 'linux' }}
+        run: |
+          cd build/linux/x64/release/bundle
+          zip -r xstream-linux.zip . -x xstream-linux.zip
+            
+      - name: Zip Windows bundle
         if: ${{ matrix.platform == 'windows' }}
         shell: powershell
         run: |
@@ -215,7 +221,7 @@ jobs:
           name: build-${{ matrix.platform }}-${{ matrix.arch }}
           path: |
             build/macos/*.dmg
-            build/linux/x64/release/bundle/xstream
+            build/linux/x64/release/bundle/xstream-linux.zip
             build/windows/x64/runner/Release/xstream-windows.zip
             build/app/outputs/flutter-apk/app-release.apk
             build/ios/iphoneos/XStream.app.zip
@@ -246,9 +252,9 @@ jobs:
           name: Daily Build ${{ github.run_number }}
           files: |
             release-artifacts/**/*.dmg
+            release-artifacts/**/xstream-linux.zip
             release-artifacts/**/xstream-windows.zip
             release-artifacts/**/app-release.apk
             release-artifacts/**/XStream.app.zip
-            release-artifacts/build-linux-x64/linux/x64/release/bundle/xstream
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
