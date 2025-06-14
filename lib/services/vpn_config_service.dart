@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import '../utils/global_config.dart';
 import '../templates/xray_config_template.dart';
 import '../templates/xray_plist_template.dart';
+import '../templates/xray_service_template.dart';
 
 class VpnNode {
   String name;
