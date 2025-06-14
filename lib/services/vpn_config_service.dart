@@ -6,7 +6,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../utils/global_config.dart';
 import '../templates/xray_config_template.dart';
-import '../templates/xray_plist_template.dart';
+import '../templates/xray_service_macos_template.dart';
+import '../templates/xray_service_linux_template.dart';
+import '../templates/xray_service_windows_template.dart';
 
 class VpnNode {
   String name;
@@ -190,7 +192,7 @@ class VpnConfig {
     final serviceName = '$bundleId.xray-node-$code.plist';
     final servicePath = GlobalApplicationConfig.servicePath(serviceName);
 
-    final serviceContent = _generatePlistFile(code, bundleId, xrayConfigPath);
+    final serviceContent = _generateServiceContent(code, bundleId, xrayConfigPath);
     if (serviceContent.isEmpty) return;
 
     final vpnNodesConfigPath = await GlobalApplicationConfig.getLocalConfigPath();
@@ -242,13 +244,34 @@ class VpnConfig {
     }
   }
 
-  static String _generatePlistFile(String nodeCode, String bundleId, String configPath) {
+  static String _generateServiceContent(
+      String nodeCode, String bundleId, String configPath) {
     try {
-      return renderXrayPlist(
-        bundleId: bundleId,
-        name: nodeCode.toLowerCase(),
-        configPath: configPath,
-      );
+      switch (Platform.operatingSystem) {
+        case 'macos':
+          return renderXrayPlist(
+            bundleId: bundleId,
+            name: nodeCode.toLowerCase(),
+            configPath: configPath,
+          );
+        case 'linux':
+          final home = Platform.environment['HOME'] ?? '~';
+          final xrayPath = '$home/.local/bin/xray';
+          return renderXrayService(
+            xrayPath: xrayPath,
+            configPath: configPath,
+          );
+        case 'windows':
+          const xrayPath = r'C:\\ProgramData\\xstream\\xray.exe';
+          final serviceName = 'xray-node-${nodeCode.toLowerCase()}';
+          return renderXrayServiceWindows(
+            serviceName: serviceName,
+            xrayPath: xrayPath,
+            configPath: configPath,
+          );
+        default:
+          return '';
+      }
     } catch (e) {
       return '';
     }
