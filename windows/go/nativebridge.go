@@ -152,4 +152,34 @@ func ResetXrayAndConfig(password *C.char) C.int {
 	return 0
 }
 
+//export CreateXrayService
+func CreateXrayService(name, configPath *C.char) C.int {
+	service := C.GoString(name)
+	cfg := C.GoString(configPath)
+	exe := filepath.Join(os.Getenv("ProgramData"), "xstream", "xray.exe")
+	bin := exe + " run -c " + cfg
+	cmd := exec.Command("sc", "create", service, "binPath=", bin, "start=", "auto")
+	if err := cmd.Run(); err != nil {
+		return 1
+	}
+	return 0
+}
+
+//export DeleteXrayService
+func DeleteXrayService(name *C.char) C.int {
+	cmd := exec.Command("sc", "delete", C.GoString(name))
+	if err := cmd.Run(); err != nil {
+		return 1
+	}
+	return 0
+}
+
+//export RestartNodeService
+func RestartNodeService(name *C.char) C.int {
+	if StopNodeService(name) != 0 {
+		return 1
+	}
+	return StartNodeService(name)
+}
+
 func main() {}
