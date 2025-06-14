@@ -206,15 +206,27 @@ class VpnConfig {
     );
 
     try {
-      await platform.invokeMethod('writeConfigFiles', {
-        'xrayConfigPath': xrayConfigPath,
-        'xrayConfigContent': xrayConfigContent,
-        'servicePath': servicePath,
-        'serviceContent': serviceContent,
-        'vpnNodesConfigPath': vpnNodesConfigPath,
-        'vpnNodesConfigContent': vpnNodesConfigContent,
-        'password': password,
-      });
+      if (Platform.isWindows || Platform.isLinux) {
+        await NativeBridge.writeConfigFiles(
+          xrayPath: xrayConfigPath,
+          xrayContent: xrayConfigContent,
+          servicePath: servicePath,
+          serviceContent: serviceContent,
+          vpnNodesPath: vpnNodesConfigPath,
+          vpnNodesContent: vpnNodesConfigContent,
+          password: password,
+        );
+      } else {
+        await platform.invokeMethod('writeConfigFiles', {
+          'xrayConfigPath': xrayConfigPath,
+          'xrayConfigContent': xrayConfigContent,
+          'servicePath': servicePath,
+          'serviceContent': serviceContent,
+          'vpnNodesConfigPath': vpnNodesConfigPath,
+          'vpnNodesConfigContent': vpnNodesConfigContent,
+          'password': password,
+        });
+      }
 
       setMessage('✅ 配置已保存: $xrayConfigPath');
       setMessage('✅ 服务项已生成: $servicePath');

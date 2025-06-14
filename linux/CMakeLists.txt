@@ -63,7 +63,6 @@ add_definitions(-DAPPLICATION_ID="${APPLICATION_ID}")
 add_executable(${BINARY_NAME}
   "main.cc"
   "my_application.cc"
-  "native_bridge_plugin.cc"
   "${FLUTTER_MANAGED_DIR}/generated_plugin_registrant.cc"
 )
 
@@ -77,21 +76,20 @@ target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::GTK)
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/go")
 
 add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/go/libnative_bridge.a ${CMAKE_CURRENT_SOURCE_DIR}/go/libnative_bridge.h
-  COMMAND env CGO_CFLAGS="-O2" go build -buildmode=c-archive -o libnative_bridge.a
+  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/go/libnative_bridge.so ${CMAKE_CURRENT_SOURCE_DIR}/go/libnative_bridge.h
+  COMMAND env CGO_CFLAGS="-O2" go build -buildmode=c-shared -o libnative_bridge.so
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/go
   COMMENT "Building Go native bridge library"
 )
 
 add_custom_target(go_native_bridge_build ALL
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/go/libnative_bridge.a)
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/go/libnative_bridge.so)
 
-add_library(go_native_bridge STATIC IMPORTED)
+add_library(go_native_bridge SHARED IMPORTED)
 set_target_properties(go_native_bridge PROPERTIES
-  IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/go/libnative_bridge.a"
+  IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/go/libnative_bridge.so"
   INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/go")
 add_dependencies(go_native_bridge go_native_bridge_build)
-target_link_libraries(${BINARY_NAME} PRIVATE go_native_bridge)
 
 # Run the Flutter tool portions of the build. This must not be removed.
 add_dependencies(${BINARY_NAME} flutter_assemble)
@@ -141,6 +139,9 @@ foreach(bundled_library ${PLUGIN_BUNDLED_LIBRARIES})
     DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
     COMPONENT Runtime)
 endforeach(bundled_library)
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/go/libnative_bridge.so"
+  DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+  COMPONENT Runtime)
 
 # Copy the native assets provided by the build.dart from all packages.
 set(NATIVE_ASSETS_DIR "${PROJECT_BUILD_DIR}native_assets/linux/")
