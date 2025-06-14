@@ -26,24 +26,55 @@ class GlobalState {
 
 /// 用于获取应用相关的配置信息
 class GlobalApplicationConfig {
-  /// 从 macOS 配置文件中动态获取 PRODUCT_BUNDLE_IDENTIFIER
+  /// 从配置文件或默认值中获取 PRODUCT_BUNDLE_IDENTIFIER
   static Future<String> getBundleId() async {
-    try {
-      // 读取 macOS 配置文件，获取 PRODUCT_BUNDLE_IDENTIFIER
-      final config = await rootBundle.loadString('macos/Runner/Configs/AppInfo.xcconfig');
-      final line = config.split('\n').firstWhere((l) => l.startsWith('PRODUCT_BUNDLE_IDENTIFIER='));
-      return line.split('=').last.trim();
-    } catch (_) {
-      return 'com.xstream'; // 返回默认值
+    if (Platform.isMacOS) {
+      try {
+        // 读取 macOS 配置文件，获取 PRODUCT_BUNDLE_IDENTIFIER
+        final config = await rootBundle.loadString('macos/Runner/Configs/AppInfo.xcconfig');
+        final line = config
+            .split('\n')
+            .firstWhere((l) => l.startsWith('PRODUCT_BUNDLE_IDENTIFIER='));
+        return line.split('=').last.trim();
+      } catch (_) {
+        // macOS 下若读取失败返回默认值
+        return 'com.xstream';
+      }
     }
+
+    // 其他平台直接返回默认值
+    return 'com.xstream';
   }
 
-  /// 默认本地配置文件路径（macOS）
+  /// 根据平台返回本地配置文件路径
   static Future<String> getLocalConfigPath() async {
-    final bundleId = await getBundleId();  // 获取 PRODUCT_BUNDLE_IDENTIFIER
-    final baseDir = await getApplicationSupportDirectory();  // 获取应用支持目录
-    final xstreamDir = Directory('${baseDir.path}/$bundleId');  // 拼接目录路径
-    await xstreamDir.create(recursive: true);  // 创建目录（如果不存在）
-    return '${xstreamDir.path}/vpn_nodes.json';  // 返回完整路径
+    switch (Platform.operatingSystem) {
+      case 'macos':
+        final bundleId = await getBundleId();
+        final baseDir = await getApplicationSupportDirectory();
+        final xstreamDir = Directory('${baseDir.path}/$bundleId');
+        await xstreamDir.create(recursive: true);
+        return '${xstreamDir.path}/vpn_nodes.json';
+
+      case 'windows':
+        final base = Platform.environment['ProgramData'] ??
+            (await getApplicationSupportDirectory()).path;
+        final xstreamDir = Directory('$base\\xstream');
+        await xstreamDir.create(recursive: true);
+        return '${xstreamDir.path}\\vpn_nodes.json';
+
+      case 'linux':
+        final home = Platform.environment['HOME'] ??
+            (await getApplicationSupportDirectory()).path;
+        final xstreamDir = Directory('$home/.config/xstream');
+        await xstreamDir.create(recursive: true);
+        return '${xstreamDir.path}/vpn_nodes.json';
+
+      default:
+        final baseDir = await getApplicationSupportDirectory();
+        final xstreamDir = Directory('${baseDir.path}/xstream');
+        await xstreamDir.create(recursive: true);
+        return '${xstreamDir.path}/vpn_nodes.json';
+    }
   }
 }
