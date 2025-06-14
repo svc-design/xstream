@@ -2,8 +2,10 @@ package main
 
 import "C"
 import (
+	"archive/zip"
 	"encoding/json"
 	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -121,28 +123,59 @@ func PerformAction(action, password *C.char) C.int {
 
 //export InitXray
 func InitXray() C.int {
-	exe, err := os.Executable()
-	if err != nil {
-		return 1
-	}
-	base := filepath.Dir(exe)
-	src := filepath.Join(base, "xray.exe")
 	destDir := filepath.Join(os.Getenv("ProgramData"), "xstream")
 	dest := filepath.Join(destDir, "xray.exe")
 	if err := os.MkdirAll(destDir, 0755); err != nil {
 		return 1
 	}
-	in, err := os.Open(src)
+
+	resp, err := http.Get("https://artifact.onwalk.net/xray-core/v25.3.6/Xray-windows-64.zip")
 	if err != nil {
 		return 1
 	}
-	defer in.Close()
+	defer resp.Body.Close()
+
+	tmp, err := os.CreateTemp("", "xray-*.zip")
+	if err != nil {
+		return 1
+	}
+	if _, err := io.Copy(tmp, resp.Body); err != nil {
+		tmp.Close()
+		os.Remove(tmp.Name())
+		return 1
+	}
+	tmp.Close()
+	defer os.Remove(tmp.Name())
+
+	zr, err := zip.OpenReader(tmp.Name())
+	if err != nil {
+		return 1
+	}
+	defer zr.Close()
+
+	var xrayFile *zip.File
+	for _, f := range zr.File {
+		name := strings.ToLower(filepath.Base(f.Name))
+		if name == "xray.exe" {
+			xrayFile = f
+			break
+		}
+	}
+	if xrayFile == nil {
+		return 1
+	}
+	rc, err := xrayFile.Open()
+	if err != nil {
+		return 1
+	}
+	defer rc.Close()
+
 	out, err := os.Create(dest)
 	if err != nil {
 		return 1
 	}
 	defer out.Close()
-	if _, err := io.Copy(out, in); err != nil {
+	if _, err := io.Copy(out, rc); err != nil {
 		return 1
 	}
 	return 0
