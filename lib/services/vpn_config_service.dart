@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../utils/global_config.dart';
+import '../utils/native_bridge.dart';
 import '../templates/xray_config_template.dart';
 import '../templates/xray_service_macos_template.dart';
 import '../templates/xray_service_linux_template.dart';
@@ -206,15 +207,27 @@ class VpnConfig {
     );
 
     try {
-      await platform.invokeMethod('writeConfigFiles', {
-        'xrayConfigPath': xrayConfigPath,
-        'xrayConfigContent': xrayConfigContent,
-        'servicePath': servicePath,
-        'serviceContent': serviceContent,
-        'vpnNodesConfigPath': vpnNodesConfigPath,
-        'vpnNodesConfigContent': vpnNodesConfigContent,
-        'password': password,
-      });
+      if (Platform.isWindows || Platform.isLinux) {
+        await NativeBridge.writeConfigFiles(
+          xrayPath: xrayConfigPath,
+          xrayContent: xrayConfigContent,
+          servicePath: servicePath,
+          serviceContent: serviceContent,
+          vpnNodesPath: vpnNodesConfigPath,
+          vpnNodesContent: vpnNodesConfigContent,
+          password: password,
+        );
+      } else {
+        await platform.invokeMethod('writeConfigFiles', {
+          'xrayConfigPath': xrayConfigPath,
+          'xrayConfigContent': xrayConfigContent,
+          'servicePath': servicePath,
+          'serviceContent': serviceContent,
+          'vpnNodesConfigPath': vpnNodesConfigPath,
+          'vpnNodesConfigContent': vpnNodesConfigContent,
+          'password': password,
+        });
+      }
 
       setMessage('✅ 配置已保存: $xrayConfigPath');
       setMessage('✅ 服务项已生成: $servicePath');
