@@ -26,9 +26,10 @@ bool FlutterWindow::OnCreate() {
     return false;
   }
   RegisterPlugins(flutter_controller_->engine());
+  auto plugin_registrar = flutter_controller_->engine()->GetRegistrarForPlugin(
+      "NativeBridgePlugin");
   NativeBridgePlugin::RegisterWithRegistrar(
-      flutter_controller_->engine()->GetRegistrarForPlugin(
-          "NativeBridgePlugin"));
+      static_cast<flutter::PluginRegistrarWindows*>(plugin_registrar));
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
