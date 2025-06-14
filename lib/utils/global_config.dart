@@ -46,6 +46,21 @@ class GlobalApplicationConfig {
     return 'com.xstream';
   }
 
+  /// 返回各平台下存放 Xray 配置文件的目录，末尾已包含分隔符
+  static String get xrayConfigPath {
+    switch (Platform.operatingSystem) {
+      case 'macos':
+        return '/opt/homebrew/etc/';
+      case 'windows':
+        final base = Platform.environment['ProgramData'] ?? 'C:\\ProgramData';
+        return '$base\\xstream\\';
+      case 'linux':
+        return '/opt/etc/';
+      default:
+        return '';
+    }
+  }
+
   /// 根据平台返回本地配置文件路径
   static Future<String> getLocalConfigPath() async {
     switch (Platform.operatingSystem) {
