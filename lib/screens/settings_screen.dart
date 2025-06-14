@@ -103,7 +103,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     UpdateChecker.manualCheck(
       context,
       currentVersion: _currentVersion(),
-      channel: GlobalState.useDailyBuild.value ? UpdateChannel.beta : UpdateChannel.stable,
+      channel: GlobalState.useDailyBuild.value ? UpdateChannel.latest : UpdateChannel.stable,
     );
   }
 
