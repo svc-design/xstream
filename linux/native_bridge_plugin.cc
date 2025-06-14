@@ -36,14 +36,14 @@ static void handle_method_call(NativeBridgePlugin* self, FlMethodCall* method_ca
   if (strcmp(method, "writeConfigFiles") == 0) {
     const gchar* xray_path = fl_value_get_string(fl_value_lookup_string(args, "xrayConfigPath"));
     const gchar* xray_content = fl_value_get_string(fl_value_lookup_string(args, "xrayConfigContent"));
-    const gchar* plist_path = fl_value_get_string(fl_value_lookup_string(args, "plistPath"));
-    const gchar* plist_content = fl_value_get_string(fl_value_lookup_string(args, "plistContent"));
+    const gchar* service_path = fl_value_get_string(fl_value_lookup_string(args, "servicePath"));
+    const gchar* service_content = fl_value_get_string(fl_value_lookup_string(args, "serviceContent"));
     const gchar* vpn_path = fl_value_get_string(fl_value_lookup_string(args, "vpnNodesConfigPath"));
     const gchar* vpn_content = fl_value_get_string(fl_value_lookup_string(args, "vpnNodesConfigContent"));
     const gchar* password = fl_value_get_string(fl_value_lookup_string(args, "password"));
 
-    if (xray_path && xray_content && plist_path && plist_content && vpn_path && vpn_content && password) {
-      const char* res = WriteConfigFiles(xray_path, xray_content, plist_path, plist_content, vpn_path, vpn_content, password);
+    if (xray_path && xray_content && service_path && service_content && vpn_path && vpn_content && password) {
+      const char* res = WriteConfigFiles(xray_path, xray_content, service_path, service_content, vpn_path, vpn_content, password);
       if (g_str_has_prefix(res, "error:")) {
         response = FL_METHOD_RESPONSE(fl_method_error_response_new("WRITE_ERROR", res + 6, nullptr));
       } else {

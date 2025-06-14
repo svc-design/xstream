@@ -92,4 +92,21 @@ class GlobalApplicationConfig {
         return '${xstreamDir.path}/vpn_nodes.json';
     }
   }
+
+  /// 根据平台和服务名称返回服务配置文件路径
+  static String servicePath(String serviceName) {
+    switch (Platform.operatingSystem) {
+      case 'macos':
+        final home = Platform.environment['HOME'] ?? '/Users/unknown';
+        return '$home/Library/LaunchAgents/$serviceName';
+      case 'linux':
+        final home = Platform.environment['HOME'] ?? '';
+        return '$home/.config/systemd/user/$serviceName';
+      case 'windows':
+        final base = Platform.environment['ProgramData'] ?? 'C:\\ProgramData';
+        return '$base\\xstream\\$serviceName';
+      default:
+        return serviceName;
+    }
+  }
 }

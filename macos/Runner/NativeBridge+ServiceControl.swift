@@ -11,7 +11,7 @@ extension AppDelegate {
 
     let userName = NSUserName()
     let uid = getuid()
-    let plistPath = "/Users/\(userName)/Library/LaunchAgents/\(serviceNameArg)"
+    let servicePath = "/Users/\(userName)/Library/LaunchAgents/\(serviceNameArg)"
     let serviceName = serviceNameArg.replacingOccurrences(of: ".plist", with: "")
 
     // 检查 macOS 是否为现代版本（>= 10.15）
@@ -21,14 +21,14 @@ extension AppDelegate {
     switch call.method {
     case "startNodeService":
       let command = useModernLaunchctl
-        ? "launchctl bootstrap gui/\(uid) \"\(plistPath)\""
-        : "launchctl load \"\(plistPath)\""
+        ? "launchctl bootstrap gui/\(uid) \"\(servicePath)\""
+        : "launchctl load \"\(servicePath)\""
       runShellScript(command: command, returnsBool: false, result: result)
 
     case "stopNodeService":
       let command = useModernLaunchctl
-        ? "launchctl bootout gui/\(uid) \"\(plistPath)\""
-        : "launchctl unload \"\(plistPath)\""
+        ? "launchctl bootout gui/\(uid) \"\(servicePath)\""
+        : "launchctl unload \"\(servicePath)\""
       runShellScript(command: command, returnsBool: false, result: result)
 
     case "checkNodeStatus":
