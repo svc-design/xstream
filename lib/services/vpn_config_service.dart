@@ -124,11 +124,11 @@ class VpnConfig {
         await jsonFile.delete();
       }
 
-      final homeDir = Platform.environment['HOME'] ?? '/Users/unknown';
-      final plistPath = '$homeDir/Library/LaunchAgents/${node.serviceName}';
-      final plistFile = File(plistPath);
-      if (await plistFile.exists()) {
-        await plistFile.delete();
+      final servicePath =
+          GlobalApplicationConfig.servicePath(node.serviceName);
+      final serviceFile = File(servicePath);
+      if (await serviceFile.exists()) {
+        await serviceFile.delete();
       }
 
       removeNode(node.name);
@@ -180,7 +180,6 @@ class VpnConfig {
     required Function(String) setMessage,
     required Function(String) logMessage,
   }) async {
-    final homeDir = Platform.environment['HOME'] ?? '/Users/unknown';
     final code = nodeName.split('-').first.toLowerCase();
     final prefix = GlobalApplicationConfig.xrayConfigPath;
     final xrayConfigPath = '${prefix}xray-vpn-node-$code.json';
@@ -189,10 +188,10 @@ class VpnConfig {
     if (xrayConfigContent.isEmpty) return;
 
     final serviceName = '$bundleId.xray-node-$code.plist';
-    final plistPath = '$homeDir/Library/LaunchAgents/$serviceName';
+    final servicePath = GlobalApplicationConfig.servicePath(serviceName);
 
-    final plistContent = _generatePlistFile(code, bundleId, xrayConfigPath);
-    if (plistContent.isEmpty) return;
+    final serviceContent = _generatePlistFile(code, bundleId, xrayConfigPath);
+    if (serviceContent.isEmpty) return;
 
     final vpnNodesConfigPath = await GlobalApplicationConfig.getLocalConfigPath();
     final vpnNodesConfigContent = await _generateVpnNodesJsonContent(
@@ -208,15 +207,15 @@ class VpnConfig {
       await platform.invokeMethod('writeConfigFiles', {
         'xrayConfigPath': xrayConfigPath,
         'xrayConfigContent': xrayConfigContent,
-        'plistPath': plistPath,
-        'plistContent': plistContent,
+        'servicePath': servicePath,
+        'serviceContent': serviceContent,
         'vpnNodesConfigPath': vpnNodesConfigPath,
         'vpnNodesConfigContent': vpnNodesConfigContent,
         'password': password,
       });
 
       setMessage('✅ 配置已保存: $xrayConfigPath');
-      setMessage('✅ 服务项已生成: $plistPath');
+      setMessage('✅ 服务项已生成: $servicePath');
       setMessage('✅ 菜单项已更新: $vpnNodesConfigPath');
       logMessage('配置已成功保存并生成');
     } on PlatformException catch (e) {

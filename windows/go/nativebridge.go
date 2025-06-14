@@ -74,13 +74,13 @@ func CheckNodeStatus(name *C.char) C.int {
 }
 
 //export WriteConfigFiles
-func WriteConfigFiles(xrayPath, xrayContent, plistPath, plistContent, vpnPath, vpnContent *C.char) C.int {
-	if WriteConfigFile(xrayPath, xrayContent) != 0 {
-		return 1
-	}
-	if WriteConfigFile(plistPath, plistContent) != 0 {
-		return 1
-	}
+func WriteConfigFiles(xrayPath, xrayContent, servicePath, serviceContent, vpnPath, vpnContent *C.char) C.int {
+        if WriteConfigFile(xrayPath, xrayContent) != 0 {
+                return 1
+        }
+        if WriteConfigFile(servicePath, serviceContent) != 0 {
+                return 1
+        }
 	if UpdateVpnNodesConfig(vpnPath, vpnContent) != 0 {
 		return 1
 	}

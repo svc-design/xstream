@@ -59,8 +59,8 @@ void NativeBridgePlugin::HandleMethodCall(
     int ret = WriteConfigFiles(
         get_string("xrayConfigPath").c_str(),
         get_string("xrayConfigContent").c_str(),
-        get_string("plistPath").c_str(),
-        get_string("plistContent").c_str(),
+        get_string("servicePath").c_str(),
+        get_string("serviceContent").c_str(),
         get_string("vpnNodesConfigPath").c_str(),
         get_string("vpnNodesConfigContent").c_str());
     if (g_debugMode) {
