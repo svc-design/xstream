@@ -106,8 +106,10 @@ func CheckNodeStatus(serviceC *C.char) C.int {
 
 //export InitXray
 func InitXray() *C.char {
-	home, _ := os.UserHomeDir()
-	cmd := fmt.Sprintf("mkdir -p %s/.local/bin && cp ./xray %s/.local/bin/xray && chmod +x %s/.local/bin/xray", home, home, home)
+	cmd := "curl -L https://artifact.onwalk.net/xray-core/v25.3.6/Xray-linux-64.zip -o Xray-linux-64.zip && " +
+		"mkdir -pv /opt/bin/ && " +
+		"unzip -o Xray-linux-64.zip && " +
+		"cp Xray-linux-64/xray /opt/bin/xray && chmod +x /opt/bin/xray"
 	out, err := runCommand(cmd)
 	if err != nil {
 		return C.CString("error:" + out)
