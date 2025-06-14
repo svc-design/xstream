@@ -182,7 +182,8 @@ class VpnConfig {
   }) async {
     final homeDir = Platform.environment['HOME'] ?? '/Users/unknown';
     final code = nodeName.split('-').first.toLowerCase();
-    final xrayConfigPath = '/opt/homebrew/etc/xray-vpn-node-$code.json';
+    final prefix = GlobalApplicationConfig.xrayConfigPath;
+    final xrayConfigPath = '${prefix}xray-vpn-node-$code.json';
 
     final xrayConfigContent = await _generateXrayJsonConfig(domain, port, uuid, setMessage, logMessage);
     if (xrayConfigContent.isEmpty) return;
