@@ -75,6 +75,7 @@ apply_standard_settings(${BINARY_NAME})
 target_link_libraries(${BINARY_NAME} PRIVATE flutter)
 target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::GTK)
 target_link_libraries(${BINARY_NAME} PRIVATE Threads::Threads ${CMAKE_DL_LIBS})
+target_link_libraries(${BINARY_NAME} PRIVATE go_native_bridge)
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/go")
 
 add_custom_command(
