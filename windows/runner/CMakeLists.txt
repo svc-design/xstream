@@ -34,6 +34,8 @@ target_link_libraries(${BINARY_NAME} PRIVATE
   flutter_wrapper_plugin
   dwmapi.lib
   legacy_stdio_definitions.lib
+  ws2_32.lib
+  advapi32.lib
 )
 
 # Locate Go executable
