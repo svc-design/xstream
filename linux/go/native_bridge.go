@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"unsafe"
 )
@@ -21,6 +22,12 @@ func runCommand(cmd string) (string, error) {
 }
 
 func runPrivilegedWrite(path, content, password string) error {
+	dir := filepath.Dir(path)
+	mkdirCmd := fmt.Sprintf("echo \"%s\" | sudo -S mkdir -pv \"%s\"", password, dir)
+	if _, err := runCommand(mkdirCmd); err != nil {
+		return err
+	}
+
 	escaped := strings.ReplaceAll(content, "\"", "\\\"")
 	cmd := fmt.Sprintf("echo \"%s\" | sudo -S bash -c 'echo \"%s\" > \"%s\"'", password, escaped, path)
 	_, err := runCommand(cmd)

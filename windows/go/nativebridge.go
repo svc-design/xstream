@@ -14,6 +14,9 @@ import (
 func WriteConfigFile(path *C.char, content *C.char) C.int {
 	p := C.GoString(path)
 	c := C.GoString(content)
+	if err := os.MkdirAll(filepath.Dir(p), 0755); err != nil {
+		return 1
+	}
 	if err := os.WriteFile(p, []byte(c), 0644); err != nil {
 		return 1
 	}
@@ -24,6 +27,9 @@ func WriteConfigFile(path *C.char, content *C.char) C.int {
 func UpdateVpnNodesConfig(path *C.char, content *C.char) C.int {
 	p := C.GoString(path)
 	c := C.GoString(content)
+	if err := os.MkdirAll(filepath.Dir(p), 0755); err != nil {
+		return 1
+	}
 	var nodes []map[string]interface{}
 	if data, err := os.ReadFile(p); err == nil {
 		json.Unmarshal(data, &nodes)
@@ -75,12 +81,12 @@ func CheckNodeStatus(name *C.char) C.int {
 
 //export WriteConfigFiles
 func WriteConfigFiles(xrayPath, xrayContent, servicePath, serviceContent, vpnPath, vpnContent *C.char) C.int {
-        if WriteConfigFile(xrayPath, xrayContent) != 0 {
-                return 1
-        }
-        if WriteConfigFile(servicePath, serviceContent) != 0 {
-                return 1
-        }
+	if WriteConfigFile(xrayPath, xrayContent) != 0 {
+		return 1
+	}
+	if WriteConfigFile(servicePath, serviceContent) != 0 {
+		return 1
+	}
 	if UpdateVpnNodesConfig(vpnPath, vpnContent) != 0 {
 		return 1
 	}
