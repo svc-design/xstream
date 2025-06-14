@@ -57,7 +57,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     logConsoleKey.currentState?.addLog('开始生成默认节点...');
     await VpnConfig.generateDefaultNodes(
       password: password,
-      platform: platform,
       setMessage: (msg) => logConsoleKey.currentState?.addLog(msg),
       logMessage: (msg) => logConsoleKey.currentState?.addLog(msg),
     );
