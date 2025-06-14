@@ -12,14 +12,19 @@ class VpnNode {
   String name;
   String countryCode;
   String configPath;
-  String plistName;
+  /// Cross-platform service identifier
+  ///
+  /// - macOS: LaunchAgent plist file name
+  /// - Linux: systemd service name
+  /// - Windows: SC service name
+  String serviceName;
   bool enabled;
 
   VpnNode({
     required this.name,
     required this.countryCode,
     required this.configPath,
-    required this.plistName,
+    required this.serviceName,
     this.enabled = true,
   });
 
@@ -28,7 +33,7 @@ class VpnNode {
       name: json['name'],
       countryCode: json['countryCode'],
       configPath: json['configPath'],
-      plistName: json['plistName'],
+      serviceName: json['serviceName'] ?? json['plistName'],
       enabled: json['enabled'] ?? true,
     );
   }
@@ -38,7 +43,7 @@ class VpnNode {
       'name': name,
       'countryCode': countryCode,
       'configPath': configPath,
-      'plistName': plistName,
+      'serviceName': serviceName,
       'enabled': enabled,
     };
   }
@@ -120,7 +125,7 @@ class VpnConfig {
       }
 
       final homeDir = Platform.environment['HOME'] ?? '/Users/unknown';
-      final plistPath = '$homeDir/Library/LaunchAgents/${node.plistName}';
+      final plistPath = '$homeDir/Library/LaunchAgents/${node.serviceName}';
       final plistFile = File(plistPath);
       if (await plistFile.exists()) {
         await plistFile.delete();
@@ -183,8 +188,8 @@ class VpnConfig {
     final xrayConfigContent = await _generateXrayJsonConfig(domain, port, uuid, setMessage, logMessage);
     if (xrayConfigContent.isEmpty) return;
 
-    final plistName = '$bundleId.xray-node-$code.plist';
-    final plistPath = '$homeDir/Library/LaunchAgents/$plistName';
+    final serviceName = '$bundleId.xray-node-$code.plist';
+    final plistPath = '$homeDir/Library/LaunchAgents/$serviceName';
 
     final plistContent = _generatePlistFile(code, bundleId, xrayConfigPath);
     if (plistContent.isEmpty) return;
@@ -193,7 +198,7 @@ class VpnConfig {
     final vpnNodesConfigContent = await _generateVpnNodesJsonContent(
       nodeName,
       code,
-      plistName,
+      serviceName,
       xrayConfigPath,
       setMessage,
       logMessage,
@@ -253,12 +258,12 @@ class VpnConfig {
   static Future<String> _generateVpnNodesJsonContent(
     String nodeName,
     String nodeCode,
-    String plistName,
+    String serviceName,
     String xrayConfigPath,
     Function(String) setMessage,
     Function(String) logMessage,
   ) async {
-    if (nodeName.trim().isEmpty || nodeCode.trim().isEmpty || plistName.trim().isEmpty || xrayConfigPath.trim().isEmpty) {
+    if (nodeName.trim().isEmpty || nodeCode.trim().isEmpty || serviceName.trim().isEmpty || xrayConfigPath.trim().isEmpty) {
       final err = 'VPN 节点信息不完整，无法生成 JSON 配置';
       setMessage('❌ $err');
       logMessage(err);
@@ -268,7 +273,7 @@ class VpnConfig {
     final vpnNode = {
       'name': nodeName,
       'countryCode': nodeCode,
-      'plistName': plistName,
+      'serviceName': serviceName,
       'configPath': xrayConfigPath,
       'enabled': true,
     };

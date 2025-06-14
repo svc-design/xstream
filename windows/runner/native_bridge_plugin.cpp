@@ -89,7 +89,7 @@ void NativeBridgePlugin::HandleMethodCall(
       return "";
     };
 
-    int ret = ControlNodeService(method.c_str(), get_string("plistName").c_str());
+    int ret = ControlNodeService(method.c_str(), get_string("serviceName").c_str());
     if (g_debugMode) {
       std::cout << method << " -> " << ret << std::endl;
     }

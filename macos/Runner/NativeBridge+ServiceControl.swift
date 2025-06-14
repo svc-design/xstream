@@ -4,15 +4,15 @@ import FlutterMacOS
 extension AppDelegate {
   func handleServiceControl(call: FlutterMethodCall, bundleId: String, result: @escaping FlutterResult) {
     guard let args = call.arguments as? [String: Any],
-          let plistName = args["plistName"] as? String else {
-      result(FlutterError(code: "INVALID_ARGS", message: "Missing plistName", details: nil))
+          let serviceNameArg = args["serviceName"] as? String else {
+      result(FlutterError(code: "INVALID_ARGS", message: "Missing serviceName", details: nil))
       return
     }
 
     let userName = NSUserName()
     let uid = getuid()
-    let plistPath = "/Users/\(userName)/Library/LaunchAgents/\(plistName)"
-    let serviceName = plistName.replacingOccurrences(of: ".plist", with: "")
+    let plistPath = "/Users/\(userName)/Library/LaunchAgents/\(serviceNameArg)"
+    let serviceName = serviceNameArg.replacingOccurrences(of: ".plist", with: "")
 
     // 检查 macOS 是否为现代版本（>= 10.15）
     let os = ProcessInfo.processInfo.operatingSystemVersion

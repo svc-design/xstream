@@ -7,7 +7,7 @@ VpnNode 类用于表示一个 VPN 节点的数据结构。每个 VpnNode 实例�
 name：节点名称（如 "US-VPN"）。
 countryCode：节点所在国家的代码（如 "us"）。
 configPath：VPN 配置文件路径（如 "/opt/homebrew/etc/xray-vpn-node-us.json"）。
-plistName：LaunchAgent 配置文件名称（如 "xstream.svc.plus.xray-node-us.plist"）。
+serviceName：服务名称，macOS 为 LaunchAgent plist 名称，Linux 为 systemd 服务名，Windows 为 SC 服务名。
 enabled：节点是否启用（默认 true）。
 
 方法：
