@@ -65,7 +65,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         uuid: _uuidController.text.trim(),
         password: password,
         bundleId: _bundleId!,
-        platform: platform,
         setMessage: (msg) {
           setState(() {
             _message = msg;

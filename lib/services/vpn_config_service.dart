@@ -3,8 +3,8 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import '../utils/global_config.dart';
+import '../utils/native_bridge.dart';
 import '../templates/xray_config_template.dart';
 import '../templates/xray_service_macos_template.dart';
 import '../templates/xray_service_linux_template.dart';
@@ -142,7 +142,6 @@ class VpnConfig {
 
   static Future<void> generateDefaultNodes({
     required String password,
-    required MethodChannel platform,
     required Function(String) setMessage,
     required Function(String) logMessage,
   }) async {
@@ -164,7 +163,6 @@ class VpnConfig {
         uuid: uuid,
         password: password,
         bundleId: bundleId,
-        platform: platform,
         setMessage: setMessage,
         logMessage: logMessage,
       );
@@ -178,7 +176,6 @@ class VpnConfig {
     required String uuid,
     required String password,
     required String bundleId,
-    required MethodChannel platform,
     required Function(String) setMessage,
     required Function(String) logMessage,
   }) async {
@@ -206,21 +203,22 @@ class VpnConfig {
     );
 
     try {
-      await platform.invokeMethod('writeConfigFiles', {
-        'xrayConfigPath': xrayConfigPath,
-        'xrayConfigContent': xrayConfigContent,
-        'servicePath': servicePath,
-        'serviceContent': serviceContent,
-        'vpnNodesConfigPath': vpnNodesConfigPath,
-        'vpnNodesConfigContent': vpnNodesConfigContent,
-        'password': password,
-      });
+      final result = await NativeBridge.writeConfigFiles(
+        xrayConfigPath: xrayConfigPath,
+        xrayConfigContent: xrayConfigContent,
+        servicePath: servicePath,
+        serviceContent: serviceContent,
+        vpnNodesConfigPath: vpnNodesConfigPath,
+        vpnNodesConfigContent: vpnNodesConfigContent,
+        password: password,
+      );
+      if (result != 'success') throw Exception(result);
 
       setMessage('✅ 配置已保存: $xrayConfigPath');
       setMessage('✅ 服务项已生成: $servicePath');
       setMessage('✅ 菜单项已更新: $vpnNodesConfigPath');
       logMessage('配置已成功保存并生成');
-    } on PlatformException catch (e) {
+    } catch (e) {
       setMessage('生成配置失败: $e');
       logMessage('生成配置失败: $e');
     }
