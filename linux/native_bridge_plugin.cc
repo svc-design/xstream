@@ -56,9 +56,9 @@ static void handle_method_call(NativeBridgePlugin* self, FlMethodCall* method_ca
   } else if (strcmp(method, "startNodeService") == 0 ||
              strcmp(method, "stopNodeService") == 0 ||
              strcmp(method, "checkNodeStatus") == 0) {
-    const gchar* service = fl_value_get_string(fl_value_lookup_string(args, "plistName"));
+    const gchar* service = fl_value_get_string(fl_value_lookup_string(args, "serviceName"));
     if (!service) {
-      response = FL_METHOD_RESPONSE(fl_method_error_response_new("INVALID_ARGS", "Missing plistName", nullptr));
+      response = FL_METHOD_RESPONSE(fl_method_error_response_new("INVALID_ARGS", "Missing serviceName", nullptr));
     } else {
       if (strcmp(method, "startNodeService") == 0) {
         const char* res = StartNodeService(service);
