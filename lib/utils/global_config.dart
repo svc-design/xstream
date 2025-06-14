@@ -100,8 +100,7 @@ class GlobalApplicationConfig {
         final home = Platform.environment['HOME'] ?? '/Users/unknown';
         return '$home/Library/LaunchAgents/$serviceName';
       case 'linux':
-        final home = Platform.environment['HOME'] ?? '';
-        return '$home/.config/systemd/user/$serviceName';
+        return '/etc/systemd/system/$serviceName';
       case 'windows':
         final base = Platform.environment['ProgramData'] ?? 'C:\\ProgramData';
         return '$base\\xstream\\$serviceName';
