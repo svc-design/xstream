@@ -8,29 +8,12 @@ if [ "$(go env CGO_ENABLED)" != "1" ]; then
   export CGO_ENABLED=1
 fi
 
-# Choose a single compiler toolchain for both Go and Flutter builds.
-# Prefer GNU gcc/g++ if available, otherwise fall back to clang/clang++.
-if command -v gcc >/dev/null && command -v g++ >/dev/null; then
-  CC=$(command -v gcc)
-  CXX=$(command -v g++)
-elif command -v clang >/dev/null && command -v clang++ >/dev/null; then
-  CC=$(command -v clang)
-  CXX=$(command -v clang++)
-else
-  : "${CC:=gcc}"
-  : "${CXX:=g++}"
-fi
-
-# Disable musl toolchains entirely.
-if [[ "$(basename "$CC")" == musl-gcc ]] || [[ "$(basename "$CXX")" == musl-g++ ]]; then
-  echo "musl-gcc detected; switching to glibc compiler"
-  if command -v gcc >/dev/null && command -v g++ >/dev/null; then
-    CC=$(command -v gcc)
-    CXX=$(command -v g++)
-  else
-    CC=$(command -v clang)
-    CXX=$(command -v clang++)
-  fi
+# Use clang for both Go and Flutter builds.
+CC=$(command -v clang)
+CXX=$(command -v clang++)
+if [ -z "$CC" ] || [ -z "$CXX" ]; then
+  echo "clang/clang++ are required" >&2
+  exit 1
 fi
 
 export CC

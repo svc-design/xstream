@@ -53,14 +53,19 @@ Linux 平台同样需要先生成 `libgo_native_bridge.so`，执行：
 ./build_scripts/build_linux.sh
 ```
 
-脚本会优先查找系统的 `gcc/g++`，若存在则同时用于 Go 桥接库和桌面应
-用的编译；否则退回到 `clang/clang++`。如检测到 `musl-gcc` 或
-`musl-g++` 会强制切换到上述编译器，确保生成的库依赖标准 glibc。
+脚本强制使用 `clang/clang++`，通过 `command -v` 查找二进制并设置
+`CC` 与 `CXX` 环境变量。如未找到会报错终止，确保生成的库依赖标
+准 glibc。
 如果环境变量 `FLUTTER_TARGET_PLATFORM_SYSROOT` 存在（例如在 CI
 跨平台构建时），脚本会将该路径传递给 CGO 的 `--sysroot`，保证与
 Flutter 编译阶段使用的 glibc 版本一致。
 
-该脚本在 CI 中也会被调用，随后运行 `flutter build linux --release` 构建桌面应用。
+该脚本在 CI 中也会被调用，随后运行以下命令构建桌面应用：
+
+```bash
+CC=$(command -v clang) CXX=$(command -v clang++) flutter build linux --release -v
+```
+
 依赖 ImageMagick，若未安装请先安装 `convert` 命令。
 
 ## 🪟 Windows 构建须知
