@@ -65,6 +65,8 @@ Flutter 编译阶段使用的 glibc 版本一致。
 ```bash
 CC=$(command -v clang) CXX=$(command -v clang++) flutter build linux --release -v
 ```
+无论系统中是否存在 GNU `gcc`，都必须如此显式指定 `clang` 和 `clang++`，
+否则可能出现 `pthread_*` 相关链接错误。
 
 依赖 ImageMagick，若未安装请先安装 `convert` 命令。
 
