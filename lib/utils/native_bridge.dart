@@ -50,7 +50,7 @@ class NativeBridge {
       final pwd = password.toNativeUtf8();
       final resPtr = _ffi.writeConfigFiles(
           p1.cast(), p2.cast(), p3.cast(), p4.cast(), p5.cast(), p6.cast(), pwd.cast());
-      final result = resPtr.cast<ffi.Utf8>().toDartString();
+      final result = resPtr.cast<Utf8>().toDartString();
       _ffi.freeCString(resPtr);
       malloc.free(p1);
       malloc.free(p2);
@@ -94,7 +94,7 @@ class NativeBridge {
     if (_useFfi) {
       final namePtr = node.serviceName.toNativeUtf8();
       final resPtr = _ffi.startNodeService(namePtr.cast());
-      final result = resPtr.cast<ffi.Utf8>().toDartString();
+      final result = resPtr.cast<Utf8>().toDartString();
       _ffi.freeCString(resPtr);
       malloc.free(namePtr);
       return result;
@@ -123,7 +123,7 @@ class NativeBridge {
     if (_useFfi) {
       final namePtr = node.serviceName.toNativeUtf8();
       final resPtr = _ffi.stopNodeService(namePtr.cast());
-      final result = resPtr.cast<ffi.Utf8>().toDartString();
+      final result = resPtr.cast<Utf8>().toDartString();
       _ffi.freeCString(resPtr);
       malloc.free(namePtr);
       return result;
@@ -185,7 +185,7 @@ class NativeBridge {
       final actionPtr = 'initXray'.toNativeUtf8();
       final empty = ''.toNativeUtf8();
       final resPtr = _ffi.performAction(actionPtr.cast(), empty.cast());
-      final result = resPtr.cast<ffi.Utf8>().toDartString();
+      final result = resPtr.cast<Utf8>().toDartString();
       _ffi.freeCString(resPtr);
       malloc.free(actionPtr);
       malloc.free(empty);
@@ -212,7 +212,7 @@ class NativeBridge {
       final actionPtr = 'resetXrayAndConfig'.toNativeUtf8();
       final pwdPtr = password.toNativeUtf8();
       final resPtr = _ffi.performAction(actionPtr.cast(), pwdPtr.cast());
-      final result = resPtr.cast<ffi.Utf8>().toDartString();
+      final result = resPtr.cast<Utf8>().toDartString();
       _ffi.freeCString(resPtr);
       malloc.free(actionPtr);
       malloc.free(pwdPtr);
