@@ -1,3 +1,5 @@
+//go:build linux
+
 package main
 
 /*
@@ -12,7 +14,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"unsafe"
 )
 
 func runCommand(cmd string) (string, error) {
@@ -27,7 +28,6 @@ func runPrivilegedWrite(path, content, password string) error {
 	if _, err := runCommand(mkdirCmd); err != nil {
 		return err
 	}
-
 	escaped := strings.ReplaceAll(content, "\"", "\\\"")
 	cmd := fmt.Sprintf("echo \"%s\" | sudo -S bash -c 'echo \"%s\" > \"%s\"'", password, escaped, path)
 	_, err := runCommand(cmd)
@@ -43,14 +43,12 @@ func WriteConfigFiles(xrayPathC, xrayContentC, servicePathC, serviceContentC, vp
 	vpnPath := C.GoString(vpnPathC)
 	vpnContent := C.GoString(vpnContentC)
 	password := C.GoString(passwordC)
-
 	if err := runPrivilegedWrite(xrayPath, xrayContent, password); err != nil {
 		return C.CString("error:" + err.Error())
 	}
 	if err := runPrivilegedWrite(servicePath, serviceContent, password); err != nil {
 		return C.CString("error:" + err.Error())
 	}
-
 	var existing []map[string]interface{}
 	if data, err := ioutil.ReadFile(vpnPath); err == nil {
 		json.Unmarshal(data, &existing)
@@ -128,10 +126,3 @@ func ResetXrayAndConfig(passwordC *C.char) *C.char {
 	}
 	return C.CString("success")
 }
-
-//export FreeCString
-func FreeCString(str *C.char) {
-	C.free(unsafe.Pointer(str))
-}
-
-func main() {}

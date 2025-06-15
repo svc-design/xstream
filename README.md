@@ -40,18 +40,27 @@
 - 🛠️ [开发者文档（macOS 开发环境搭建）](docs/dev-guide.md)
 - 🐧 [Linux systemd 运行指南](docs/linux-xray-systemd.md)
 - 🪟 [Windows 服务运行指南](docs/windows-xray-sc.md)
-- 🧩 [FFI 跨平台桥接架构](docs/ffi-bridge-architecture.md)
+按照 [Windows 开发环境搭建](docs/windows-build.md) 文档安装 **MinGW-w64** 后，执行脚本即可生成 `libgo_native_bridge.dll`：
 
-## 🖼 更新应用图标
+./build_scripts/build_windows.sh
+完成 DLL 构建后再运行 `flutter build windows` 即可。
 
-使用 `scripts/generate_icons.sh` 可一键生成并替换 Android、iOS、macOS、Linux 与 Windows 平台的应用图标。
+## 🐧 Linux 构建须知
+
+Linux 平台同样需要先生成 `libgo_native_bridge.so`，执行：
+
+```bash
+./build_scripts/build_linux.sh
+```
+
+该脚本在 CI 中也会被调用，随后运行 `flutter build linux --release` 构建桌面应用。
 依赖 ImageMagick，若未安装请先安装 `convert` 命令。
 
 ## 🪟 Windows 构建须知
 
 Windows 平台需要依赖 Go 编译工具生成原生桥接库。请确保在构建前已安装 Go (推荐 1.20 及以上版本) 并将 `go` 命令加入 `PATH` 环境变量，否则 Visual Studio 构建阶段会报错 `MSB8066`。
 
-如遇 `go build` 相关错误，可按照 [Windows 开发环境搭建](docs/windows-build.md) 文档安装 **MinGW-w64**，并在 `windows/go` 目录执行
+如遇 `go build` 相关错误，可按照 [Windows 开发环境搭建](docs/windows-build.md) 文档安装 **MinGW-w64**，并在 `go_core` 目录执行
 
 ```powershell
 go env CGO_ENABLED   # 应输出 1

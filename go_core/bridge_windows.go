@@ -1,3 +1,5 @@
+//go:build windows
+
 package main
 
 import "C"
@@ -12,25 +14,41 @@ import (
 	"strings"
 )
 
-//export WriteConfigFile
-func WriteConfigFile(path *C.char, content *C.char) C.int {
-	p := C.GoString(path)
-	c := C.GoString(content)
-	if err := os.MkdirAll(filepath.Dir(p), 0755); err != nil {
-		return 1
+func cStringOrError(err error) *C.char {
+	if err != nil {
+		return C.CString("error:" + err.Error())
 	}
-	if err := os.WriteFile(p, []byte(c), 0644); err != nil {
-		return 1
-	}
-	return 0
+	return C.CString("success")
 }
 
-//export UpdateVpnNodesConfig
-func UpdateVpnNodesConfig(path *C.char, content *C.char) C.int {
-	p := C.GoString(path)
-	c := C.GoString(content)
+//export WriteConfigFiles
+func WriteConfigFiles(xrayPath, xrayContent, servicePath, serviceContent, vpnPath, vpnContent, password *C.char) *C.char {
+	if res := writeConfigFile(xrayPath, xrayContent); res != nil {
+		return res
+	}
+	if res := writeConfigFile(servicePath, serviceContent); res != nil {
+		return res
+	}
+	return updateVpnNodesConfig(vpnPath, vpnContent)
+}
+
+func writeConfigFile(pathC, contentC *C.char) *C.char {
+	p := C.GoString(pathC)
+	c := C.GoString(contentC)
 	if err := os.MkdirAll(filepath.Dir(p), 0755); err != nil {
-		return 1
+		return C.CString("error:" + err.Error())
+	}
+	if err := os.WriteFile(p, []byte(c), 0644); err != nil {
+		return C.CString("error:" + err.Error())
+	}
+	return nil
+}
+
+func updateVpnNodesConfig(pathC, contentC *C.char) *C.char {
+	p := C.GoString(pathC)
+	c := C.GoString(contentC)
+	if err := os.MkdirAll(filepath.Dir(p), 0755); err != nil {
+		return C.CString("error:" + err.Error())
 	}
 	var nodes []map[string]interface{}
 	if data, err := os.ReadFile(p); err == nil {
@@ -38,35 +56,31 @@ func UpdateVpnNodesConfig(path *C.char, content *C.char) C.int {
 	}
 	var newNodes []map[string]interface{}
 	if err := json.Unmarshal([]byte(c), &newNodes); err != nil {
-		return 1
+		return C.CString("error:" + err.Error())
 	}
 	nodes = append(nodes, newNodes...)
 	out, err := json.MarshalIndent(nodes, "", "  ")
 	if err != nil {
-		return 1
+		return C.CString("error:" + err.Error())
 	}
 	if err := os.WriteFile(p, out, 0644); err != nil {
-		return 1
+		return C.CString("error:" + err.Error())
 	}
-	return 0
+	return C.CString("success")
 }
 
 //export StartNodeService
-func StartNodeService(name *C.char) C.int {
+func StartNodeService(name *C.char) *C.char {
 	cmd := exec.Command("sc", "start", C.GoString(name))
-	if err := cmd.Run(); err != nil {
-		return 1
-	}
-	return 0
+	err := cmd.Run()
+	return cStringOrError(err)
 }
 
 //export StopNodeService
-func StopNodeService(name *C.char) C.int {
+func StopNodeService(name *C.char) *C.char {
 	cmd := exec.Command("sc", "stop", C.GoString(name))
-	if err := cmd.Run(); err != nil {
-		return 1
-	}
-	return 0
+	err := cmd.Run()
+	return cStringOrError(err)
 }
 
 //export CheckNodeStatus
@@ -81,78 +95,46 @@ func CheckNodeStatus(name *C.char) C.int {
 	return 0
 }
 
-//export WriteConfigFiles
-func WriteConfigFiles(xrayPath, xrayContent, servicePath, serviceContent, vpnPath, vpnContent *C.char) C.int {
-	if WriteConfigFile(xrayPath, xrayContent) != 0 {
-		return 1
-	}
-	if WriteConfigFile(servicePath, serviceContent) != 0 {
-		return 1
-	}
-	if UpdateVpnNodesConfig(vpnPath, vpnContent) != 0 {
-		return 1
-	}
-	return 0
-}
-
-//export ControlNodeService
-func ControlNodeService(action, name *C.char) C.int {
-	switch C.GoString(action) {
-	case "startNodeService":
-		return StartNodeService(name)
-	case "stopNodeService":
-		return StopNodeService(name)
-	case "checkNodeStatus":
-		return CheckNodeStatus(name)
-	default:
-		return -1
-	}
-}
-
 //export PerformAction
-func PerformAction(action, password *C.char) C.int {
+func PerformAction(action, password *C.char) *C.char {
 	switch C.GoString(action) {
 	case "initXray":
 		return InitXray()
 	case "resetXrayAndConfig":
 		return ResetXrayAndConfig(password)
 	default:
-		return 1
+		return C.CString("error:unknown action")
 	}
 }
 
 //export InitXray
-func InitXray() C.int {
+func InitXray() *C.char {
 	destDir := filepath.Join(os.Getenv("ProgramData"), "xstream")
 	dest := filepath.Join(destDir, "xray.exe")
 	if err := os.MkdirAll(destDir, 0755); err != nil {
-		return 1
+		return C.CString("error:" + err.Error())
 	}
-
 	resp, err := http.Get("https://artifact.onwalk.net/xray-core/v25.3.6/Xray-windows-64.zip")
 	if err != nil {
-		return 1
+		return C.CString("error:" + err.Error())
 	}
 	defer resp.Body.Close()
-
 	tmp, err := os.CreateTemp("", "xray-*.zip")
 	if err != nil {
-		return 1
+		return C.CString("error:" + err.Error())
 	}
 	if _, err := io.Copy(tmp, resp.Body); err != nil {
 		tmp.Close()
 		os.Remove(tmp.Name())
-		return 1
+		return C.CString("error:" + err.Error())
 	}
 	tmp.Close()
 	defer os.Remove(tmp.Name())
-
 	zr, err := zip.OpenReader(tmp.Name())
 	if err != nil {
-		return 1
+		return C.CString("error:" + err.Error())
 	}
 	defer zr.Close()
-
 	var xrayFile *zip.File
 	for _, f := range zr.File {
 		name := strings.ToLower(filepath.Base(f.Name))
@@ -162,33 +144,30 @@ func InitXray() C.int {
 		}
 	}
 	if xrayFile == nil {
-		return 1
+		return C.CString("error:xray.exe not found")
 	}
 	rc, err := xrayFile.Open()
 	if err != nil {
-		return 1
+		return C.CString("error:" + err.Error())
 	}
 	defer rc.Close()
-
 	out, err := os.Create(dest)
 	if err != nil {
-		return 1
+		return C.CString("error:" + err.Error())
 	}
 	defer out.Close()
 	if _, err := io.Copy(out, rc); err != nil {
-		return 1
+		return C.CString("error:" + err.Error())
 	}
-	return 0
+	return C.CString("success")
 }
 
 //export ResetXrayAndConfig
-func ResetXrayAndConfig(password *C.char) C.int {
+func ResetXrayAndConfig(password *C.char) *C.char {
 	dir := filepath.Join(os.Getenv("ProgramData"), "xstream")
 	os.RemoveAll(dir)
 	exec.Command("sc", "delete", "xray-node-jp").Run()
 	exec.Command("sc", "delete", "xray-node-ca").Run()
 	exec.Command("sc", "delete", "xray-node-us").Run()
-	return 0
+	return C.CString("success")
 }
-
-func main() {}
