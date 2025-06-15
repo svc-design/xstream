@@ -121,7 +121,12 @@ jobs:
         shell: msys2 {0}
         run: |
           gcc --version
-          cd go_core
+        run: |
+          if [ -d test ]; then
+            flutter test --reporter expanded
+          else
+            echo "No tests found, skipping"
+          fi
           if [ "$(go env CGO_ENABLED)" != "1" ]; then
             export CGO_ENABLED=1
           fi
