@@ -3,7 +3,7 @@ import 'dart:ffi' as ffi;
 import 'package:flutter/services.dart';
 import 'package:ffi/ffi.dart';
 import '../../services/vpn_config_service.dart'; // 引入新的 VpnConfig 类
-import '../../bindings/bridge_bindings.dart';
+import '../bindings/bridge_bindings.dart';
 
 class NativeBridge {
   static const MethodChannel _channel = MethodChannel('com.xstream/native');
