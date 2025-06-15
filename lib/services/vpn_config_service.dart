@@ -3,7 +3,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import '../utils/global_config.dart';
 import '../utils/native_bridge.dart';
 import '../templates/xray_config_template.dart';
