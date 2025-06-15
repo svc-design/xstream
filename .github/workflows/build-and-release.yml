@@ -159,11 +159,10 @@ jobs:
         shell: bash
         run: flutter build linux --release
 
-      - name: Zip Linux bundle
+      - name: Package and verify Linux bundle
         if: ${{ matrix.platform == 'linux' }}
         run: |
-          cd build/linux/x64/release/bundle
-          zip -r xstream-linux.zip .
+          bash build_scripts/package_linux_bundle.sh
 
       # Windows build
       - name: Build Windows App
@@ -172,12 +171,11 @@ jobs:
         run: |
           flutter build windows --release
 
-      - name: Zip Windows bundle
+      - name: Package and verify Windows bundle
         if: ${{ matrix.platform == 'windows' }}
         shell: powershell
         run: |
-          $releaseDir = "build/windows/x64/runner/Release"
-          Compress-Archive -Path "$releaseDir/*" -DestinationPath "$releaseDir/xstream-windows.zip"
+          ./build_scripts/package_windows_bundle.ps1
 
       # iOS 压缩
       - name: Zip iOS Runner.app
