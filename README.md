@@ -53,7 +53,7 @@ Linux 平台同样需要先生成 `libbridge.so`，执行：
 ./build_scripts/build_linux.sh
 ```
 
-然后运行 `flutter build linux --release` 构建桌面应用。
+该脚本在 CI 中也会被调用，随后运行 `flutter build linux --release` 构建桌面应用。
 依赖 ImageMagick，若未安装请先安装 `convert` 命令。
 
 ## 🪟 Windows 构建须知

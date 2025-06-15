@@ -127,6 +127,10 @@ jobs:
 
       - name: Run Flutter tests (Linux only)
         if: ${{ matrix.platform == 'linux' && matrix.arch == 'x64' }}
+      - name: Build Go shared library (Linux)
+        if: ${{ matrix.platform == 'linux' }}
+        run: ./build_scripts/build_linux.sh
+
         run: flutter test --reporter expanded
         continue-on-error: true
 
