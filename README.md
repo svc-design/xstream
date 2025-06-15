@@ -55,7 +55,10 @@ Linux 平台同样需要先生成 `libgo_native_bridge.so`，执行：
 
 脚本会默认使用 `gcc` 编译；若发现整个工程采用 `clang++`，则改用
 `clang` 保持一致。如检测到 `musl-gcc`，会自动切换回上述编译器以确
-保生成的库依赖标准 glibc，避免链接问题。
+保生成的库依赖标准 glibc，避免链接问题。如果环境变量
+`FLUTTER_TARGET_PLATFORM_SYSROOT` 存在（例如在 CI 跨平台构建时），
+脚本会将该路径传递给 CGO 的 `--sysroot`，保证和 Flutter
+编译阶段使用的 glibc 版本一致。
 
 该脚本在 CI 中也会被调用，随后运行 `flutter build linux --release` 构建桌面应用。
 依赖 ImageMagick，若未安装请先安装 `convert` 命令。

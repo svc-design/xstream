@@ -24,6 +24,14 @@ if [ "$(basename "$CC")" = "musl-gcc" ]; then
     CC=gcc
   fi
 fi
+
+# Respect Flutter's sysroot when cross-compiling so the Go library links against
+# the same glibc as the rest of the application.
+if [ -n "$FLUTTER_TARGET_PLATFORM_SYSROOT" ]; then
+  export CGO_CFLAGS="--sysroot=$FLUTTER_TARGET_PLATFORM_SYSROOT"
+  export CGO_LDFLAGS="--sysroot=$FLUTTER_TARGET_PLATFORM_SYSROOT"
+fi
+
 CC=$CC GOOS=linux GOARCH=amd64 go build -buildmode=c-shared -o ../bindings/libgo_native_bridge.so
 
 # Copy the library next to the executable so it is bundled with the app
