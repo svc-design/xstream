@@ -53,17 +53,20 @@ Linux 平台同样需要先生成 `libgo_native_bridge.so`，执行：
 ./build_scripts/build_linux.sh
 ```
 
-脚本强制使用 `clang/clang++`，通过 `command -v` 查找二进制并设置
-`CC` 与 `CXX` 环境变量。如未找到会报错终止，确保生成的库依赖标
-准 glibc。
+脚本会优先使用与 `flutter` 打包在一起的 `clang/clang++`，以确保编译
+出的库和桌面应用依赖同一套 glibc。如未找到则退回系统的 `clang`，
+二者都缺失时脚本会报错终止。
 
 该脚本在 CI 中也会被调用，随后运行以下命令构建桌面应用：
 
 ```bash
-CC=$(command -v clang) CXX=$(command -v clang++) flutter build linux --release -v
+CC=/snap/flutter/current/usr/bin/clang \
+CXX=/snap/flutter/current/usr/bin/clang++ \
+flutter build linux --release -v
 ```
-无论系统中是否存在 GNU `gcc`，都必须如此显式指定 `clang` 和 `clang++`，
-否则可能出现 `pthread_*` 相关链接错误。
+如果 `flutter` 并非以 Snap 形式安装，可将上述路径替换为实际安装目
+录下的 `clang`/`clang++`，务必保持与 `build_linux.sh` 使用的编译器一致
+，否则可能出现 `pthread_*` 相关链接错误。
 
 依赖 ImageMagick，若未安装请先安装 `convert` 命令。
 
