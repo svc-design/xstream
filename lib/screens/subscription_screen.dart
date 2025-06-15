@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../../utils/global_config.dart';
 import '../../widgets/log_console.dart';
 import '../../services/vpn_config_service.dart';
@@ -18,7 +17,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   final _uuidController = TextEditingController();
   String _message = '';
   String? _bundleId; // Start with null and load it asynchronously
-  static const platform = MethodChannel('com.xstream/native');
 
   @override
   void initState() {
@@ -65,7 +63,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         uuid: _uuidController.text.trim(),
         password: password,
         bundleId: _bundleId!,
-        platform: platform,
         setMessage: (msg) {
           setState(() {
             _message = msg;

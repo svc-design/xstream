@@ -40,6 +40,7 @@
 - 🛠️ [开发者文档（macOS 开发环境搭建）](docs/dev-guide.md)
 - 🐧 [Linux systemd 运行指南](docs/linux-xray-systemd.md)
 - 🪟 [Windows 服务运行指南](docs/windows-xray-sc.md)
+- 🧩 [FFI 跨平台桥接架构](docs/ffi-bridge-architecture.md)
 
 ## 🖼 更新应用图标
 
@@ -58,3 +59,12 @@ go build -buildmode=c-archive -o libgo_logic.a
 ```
 
 成功后会生成 `libgo_logic.a` 与 `libgo_logic.h`，再运行 `flutter build windows` 即可。
+
+## 🖥️ 桥接实现
+
+XStream 在桌面端采用两套原生交互方式：
+
+- **macOS** 继续使用 Flutter 插件，通过 `MethodChannel` 与 Swift 实现的逻辑通信。
+- **Windows 和 Linux** 使用 `dart:ffi` 加载 `nativebridge` 动态库直接调用 Go 导出的 C 接口，并在库不可用时回退到 `MethodChannel`。
+
+这种设计确保 macOS 版本与旧实现兼容，同时减少其他平台对插件的依赖。
