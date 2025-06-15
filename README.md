@@ -56,9 +56,6 @@ Linux 平台同样需要先生成 `libgo_native_bridge.so`，执行：
 脚本强制使用 `clang/clang++`，通过 `command -v` 查找二进制并设置
 `CC` 与 `CXX` 环境变量。如未找到会报错终止，确保生成的库依赖标
 准 glibc。
-如果环境变量 `FLUTTER_TARGET_PLATFORM_SYSROOT` 存在（例如在 CI
-跨平台构建时），脚本会将该路径传递给 CGO 的 `--sysroot`，保证与
-Flutter 编译阶段使用的 glibc 版本一致。
 
 该脚本在 CI 中也会被调用，随后运行以下命令构建桌面应用：
 
