@@ -101,12 +101,12 @@ macos-arm64:
 windows-x64:
 	@if [ "$(UNAME_S)" = "Windows_NT" ] || [ "$(OS)" = "Windows_NT" ]; then \
 	 echo "Building Go static library..."; \
-	 cd windows/go; \
-	 if [ "$(shell go env CGO_ENABLED 2>/dev/null)" != "1" ]; then \
-	 export CGO_ENABLED=1; \
-	 fi; \
-	 go build -buildmode=c-archive -o ../runner/libgo_logic.a || exit 1; \
-	 cd ../..; \
+        cd go_core; \
+        if [ "$(shell go env CGO_ENABLED 2>/dev/null)" != "1" ]; then \
+        export CGO_ENABLED=1; \
+        fi; \
+        go build -buildmode=c-archive -o ../windows/runner/libgo_logic.a || exit 1; \
+        cd ..; \
 	 echo "Building for Windows (native)..."; \
 	 flutter pub get; \
 	 flutter pub outdated; \

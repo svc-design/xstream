@@ -121,11 +121,11 @@ jobs:
         shell: msys2 {0}
         run: |
           gcc --version
-          cd windows/go
+          cd go_core
           if [ "$(go env CGO_ENABLED)" != "1" ]; then
             export CGO_ENABLED=1
           fi
-          go build -buildmode=c-archive -o ../runner/libgo_logic.a
+          go build -buildmode=c-archive -o ../windows/runner/libgo_logic.a
 
       - name: Show Flutter version
         shell: bash

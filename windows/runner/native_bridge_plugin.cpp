@@ -56,22 +56,24 @@ void NativeBridgePlugin::HandleMethodCall(
       return "";
     };
 
-    int ret = WriteConfigFiles(
+    const char* res = WriteConfigFiles(
         get_string("xrayConfigPath").c_str(),
         get_string("xrayConfigContent").c_str(),
         get_string("servicePath").c_str(),
         get_string("serviceContent").c_str(),
         get_string("vpnNodesConfigPath").c_str(),
-        get_string("vpnNodesConfigContent").c_str());
+        get_string("vpnNodesConfigContent").c_str(),
+        get_string("password").c_str());
     if (g_debugMode) {
-      std::cout << "writeConfigFiles -> " << ret << std::endl;
+      std::cout << "writeConfigFiles -> " << res << std::endl;
     }
 
-    if (ret == 0) {
-      result->Success(flutter::EncodableValue("Configuration files written successfully"));
+    if (strncmp(res, "error:", 6) == 0) {
+      result->Error("WRITE_ERROR", res + 6);
     } else {
-      result->Error("WRITE_ERROR", "Failed to write configuration files");
+      result->Success(flutter::EncodableValue(res));
     }
+    FreeCString(const_cast<char*>(res));
     return;
   }
 
@@ -89,14 +91,36 @@ void NativeBridgePlugin::HandleMethodCall(
       return "";
     };
 
-    int ret = ControlNodeService(method.c_str(), get_string("serviceName").c_str());
-    if (g_debugMode) {
-      std::cout << method << " -> " << ret << std::endl;
-    }
-    if (method == "checkNodeStatus") {
-      result->Success(flutter::EncodableValue(ret == 1));
+    const std::string service = get_string("serviceName");
+    if (method == "startNodeService") {
+      const char* res = StartNodeService(service.c_str());
+      if (g_debugMode) {
+        std::cout << method << " -> " << res << std::endl;
+      }
+      if (strncmp(res, "error:", 6) == 0) {
+        result->Error("EXEC_FAILED", res + 6);
+      } else {
+        result->Success(flutter::EncodableValue(res));
+      }
+      FreeCString(const_cast<char*>(res));
+    } else if (method == "stopNodeService") {
+      const char* res = StopNodeService(service.c_str());
+      if (g_debugMode) {
+        std::cout << method << " -> " << res << std::endl;
+      }
+      if (strncmp(res, "error:", 6) == 0) {
+        result->Error("EXEC_FAILED", res + 6);
+      } else {
+        result->Success(flutter::EncodableValue(res));
+      }
+      FreeCString(const_cast<char*>(res));
     } else {
-      result->Success(flutter::EncodableValue(ret == 0 ? "success" : "failed"));
+      int state = CheckNodeStatus(service.c_str());
+      if (state >= 0) {
+        result->Success(flutter::EncodableValue(state == 1));
+      } else {
+        result->Error("EXEC_FAILED", "check failed");
+      }
     }
     return;
   }
@@ -115,15 +139,29 @@ void NativeBridgePlugin::HandleMethodCall(
       return "";
     };
 
-    int ret = PerformAction(get_string("action").c_str(), get_string("password").c_str());
-    if (g_debugMode) {
-      std::cout << "performAction -> " << ret << std::endl;
-    }
-
-    if (ret == 0) {
-      result->Success(flutter::EncodableValue("success"));
-    } else if (ret == 1) {
-      result->Error("EXEC_FAILED", "Action failed");
+    const std::string action = get_string("action");
+    if (action == "initXray") {
+      const char* res = InitXray();
+      if (g_debugMode) {
+        std::cout << "initXray -> " << res << std::endl;
+      }
+      if (strncmp(res, "error:", 6) == 0) {
+        result->Error("EXEC_FAILED", res + 6);
+      } else {
+        result->Success(flutter::EncodableValue(res));
+      }
+      FreeCString(const_cast<char*>(res));
+    } else if (action == "resetXrayAndConfig") {
+      const char* res = ResetXrayAndConfig(get_string("password").c_str());
+      if (g_debugMode) {
+        std::cout << "resetXrayAndConfig -> " << res << std::endl;
+      }
+      if (strncmp(res, "error:", 6) == 0) {
+        result->Error("EXEC_FAILED", res + 6);
+      } else {
+        result->Success(flutter::EncodableValue(res));
+      }
+      FreeCString(const_cast<char*>(res));
     } else {
       result->Error("UNKNOWN_ACTION", "Unsupported action");
     }

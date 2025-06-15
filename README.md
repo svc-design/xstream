@@ -50,7 +50,7 @@
 
 Windows 平台需要依赖 Go 编译工具生成原生桥接库。请确保在构建前已安装 Go (推荐 1.20 及以上版本) 并将 `go` 命令加入 `PATH` 环境变量，否则 Visual Studio 构建阶段会报错 `MSB8066`。
 
-如遇 `go build` 相关错误，可按照 [Windows 开发环境搭建](docs/windows-build.md) 文档安装 **MinGW-w64**，并在 `windows/go` 目录执行
+如遇 `go build` 相关错误，可按照 [Windows 开发环境搭建](docs/windows-build.md) 文档安装 **MinGW-w64**，并在 `go_core` 目录执行
 
 ```powershell
 go env CGO_ENABLED   # 应输出 1
