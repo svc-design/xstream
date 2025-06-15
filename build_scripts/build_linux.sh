@@ -10,6 +10,15 @@ fi
 
 # Use the host compiler (defaults to gcc) to build the shared library
 : "${CC:=gcc}"
+if [ "$(basename "$CC")" = "musl-gcc" ]; then
+  echo "musl-gcc detected; switching to gcc for glibc build"
+  CC=gcc
+fi
+# Use Flutter's bundled compiler when available so glibc matches the main build
+if [ -x /snap/flutter/current/usr/bin/clang ]; then
+  echo "Using Flutter's clang compiler from /snap for Go build"
+  CC=/snap/flutter/current/usr/bin/clang
+fi
 CC=$CC GOOS=linux GOARCH=amd64 go build -buildmode=c-shared -o ../bindings/libgo_native_bridge.so
 
 # Copy the library next to the executable so it is bundled with the app
