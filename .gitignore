@@ -49,7 +49,3 @@ linux/app_icon.png
 windows/runner/resources/app_icon.ico
 windows/runner/resources/iconset/
 
-linux/libbridge.a
-linux/bridge.h
-windows/runner/libgo_logic.a
-windows/runner/libgo_logic.h
