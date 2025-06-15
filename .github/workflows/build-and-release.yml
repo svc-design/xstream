@@ -118,7 +118,7 @@ jobs:
 
       - name: Build Go shared library (Windows)
         if: ${{ matrix.platform == 'windows' }}
-        shell: msys2 {0}
+        shell: "msys2 {0}"
         run: ./build_scripts/build_windows.sh
         continue-on-error: true
           fi
