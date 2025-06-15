@@ -13,6 +13,9 @@
 
 ```bash
 ./build_scripts/build_windows.sh
+该脚本会在需要时开启 `CGO_ENABLED` 并使用 `x86_64-w64-mingw32-gcc` 进行交叉编译，
+最终生成可供 FFI 调用的静态 DLL。
+
 生成的 DLL 会被 Dart 通过 `DynamicLibrary.open` 加载。
 ## 3. 构建 Flutter 应用
 
