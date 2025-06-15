@@ -162,6 +162,7 @@ jobs:
       - name: Zip Linux bundle
         if: ${{ matrix.platform == 'linux' }}
         run: |
+          cp `find . | grep libgo_native_bridge.so` build/linux/x64/release/bundle/
           cd build/linux/x64/release/bundle
           zip -r xstream-linux.zip .
 
@@ -176,6 +177,10 @@ jobs:
         if: ${{ matrix.platform == 'windows' }}
         shell: powershell
         run: |
+          $source = Get-ChildItem -Recurse -Filter "libgo_native_bridge.dll" | Select-Object -First 1
+          if ($source) {
+            Copy-Item $source.FullName -Destination "build/windows/x64/runner/Release/"
+          }
           $releaseDir = "build/windows/x64/runner/Release"
           Compress-Archive -Path "$releaseDir/*" -DestinationPath "$releaseDir/xstream-windows.zip"
 
