@@ -22,9 +22,9 @@ class NativeBridge {
 
   static ffi.DynamicLibrary _openLib() {
     if (Platform.isWindows) {
-      return ffi.DynamicLibrary.open('libbridge.dll');
+      return ffi.DynamicLibrary.open('libgo_native_bridge.dll');
     } else if (Platform.isLinux) {
-      return ffi.DynamicLibrary.open('libbridge.so');
+      return ffi.DynamicLibrary.open('libgo_native_bridge.so');
     }
     throw UnsupportedError('Unsupported platform');
   }

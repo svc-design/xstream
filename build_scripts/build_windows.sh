@@ -11,4 +11,4 @@ fi
 export CC=x86_64-w64-mingw32-gcc
 GOOS=windows GOARCH=amd64 go build -buildmode=c-shared \
   -ldflags="-linkmode external -extldflags '-static'" \
-  -o ../bindings/libbridge.dll
+  -o ../bindings/libgo_native_bridge.dll

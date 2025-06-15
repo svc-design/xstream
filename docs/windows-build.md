@@ -9,7 +9,7 @@
 
 ## 2. 编译桥接库
 
-执行脚本 `build_scripts/build_windows.sh` 在 `bindings/` 目录下生成 `libbridge.dll`：
+执行脚本 `build_scripts/build_windows.sh` 在 `bindings/` 目录下生成 `libgo_native_bridge.dll`：
 
 ```bash
 ./build_scripts/build_windows.sh

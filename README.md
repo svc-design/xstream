@@ -40,14 +40,14 @@
 - 🛠️ [开发者文档（macOS 开发环境搭建）](docs/dev-guide.md)
 - 🐧 [Linux systemd 运行指南](docs/linux-xray-systemd.md)
 - 🪟 [Windows 服务运行指南](docs/windows-xray-sc.md)
-按照 [Windows 开发环境搭建](docs/windows-build.md) 文档安装 **MinGW-w64** 后，执行脚本即可生成 `libbridge.dll`：
+按照 [Windows 开发环境搭建](docs/windows-build.md) 文档安装 **MinGW-w64** 后，执行脚本即可生成 `libgo_native_bridge.dll`：
 
 ./build_scripts/build_windows.sh
 完成 DLL 构建后再运行 `flutter build windows` 即可。
 
 ## 🐧 Linux 构建须知
 
-Linux 平台同样需要先生成 `libbridge.so`，执行：
+Linux 平台同样需要先生成 `libgo_native_bridge.so`，执行：
 
 ```bash
 ./build_scripts/build_linux.sh

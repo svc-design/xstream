@@ -165,7 +165,6 @@ jobs:
           esac
 
       - name: Build Flutter App (Windows)
-
         if: ${{ matrix.platform == 'windows' }}
         shell: powershell
         run: |
