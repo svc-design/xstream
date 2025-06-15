@@ -162,9 +162,8 @@ jobs:
       - name: Zip Linux bundle
         if: ${{ matrix.platform == 'linux' }}
         run: |
-          #cp `find . | grep libgo_native_bridge.so` build/linux/x64/release/bundle/
+          cp `find . | grep libgo_native_bridge.so` build/linux/x64/release/bundle/lib/
           cd build/linux/x64/release/bundle
-          ls
           zip -r xstream-linux.zip .
 
       # Windows build
