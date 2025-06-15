@@ -48,13 +48,12 @@
 
 ## 🪟 Windows 构建须知
 
-Windows 平台需要依赖 Go 编译工具生成原生桥接库。请确保在构建前已安装 Go (推荐 1.20 及以上版本) 并将 `go` 命令加入 `PATH` 环境变量，否则 Visual Studio 构建阶段会报错 `MSB8066`。
+Windows 平台需要依赖 Go 编译工具生成 FFI 库。请确保在构建前已安装 Go (推荐 1.20 及以上版本) 并将 `go` 命令加入 `PATH` 环境变量。
 
-如遇 `go build` 相关错误，可按照 [Windows 开发环境搭建](docs/windows-build.md) 文档安装 **MinGW-w64**，并在 `windows/go` 目录执行
+可执行仓库自带脚本生成 `libbridge.dll`：
 
 ```powershell
-go env CGO_ENABLED   # 应输出 1
-go build -buildmode=c-archive -o libgo_logic.a
+./build_scripts/build_windows.sh
 ```
 
-成功后会生成 `libgo_logic.a` 与 `libgo_logic.h`，再运行 `flutter build windows` 即可。
+生成的 DLL 位于 `bindings/` 目录，随后运行 `flutter build windows` 即可。

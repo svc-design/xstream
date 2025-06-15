@@ -5,8 +5,6 @@
 // clang-format off
 
 #include "generated_plugin_registrant.h"
-#include "../native_bridge_plugin.h"
-
 #include <url_launcher_linux/url_launcher_plugin.h>
 
 void fl_register_plugins(FlPluginRegistry* registry) {
@@ -14,7 +12,4 @@ void fl_register_plugins(FlPluginRegistry* registry) {
       fl_plugin_registry_get_registrar_for_plugin(registry, "UrlLauncherPlugin");
   url_launcher_plugin_register_with_registrar(url_launcher_linux_registrar);
 
-  g_autoptr(FlPluginRegistrar) native_bridge_registrar =
-      fl_plugin_registry_get_registrar_for_plugin(registry, "NativeBridgePlugin");
-  native_bridge_plugin_register_with_registrar(native_bridge_registrar);
 }

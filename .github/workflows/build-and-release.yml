@@ -116,16 +116,12 @@ jobs:
           install: mingw-w64-x86_64-gcc
           path-type: inherit
 
-      - name: Build Go static library (Windows)
+      - name: Build FFI library (Windows)
         if: ${{ matrix.platform == 'windows' }}
         shell: msys2 {0}
         run: |
           gcc --version
-          cd windows/go
-          if [ "$(go env CGO_ENABLED)" != "1" ]; then
-            export CGO_ENABLED=1
-          fi
-          go build -buildmode=c-archive -o ../runner/libgo_logic.a
+          ./build_scripts/build_windows.sh
 
       - name: Show Flutter version
         shell: bash
