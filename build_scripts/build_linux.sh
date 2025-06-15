@@ -8,27 +8,33 @@ if [ "$(go env CGO_ENABLED)" != "1" ]; then
   export CGO_ENABLED=1
 fi
 
-# Use the host compiler to build the shared library.
-# Derive CC from CXX so both compilers come from the same toolchain.
-: "${CXX:=clang++}"
-: "${CC:=gcc}"
-case "$(basename "$CXX")" in
-  clang++)
-    CC="$(dirname "$CXX")/clang"
-    ;;
-  g++)
-    CC="$(dirname "$CXX")/gcc"
-    ;;
-esac
-if [ "$(basename "$CC")" = "musl-gcc" ]; then
-  if [ "$(basename "$CXX")" = "clang++" ]; then
-    echo "musl-gcc detected; switching to clang for glibc build"
-    CC=clang
+# Choose a single compiler toolchain for both Go and Flutter builds.
+# Prefer GNU gcc/g++ if available, otherwise fall back to clang/clang++.
+if command -v gcc >/dev/null && command -v g++ >/dev/null; then
+  CC=$(command -v gcc)
+  CXX=$(command -v g++)
+elif command -v clang >/dev/null && command -v clang++ >/dev/null; then
+  CC=$(command -v clang)
+  CXX=$(command -v clang++)
+else
+  : "${CC:=gcc}"
+  : "${CXX:=g++}"
+fi
+
+# Disable musl toolchains entirely.
+if [[ "$(basename "$CC")" == musl-gcc ]] || [[ "$(basename "$CXX")" == musl-g++ ]]; then
+  echo "musl-gcc detected; switching to glibc compiler"
+  if command -v gcc >/dev/null && command -v g++ >/dev/null; then
+    CC=$(command -v gcc)
+    CXX=$(command -v g++)
   else
-    echo "musl-gcc detected; switching to gcc for glibc build"
-    CC=gcc
+    CC=$(command -v clang)
+    CXX=$(command -v clang++)
   fi
 fi
+
+export CC
+export CXX
 
 # Respect Flutter's sysroot when cross-compiling so the Go library links against
 # the same glibc as the rest of the application.
