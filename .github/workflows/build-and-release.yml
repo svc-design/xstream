@@ -67,11 +67,12 @@ jobs:
             sudo apt-get install -y clang cmake ninja-build libgtk-3-dev pkg-config libx11-dev binutils libgl1-mesa-dev
             sudo apt-get install -y curl unzip clang cmake ninja-build libgtk-3-dev pkg-config libx11-dev binutils libgl1-mesa-dev
             mkdir -p $HOME/flutter
-            curl -O https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.22.1-stable.tar.xz
-            tar xf flutter_linux_3.22.1-stable.tar.xz -C $HOME/flutter --strip-components=1
-            echo "$HOME/flutter/bin" >> $GITHUB_PATH
+            curl -O https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.22.2-stable.tar.xz
+            tar xf flutter_linux_3.22.2-stable.tar.xz -C $HOME/flutter --strip-components=1
+            export PATH="$HOME/flutter/bin:$PATH"
             flutter --version
             flutter doctor
+            echo "$HOME/flutter/bin" >> $GITHUB_PATH
           elif [[ "$PLATFORM" == "macos" || "$PLATFORM" == "ios" ]]; then
             brew install --cask flutter
             export PATH="$PATH:$HOME/Library/Flutter/bin"
