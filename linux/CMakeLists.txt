@@ -79,19 +79,20 @@ target_link_libraries(${BINARY_NAME} PRIVATE Threads::Threads ${CMAKE_DL_LIBS})
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/go")
 
 add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/go/libnative_bridge.a ${CMAKE_CURRENT_SOURCE_DIR}/go/libnative_bridge.h
-  COMMAND env CGO_CFLAGS="-O2" go build -buildmode=c-archive -o libnative_bridge.a
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/go
+  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/libbridge.a ${CMAKE_CURRENT_SOURCE_DIR}/bridge.h
+  COMMAND env GOOS=linux GOARCH=amd64 CGO_CFLAGS="-O2" go build -buildmode=c-archive -o libbridge.a ../../go_core
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  DEPENDS ../../go_core/*.go ../../go_core/go.mod
   COMMENT "Building Go native bridge library"
 )
 
 add_custom_target(go_native_bridge_build ALL
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/go/libnative_bridge.a)
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/libbridge.a)
 
 add_library(go_native_bridge STATIC IMPORTED)
 set_target_properties(go_native_bridge PROPERTIES
-  IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/go/libnative_bridge.a"
-  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/go")
+  IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/libbridge.a"
+  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}")
 add_dependencies(go_native_bridge go_native_bridge_build)
 target_link_libraries(${BINARY_NAME} PRIVATE go_native_bridge)
 

@@ -18,12 +18,15 @@
 
 ```text
 windows/
-├── go/
-│   └── nativebridge.go        # Go 导出的逻辑实现
 └── runner/
     ├── native_bridge_plugin.cpp
     ├── native_bridge_plugin.h
     └── CMakeLists.txt         # 构建规则，自动生成 libgo_logic.a
+
+go_core/
+├── bridge.go
+├── bridge_windows.go
+└── bridge_linux.go
 ```
 
 `nativebridge.go` 使用 `//export` 暴露函数供 C 调用，CMake 会在构建时执行
@@ -54,19 +57,19 @@ void NativeBridgePlugin::RegisterWithRegistrar(
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/libgo_logic.a ${CMAKE_CURRENT_SOURCE_DIR}/libgo_logic.h
   COMMAND ${CMAKE_COMMAND} -E env GOOS=windows GOARCH=amd64 CGO_ENABLED=1
-          ${GO_EXECUTABLE} build -buildmode=c-archive -o libgo_logic.a ./go/nativebridge.go
+          ${GO_EXECUTABLE} build -buildmode=c-archive -o libgo_logic.a ../../go_core
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  DEPENDS ../go/nativebridge.go
+  DEPENDS ../../go_core/*.go ../../go_core/go.mod
   BYPRODUCTS ${CMAKE_CURRENT_SOURCE_DIR}/libgo_logic.h
 )
 ```
 
 ## 3. 手动生成 Go 静态库
 
-若需要单独编译 Go 库，可进入 `windows/go` 目录执行：
+若需要单独编译 Go 库，可进入 `go_core` 目录执行：
 
 ```powershell
-cd windows/go
+cd go_core
 # 确认 CGO 已启用
 go env CGO_ENABLED
 ```
@@ -80,7 +83,7 @@ $env:CGO_ENABLED="1"
 随后执行构建：
 
 ```powershell
-go build -buildmode=c-archive -o libgo_logic.a
+go build -buildmode=c-archive -o ../windows/runner/libgo_logic.a
 ```
 
 成功后会在该目录生成 `libgo_logic.a` 与 `libgo_logic.h`，供 CMake 链接。

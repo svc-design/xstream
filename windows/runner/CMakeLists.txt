@@ -49,9 +49,9 @@ endif()
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/libgo_logic.a ${CMAKE_CURRENT_SOURCE_DIR}/libgo_logic.h
   COMMAND ${CMAKE_COMMAND} -E env GOOS=windows GOARCH=amd64 CGO_ENABLED=1
-          ${GO_EXECUTABLE} build -buildmode=c-archive -o libgo_logic.a ../go/nativebridge.go
+          ${GO_EXECUTABLE} build -buildmode=c-archive -o libgo_logic.a ../../go_core
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  DEPENDS ../go/nativebridge.go
+  DEPENDS ../../go_core/*.go ../../go_core/go.mod
   BYPRODUCTS ${CMAKE_CURRENT_SOURCE_DIR}/libgo_logic.h
 )
 
