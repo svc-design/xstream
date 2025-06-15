@@ -53,6 +53,10 @@ Linux 平台同样需要先生成 `libgo_native_bridge.so`，执行：
 ./build_scripts/build_linux.sh
 ```
 
+脚本会默认使用 `gcc` 编译；若发现整个工程采用 `clang++`，则改用
+`clang` 保持一致。如检测到 `musl-gcc`，会自动切换回上述编译器以确
+保生成的库依赖标准 glibc，避免链接问题。
+
 该脚本在 CI 中也会被调用，随后运行 `flutter build linux --release` 构建桌面应用。
 依赖 ImageMagick，若未安装请先安装 `convert` 命令。
 
