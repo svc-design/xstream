@@ -151,7 +151,7 @@ jobs:
             linux)
               flutter pub get
               flutter pub outdated
-              flutter build linux --release ;;
+              flutter build linux --release -v ;;
             macos) flutter build macos --release ;;
             ios) flutter build ios --release --no-codesign ;;
             android)
