@@ -8,13 +8,18 @@ if [ "$(go env CGO_ENABLED)" != "1" ]; then
   export CGO_ENABLED=1
 fi
 
-# Use the host compiler to build the shared library. Fall back to clang if the
-# surrounding Flutter build uses clang++.
-: "${CC:=gcc}"
+# Use the host compiler to build the shared library.
+# Derive CC from CXX so both compilers come from the same toolchain.
 : "${CXX:=clang++}"
-if [ "$(basename "$CXX")" = "clang++" ]; then
-  CC=clang
-fi
+: "${CC:=gcc}"
+case "$(basename "$CXX")" in
+  clang++)
+    CC="$(dirname "$CXX")/clang"
+    ;;
+  g++)
+    CC="$(dirname "$CXX")/gcc"
+    ;;
+esac
 if [ "$(basename "$CC")" = "musl-gcc" ]; then
   if [ "$(basename "$CXX")" = "clang++" ]; then
     echo "musl-gcc detected; switching to clang for glibc build"
