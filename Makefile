@@ -16,15 +16,16 @@ BUILD_DATE := $(shell date "+%Y-%m-%d")
 DMG_TAG := $(shell git describe --tags --exact-match 2>/dev/null || echo "")
 IS_MAIN := $(shell test "$(BRANCH)" = "main" && echo "yes" || echo "no")
 DMG_NAME := $(shell \
-	if [ "$(IS_MAIN)" = "yes" ]; then \
-		if [ "$(DMG_TAG)" != "" ]; then \
-			echo "xstream-release-$(DMG_TAG).dmg"; \
-		else \
-			echo "xstream-latest-$(BUILD_ID).dmg"; \
-		fi; \
-	else \
-		echo "xstream-dev-$(BUILD_ID).dmg"; \
-	fi)
+        if [ "$(IS_MAIN)" = "yes" ]; then \
+                if [ "$(DMG_TAG)" != "" ]; then \
+                        echo "xstream-release-$(DMG_TAG).dmg"; \
+                else \
+                        echo "xstream-latest-$(BUILD_ID).dmg"; \
+                fi; \
+        else \
+                echo "xstream-dev-$(BUILD_ID).dmg"; \
+        fi)
+WIN_ZIP_NAME := xstream-windows.zip
 
 .PHONY: all macos-intel macos-arm64 windows-x64 linux-x64 linux-arm64 android-arm64 ios-arm64 clean
 
@@ -99,25 +100,33 @@ macos-arm64:
 	fi
 
 windows-x64:
-	@if [ "$(UNAME_S)" = "Windows_NT" ] || [ "$(OS)" = "Windows_NT" ]; then \
-	 echo "Building Go static library..."; \
-	 cd windows/go; \
-	 if [ "$(shell go env CGO_ENABLED 2>/dev/null)" != "1" ]; then \
-	 export CGO_ENABLED=1; \
-	 fi; \
-	 go build -buildmode=c-archive -o ../runner/libgo_logic.a || exit 1; \
-	 cd ../..; \
-	 echo "Building for Windows (native)..."; \
-	 flutter pub get; \
-	 flutter pub outdated; \
-	 flutter build windows --release; \
-	 if [ ! -f windows/flutter/generated_plugin_registrant.h ]; then \
-	 echo "\u274c Plugin registrant header missing!"; \
-	 exit 1; \
-	 fi; \
-	 else \
-	 echo "Windows build only supported on native Windows systems"; \
- fi
+	@if [ "$(OS)" = "Windows_NT" ] || echo "$(UNAME_S)" | grep -Eq "MINGW|MSYS|CYGWIN|NT"; then \
+	echo "Building Go static library..."; \
+	cd windows/go; \
+	if [ "$(shell go env CGO_ENABLED 2>/dev/null)" != "1" ]; then \
+	export CGO_ENABLED=1; \
+	fi; \
+	go build -buildmode=c-archive -o ../runner/libgo_logic.a || exit 1; \
+	cd ../..; \
+	echo "Building for Windows (native)..."; \
+	flutter pub get; \
+	flutter pub outdated; \
+	flutter build windows --release; \
+	if [ ! -f windows/flutter/generated_plugin_registrant.h ]; then \
+	echo "\u274c Plugin registrant header missing!"; \
+	exit 1; \
+	fi; \
+	echo "Packaging Windows release..."; \
+	if command -v powershell >/dev/null 2>&1; then \
+	powershell -Command "Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath build/windows/x64/runner/Release/$(WIN_ZIP_NAME) -Force"; \
+	elif command -v zip >/dev/null 2>&1; then \
+	(cd build/windows/x64/runner/Release && zip -r $(WIN_ZIP_NAME) . -x $(WIN_ZIP_NAME)); \
+	else \
+	echo "❌ Neither powershell nor zip found for packaging"; \
+	fi; \
+	else \
+	echo "Windows build only supported on native Windows systems"; \
+fi
 
 linux-x64:
 	@if [ "$(UNAME_S)" = "Linux" ]; then \
