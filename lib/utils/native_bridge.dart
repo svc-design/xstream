@@ -23,7 +23,7 @@ class NativeBridge {
     try {
       final result = await _channel.invokeMethod<String>(
         'startNodeService',
-        {'plistName': node.plistName},
+        {'serviceName': node.serviceName},
       );
       return result ?? '启动成功';
     } on MissingPluginException {
@@ -43,7 +43,7 @@ class NativeBridge {
     try {
       final result = await _channel.invokeMethod<String>(
         'stopNodeService',
-        {'plistName': node.plistName},
+        {'serviceName': node.serviceName},
       );
       return result ?? '已停止';
     } on MissingPluginException {
@@ -63,7 +63,7 @@ class NativeBridge {
     try {
       final result = await _channel.invokeMethod<bool>(
         'checkNodeStatus',
-        {'plistName': node.plistName}, // 直接传递 plistName
+        {'serviceName': node.serviceName}, // 直接传递服务名称
       );
       return result ?? false;
     } on MissingPluginException {

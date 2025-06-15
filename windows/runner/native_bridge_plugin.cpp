@@ -59,8 +59,8 @@ void NativeBridgePlugin::HandleMethodCall(
     int ret = WriteConfigFiles(
         get_string("xrayConfigPath").c_str(),
         get_string("xrayConfigContent").c_str(),
-        get_string("plistPath").c_str(),
-        get_string("plistContent").c_str(),
+        get_string("servicePath").c_str(),
+        get_string("serviceContent").c_str(),
         get_string("vpnNodesConfigPath").c_str(),
         get_string("vpnNodesConfigContent").c_str());
     if (g_debugMode) {
@@ -89,7 +89,7 @@ void NativeBridgePlugin::HandleMethodCall(
       return "";
     };
 
-    int ret = ControlNodeService(method.c_str(), get_string("plistName").c_str());
+    int ret = ControlNodeService(method.c_str(), get_string("serviceName").c_str());
     if (g_debugMode) {
       std::cout << method << " -> " << ret << std::endl;
     }
