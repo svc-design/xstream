@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../utils/global_config.dart';
 import '../../utils/native_bridge.dart';
 import '../../services/vpn_config_service.dart';
 import '../../services/update/update_checker.dart';
+import '../../services/update/update_platform.dart';
 import '../widgets/log_console.dart';
 import 'help_screen.dart';
 
@@ -15,6 +17,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   String _selectedTab = 'log';
+  static const platform = MethodChannel('com.xstream/native');
 
   static const TextStyle _menuTextStyle = TextStyle(fontSize: 14);
   static final ButtonStyle _menuButtonStyle = ElevatedButton.styleFrom(
@@ -54,6 +57,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     logConsoleKey.currentState?.addLog('开始生成默认节点...');
     await VpnConfig.generateDefaultNodes(
       password: password,
+      platform: platform,
       setMessage: (msg) => logConsoleKey.currentState?.addLog(msg),
       logMessage: (msg) => logConsoleKey.currentState?.addLog(msg),
     );
