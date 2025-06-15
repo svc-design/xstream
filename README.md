@@ -40,11 +40,20 @@
 - 🛠️ [开发者文档（macOS 开发环境搭建）](docs/dev-guide.md)
 - 🐧 [Linux systemd 运行指南](docs/linux-xray-systemd.md)
 - 🪟 [Windows 服务运行指南](docs/windows-xray-sc.md)
-- 🧩 [FFI 跨平台桥接架构](docs/ffi-bridge-architecture.md)
+按照 [Windows 开发环境搭建](docs/windows-build.md) 文档安装 **MinGW-w64** 后，执行脚本即可生成 `libbridge.dll`：
 
-## 🖼 更新应用图标
+./build_scripts/build_windows.sh
+完成 DLL 构建后再运行 `flutter build windows` 即可。
 
-使用 `scripts/generate_icons.sh` 可一键生成并替换 Android、iOS、macOS、Linux 与 Windows 平台的应用图标。
+## 🐧 Linux 构建须知
+
+Linux 平台同样需要先生成 `libbridge.so`，执行：
+
+```bash
+./build_scripts/build_linux.sh
+```
+
+然后运行 `flutter build linux --release` 构建桌面应用。
 依赖 ImageMagick，若未安装请先安装 `convert` 命令。
 
 ## 🪟 Windows 构建须知
